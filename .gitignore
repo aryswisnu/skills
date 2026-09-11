@@ -1,0 +1,4 @@
+node_modules/
+visual-review-output/
+.DS_Store
+*.log

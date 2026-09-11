@@ -1,0 +1,11 @@
+{
+  "installCommand": "npm install",
+  "startCommand": "node examples/demo/server.mjs {port}",
+  "readyPath": "/",
+  "basePort": 4317,
+  "startupTimeoutMs": 30000,
+  "viewport": { "width": 900, "height": 620 },
+  "routes": [
+    { "name": "Demo home", "path": "/", "fullPage": false, "waitForMs": 100 }
+  ]
+}

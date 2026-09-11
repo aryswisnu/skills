@@ -1,0 +1,22 @@
+{
+  "name": "visual-pr-review",
+  "version": "0.1.0",
+  "description": "Generate before-and-after evidence for web pull requests.",
+  "type": "module",
+  "bin": {
+    "visual-pr-review": "scripts/visual-pr-review.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node scripts/visual-pr-review.mjs --base HEAD~1 --head HEAD --config examples/demo/visual-review.json --output visual-review-output"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pixelmatch": "^7.1.0",
+    "playwright": "^1.55.0",
+    "pngjs": "^7.0.0"
+  },
+  "license": "MIT"
+}
