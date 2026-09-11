@@ -9,6 +9,7 @@ import {
   preserveGitOutput,
   processTreeSpawnOptions,
   processTreeTarget,
+  resolveLocalRoute,
   startCommandForPlatform,
 } from '../src/visual.mjs';
 
@@ -56,6 +57,18 @@ test('process tree helpers isolate and target POSIX process groups', () => {
   assert.deepEqual(processTreeSpawnOptions('win32'), { detached: false });
   assert.equal(processTreeTarget(123, 'linux'), -123);
   assert.equal(processTreeTarget(123, 'win32'), 123);
+});
+
+test('resolveLocalRoute rejects external and protocol-relative URLs', () => {
+  assert.equal(resolveLocalRoute('http://127.0.0.1:4173', '/checkout'), 'http://127.0.0.1:4173/checkout');
+  assert.throws(
+    () => resolveLocalRoute('http://127.0.0.1:4173', 'https://example.com'),
+    /must stay on the preview origin/,
+  );
+  assert.throws(
+    () => resolveLocalRoute('http://127.0.0.1:4173', '//example.com/path'),
+    /must stay on the preview origin/,
+  );
 });
 
 test('createPixelDiff reports changed pixels', () => {

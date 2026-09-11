@@ -21,6 +21,15 @@ export function processTreeTarget(pid, platform = process.platform) {
   return platform === 'win32' ? pid : -pid;
 }
 
+export function resolveLocalRoute(baseUrl, routePath) {
+  const base = new URL(baseUrl);
+  const resolved = new URL(routePath, base);
+  if (resolved.origin !== base.origin) {
+    throw new Error(`route must stay on the preview origin: ${routePath}`);
+  }
+  return resolved.href;
+}
+
 export function browserLaunchOptions(env = process.env) {
   return env.VISUAL_REVIEW_BROWSER_PATH
     ? { headless: true, executablePath: env.VISUAL_REVIEW_BROWSER_PATH }

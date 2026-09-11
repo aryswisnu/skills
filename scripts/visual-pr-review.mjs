@@ -16,6 +16,7 @@ import {
   preserveGitOutput,
   processTreeSpawnOptions,
   processTreeTarget,
+  resolveLocalRoute,
   startCommandForPlatform,
 } from '../src/visual.mjs';
 
@@ -71,7 +72,10 @@ async function waitForReady(url, timeoutMs, processHandle) {
       throw new Error(`preview process exited early with code ${processHandle.exitCode}`);
     }
     try {
-      const response = await fetch(url, { redirect: 'follow' });
+      const response = await fetch(url, {
+        redirect: 'follow',
+        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
+      });
       if (response.ok) return;
       lastError = `HTTP ${response.status}`;
     } catch (error) {
@@ -116,12 +120,13 @@ async function stopPreview(child) {
     new Promise((resolve) => setTimeout(resolve, 3000)),
   ]);
   try { process.kill(target, 'SIGKILL'); } catch {}
+  await new Promise((resolve) => setTimeout(resolve, 100));
 }
 
 async function captureRoute(browser, baseUrl, route, viewport, outputPath) {
   const page = await browser.newPage({ viewport });
   try {
-    await page.goto(new URL(route.path, baseUrl).href, { waitUntil: 'networkidle' });
+    await page.goto(resolveLocalRoute(baseUrl, route.path), { waitUntil: 'networkidle' });
     if (route.waitForSelector) await page.waitForSelector(route.waitForSelector);
     if (route.waitForMs) await page.waitForTimeout(route.waitForMs);
     await page.screenshot({ path: outputPath, fullPage: route.fullPage });
@@ -197,6 +202,34 @@ async function main() {
   const headDir = path.join(tempRoot, 'head');
   const processes = [];
   let browser;
+  let cleanupPromise;
+
+  const cleanup = () => {
+    if (cleanupPromise) return cleanupPromise;
+    cleanupPromise = (async () => {
+      if (browser) {
+        try { await browser.close(); } catch {}
+      }
+      await Promise.all(processes.map(stopPreview));
+      if (!options.keepWorktrees) {
+        for (const dir of [baseDir, headDir]) {
+          try { git(['worktree', 'remove', '--force', dir], repoRoot); } catch {}
+        }
+        await rm(tempRoot, { recursive: true, force: true });
+      } else {
+        console.log(`Temporary worktrees preserved at ${tempRoot}`);
+      }
+    })();
+    return cleanupPromise;
+  };
+  const handleSignal = (signal) => {
+    const exitCode = signal === 'SIGINT' ? 130 : 143;
+    cleanup().finally(() => process.exit(exitCode));
+  };
+  const handleSigint = () => handleSignal('SIGINT');
+  const handleSigterm = () => handleSignal('SIGTERM');
+  process.once('SIGINT', handleSigint);
+  process.once('SIGTERM', handleSigterm);
 
   try {
     git(['worktree', 'add', '--detach', baseDir, baseSha], repoRoot);
@@ -225,6 +258,7 @@ async function main() {
     }
 
     browser = await chromium.launch(browserLaunchOptions());
+    const browserVersion = browser.version();
     const results = [];
     for (const route of config.routes) {
       const slug = safeArtifactName(route.name);
@@ -265,10 +299,21 @@ async function main() {
       generatedAt: new Date().toISOString(),
       base: { ref: options.base, sha: baseSha },
       head: { ref: options.head, sha: headSha },
-      viewport: config.viewport,
       changedFiles,
       diffStat,
       artifacts: { codeDiff: 'changes.patch', diffStat: 'changes-stat.txt' },
+      capture: {
+        viewport: config.viewport,
+        pixelThreshold: config.pixelThreshold,
+        readyPath: config.readyPath,
+        startupTimeoutMs: config.startupTimeoutMs,
+        ports: { base: basePort, head: headPort },
+        routes: config.routes,
+        browser: {
+          version: browserVersion,
+          executable: process.env.VISUAL_REVIEW_BROWSER_PATH ?? 'playwright-managed',
+        },
+      },
       results,
     };
     await writeFile(path.join(outputDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -283,16 +328,9 @@ async function main() {
     }));
     console.log(`Visual review written to ${outputDir}`);
   } finally {
-    if (browser) await browser.close();
-    await Promise.all(processes.map(stopPreview));
-    if (!options.keepWorktrees) {
-      for (const dir of [baseDir, headDir]) {
-        try { git(['worktree', 'remove', '--force', dir], repoRoot); } catch {}
-      }
-      await rm(tempRoot, { recursive: true, force: true });
-    } else {
-      console.log(`Temporary worktrees preserved at ${tempRoot}`);
-    }
+    process.removeListener('SIGINT', handleSigint);
+    process.removeListener('SIGTERM', handleSigterm);
+    await cleanup();
   }
 }
 
