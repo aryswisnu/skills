@@ -1,4 +1,10 @@
-# Visual PR Review
+<p align="center">
+  <img src="docs/visualize-pr-logo.svg" alt="Visualize PR" width="900">
+</p>
+
+<h1 align="center">Visual PR Review</h1>
+
+<p align="center"><code>/visualize-pr</code> turns code changes into reviewer-ready visual evidence.</p>
 
 A GitHub-friendly agent skill and CLI that turns web code changes into reviewer evidence.
 
