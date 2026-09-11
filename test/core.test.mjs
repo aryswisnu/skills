@@ -27,8 +27,21 @@ test('normalizeConfig supplies deterministic defaults', () => {
 
   assert.equal(config.basePort, 4173);
   assert.deepEqual(config.viewport, { width: 1440, height: 900 });
-  assert.equal(config.routes[0].fullPage, true);
+  assert.equal(config.routes[0].fullPage, false);
   assert.equal(config.routes[0].waitForMs, 250);
+});
+
+test('normalizeConfig rejects route names that overwrite artifacts', () => {
+  assert.throws(
+    () => normalizeConfig({
+      startCommand: 'npm start',
+      routes: [
+        { name: 'Checkout', path: '/checkout' },
+        { name: 'checkout!', path: '/checkout?empty=1' },
+      ],
+    }),
+    /route names must produce unique artifact names/,
+  );
 });
 
 test('renderReport identifies both revisions and embeds artifacts', () => {
@@ -38,6 +51,7 @@ test('renderReport identifies both revisions and embeds artifacts', () => {
     headRef: 'HEAD',
     headSha: 'def5678',
     changedFiles: ['src/app.js'],
+    diffStat: ' src/app.js | 4 +++-',
     results: [{
       name: 'Home',
       path: '/',
@@ -55,4 +69,6 @@ test('renderReport identifies both revisions and embeds artifacts', () => {
   assert.match(markdown, /!\[Home side-by-side\]\(home-side-by-side\.png\)/);
   assert.match(markdown, /4\.20%/);
   assert.match(markdown, /`src\/app\.js`/);
+  assert.match(markdown, /src\/app\.js \| 4 \+\+\+-/);
+  assert.match(markdown, /\[Full code diff\]\(changes\.patch\)/);
 });

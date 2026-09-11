@@ -8,7 +8,8 @@ The PR raiser runs it. The reviewer gets:
 - after screenshot
 - labeled side-by-side image
 - pixel-diff image
-- Markdown report
+- Markdown report with code diff statistics
+- full binary-safe Git patch
 - JSON manifest with exact commit SHAs and capture settings
 
 ## Quick start
@@ -16,6 +17,8 @@ The PR raiser runs it. The reviewer gets:
 ```bash
 npm install
 npx playwright install chromium
+# Or reuse a compatible browser:
+# export VISUAL_REVIEW_BROWSER_PATH=/path/to/chrome-headless-shell
 ```
 
 In the web application repository, create `visual-review.json`:

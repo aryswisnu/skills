@@ -26,6 +26,23 @@ export function normalizeConfig(raw) {
     throw new Error('viewport width and height must be integers');
   }
 
+  const routes = raw.routes.map((route, index) => {
+    if (!route || typeof route.path !== 'string') {
+      throw new Error(`routes[${index}].path is required`);
+    }
+    return {
+      name: route.name ?? route.path,
+      path: route.path,
+      fullPage: route.fullPage ?? false,
+      waitForMs: route.waitForMs ?? 250,
+      waitForSelector: route.waitForSelector ?? null,
+    };
+  });
+  const artifactNames = routes.map((route) => safeArtifactName(route.name));
+  if (new Set(artifactNames).size !== artifactNames.length) {
+    throw new Error('route names must produce unique artifact names');
+  }
+
   return {
     installCommand: raw.installCommand ?? null,
     startCommand: raw.startCommand,
@@ -35,18 +52,7 @@ export function normalizeConfig(raw) {
     pixelThreshold: raw.pixelThreshold ?? 0.1,
     viewport,
     env: raw.env ?? {},
-    routes: raw.routes.map((route, index) => {
-      if (!route || typeof route.path !== 'string') {
-        throw new Error(`routes[${index}].path is required`);
-      }
-      return {
-        name: route.name ?? route.path,
-        path: route.path,
-        fullPage: route.fullPage ?? true,
-        waitForMs: route.waitForMs ?? 250,
-        waitForSelector: route.waitForSelector ?? null,
-      };
-    }),
+    routes,
   };
 }
 
@@ -56,6 +62,7 @@ export function renderReport({
   headRef,
   headSha,
   changedFiles,
+  diffStat,
   results,
 }) {
   const lines = [
@@ -66,6 +73,14 @@ export function renderReport({
     '## Changed files',
     '',
     ...(changedFiles.length ? changedFiles.map((file) => `- \`${file}\``) : ['- None']),
+    '',
+    '## Code changes',
+    '',
+    '```text',
+    diffStat || 'No diff stat available.',
+    '```',
+    '',
+    '[Full code diff](changes.patch)',
     '',
     '## Visual evidence',
     '',

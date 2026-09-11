@@ -4,11 +4,10 @@ description: Generate before-and-after evidence for web changes.
 version: 0.1.0
 author: Arys, Hermes Agent
 license: MIT
-platforms: [linux, macos, windows]
+platforms: [linux, macos]
 metadata:
   hermes:
     tags: [code-review, visual-testing, playwright, git]
-    related_skills: [github-code-review]
 ---
 
 # Visual PR Review Skill
@@ -28,7 +27,7 @@ Do not use this skill as proof of correctness, accessibility, security, or compl
 - A Git repository with both revisions available locally.
 - Node.js 20 or newer.
 - A deterministic command that starts the web app on a supplied port.
-- Playwright Chromium installed through `terminal(command="npx playwright install chromium")`.
+- Playwright Chromium installed through `terminal(command="npx playwright install chromium")`. If a compatible Chromium already exists, set `VISUAL_REVIEW_BROWSER_PATH` to its executable path.
 - A `visual-review.json` configuration file in the target repository.
 
 The configured install and start commands execute code from both revisions. Run this only on code you trust or inside an appropriate sandbox.
@@ -68,7 +67,7 @@ Create `visual-review.json` in the application repository:
 ## Procedure
 
 1. Confirm the requested base and head refs, then verify both with `terminal(command="git rev-parse <ref>", workdir="<application-repository>")`. Completion criterion: both commands return commit SHAs.
-2. Read the changed-file list with `terminal(command="git diff --name-only <base>...<head>", workdir="<application-repository>")`. Completion criterion: every configured route has a defensible connection to the visible changes, or is explicitly a smoke route.
+2. Read the changed-file list and patch with `terminal(command="git diff --name-only <base>...<head> && git diff <base>...<head>", workdir="<application-repository>")`. Summarize the intent, visible impact, and risk areas for the reviewer without replacing the generated evidence. Completion criterion: every changed file is accounted for, and every configured route has a defensible connection to the visible changes or is explicitly a smoke route.
 3. Run the CLI. It creates detached temporary worktrees, starts both revisions on separate ports, captures matching routes, and writes a report. Completion criterion: the command exits with code 0 and reports the output directory.
 4. Inspect every side-by-side image with `vision_analyze`. Completion criterion: BEFORE and AFTER labels are readable, content is loaded, dimensions are comparable, and no consent dialog or error overlay obscures the page.
 5. Read the manifest and report. Completion criterion: SHAs, changed files, viewport, route paths, and image filenames agree with the requested comparison.
@@ -76,6 +75,8 @@ Create `visual-review.json` in the application repository:
 
 ## Output
 
+- `changes.patch`
+- `changes-stat.txt`
 - `<route>-before.png`
 - `<route>-after.png`
 - `<route>-side-by-side.png`

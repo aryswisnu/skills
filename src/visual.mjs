@@ -5,6 +5,28 @@ export function buildStartCommand(template, port) {
   return template.replaceAll('{port}', String(port));
 }
 
+export function startCommandForPlatform(command, platform = process.platform) {
+  return platform === 'win32' ? command : `exec ${command}`;
+}
+
+export function preserveGitOutput(output, trim = true) {
+  return trim ? output.trim() : output;
+}
+
+export function processTreeSpawnOptions(platform = process.platform) {
+  return { detached: platform !== 'win32' };
+}
+
+export function processTreeTarget(pid, platform = process.platform) {
+  return platform === 'win32' ? pid : -pid;
+}
+
+export function browserLaunchOptions(env = process.env) {
+  return env.VISUAL_REVIEW_BROWSER_PATH
+    ? { headless: true, executablePath: env.VISUAL_REVIEW_BROWSER_PATH }
+    : { headless: true };
+}
+
 export function createPixelDiff(beforeBuffer, afterBuffer, threshold = 0.1) {
   const before = PNG.sync.read(beforeBuffer);
   const after = PNG.sync.read(afterBuffer);

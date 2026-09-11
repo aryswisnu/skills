@@ -9,7 +9,15 @@ import { chromium } from 'playwright';
 import { PNG } from 'pngjs';
 
 import { normalizeConfig, renderReport, safeArtifactName } from '../src/core.mjs';
-import { buildStartCommand, createPixelDiff } from '../src/visual.mjs';
+import {
+  buildStartCommand,
+  browserLaunchOptions,
+  createPixelDiff,
+  preserveGitOutput,
+  processTreeSpawnOptions,
+  processTreeTarget,
+  startCommandForPlatform,
+} from '../src/visual.mjs';
 
 function usage() {
   return `Usage: visual-pr-review --base <ref> [--head <ref>] [options]
@@ -46,8 +54,13 @@ function parseArgs(argv) {
   return options;
 }
 
-function git(args, cwd) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+function git(args, cwd, { trim = true } = {}) {
+  const output = execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    maxBuffer: 100 * 1024 * 1024,
+  });
+  return preserveGitOutput(output, trim);
 }
 
 async function waitForReady(url, timeoutMs, processHandle) {
@@ -70,7 +83,7 @@ async function waitForReady(url, timeoutMs, processHandle) {
 }
 
 function startPreview(command, cwd, port, env) {
-  const child = spawn(buildStartCommand(command, port), {
+  const child = spawn(startCommandForPlatform(buildStartCommand(command, port)), {
     cwd,
     env: {
       ...process.env,
@@ -81,6 +94,7 @@ function startPreview(command, cwd, port, env) {
     },
     shell: true,
     stdio: ['ignore', 'pipe', 'pipe'],
+    ...processTreeSpawnOptions(),
   });
   let logs = '';
   const collect = (chunk) => {
@@ -94,13 +108,14 @@ function startPreview(command, cwd, port, env) {
 }
 
 async function stopPreview(child) {
-  if (!child || child.exitCode !== null) return;
-  child.kill('SIGTERM');
+  if (!child) return;
+  const target = processTreeTarget(child.pid);
+  try { process.kill(target, 'SIGTERM'); } catch {}
   await Promise.race([
     new Promise((resolve) => child.once('exit', resolve)),
     new Promise((resolve) => setTimeout(resolve, 3000)),
   ]);
-  if (child.exitCode === null) child.kill('SIGKILL');
+  try { process.kill(target, 'SIGKILL'); } catch {}
 }
 
 async function captureRoute(browser, baseUrl, route, viewport, outputPath) {
@@ -171,8 +186,12 @@ async function main() {
   const headSha = git(['rev-parse', options.head], repoRoot);
   const changedFiles = git(['diff', '--name-only', `${baseSha}...${headSha}`], repoRoot)
     .split('\n').filter(Boolean);
+  const diffStat = git(['diff', '--stat', `${baseSha}...${headSha}`], repoRoot);
+  const codeDiff = git(['diff', '--binary', `${baseSha}...${headSha}`], repoRoot, { trim: false });
 
   await mkdir(outputDir, { recursive: true });
+  await writeFile(path.join(outputDir, 'changes.patch'), codeDiff);
+  await writeFile(path.join(outputDir, 'changes-stat.txt'), diffStat ? `${diffStat}\n` : '');
   const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'visual-pr-review-'));
   const baseDir = path.join(tempRoot, 'base');
   const headDir = path.join(tempRoot, 'head');
@@ -205,7 +224,7 @@ async function main() {
       throw new Error(`${error.message}\n\nBase logs:\n${baseProcess.getLogs()}\n\nHead logs:\n${headProcess.getLogs()}`);
     }
 
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch(browserLaunchOptions());
     const results = [];
     for (const route of config.routes) {
       const slug = safeArtifactName(route.name);
@@ -248,6 +267,8 @@ async function main() {
       head: { ref: options.head, sha: headSha },
       viewport: config.viewport,
       changedFiles,
+      diffStat,
+      artifacts: { codeDiff: 'changes.patch', diffStat: 'changes-stat.txt' },
       results,
     };
     await writeFile(path.join(outputDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -257,6 +278,7 @@ async function main() {
       headRef: options.head,
       headSha: headSha.slice(0, 7),
       changedFiles,
+      diffStat,
       results,
     }));
     console.log(`Visual review written to ${outputDir}`);
