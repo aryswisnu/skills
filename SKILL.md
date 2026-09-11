@@ -1,13 +1,12 @@
 ---
 name: visual-pr-review
 description: Generate before-and-after evidence for web changes.
-version: 0.2.0
-author: Arys, Hermes Agent
+version: 0.2.1
+author: Arys
 license: MIT
 platforms: [linux, macos]
 metadata:
-  hermes:
-    tags: [code-review, visual-testing, playwright, git]
+  tags: [code-review, visual-testing, playwright, git]
 ---
 
 # Visual PR Review Skill
