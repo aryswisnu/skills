@@ -1,6 +1,6 @@
 {
   "name": "visual-pr-review",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Generate before-and-after evidence for web pull requests.",
   "type": "module",
   "bin": {

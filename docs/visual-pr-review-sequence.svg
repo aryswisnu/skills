@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1450" viewBox="0 0 1800 1450">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#1e293b" stroke-width="1"/></pattern>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L9 3L0 6Z" fill="#cbd5e1"/></marker>
+    <marker id="return" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto"><path d="M9 0L0 3L9 6" fill="none" stroke="#94a3b8" stroke-width="1.4"/></marker>
+    <style>
+      .title{font:700 36px system-ui,sans-serif;fill:#f8fafc}.subtitle{font:17px system-ui,sans-serif;fill:#94a3b8}
+      .actor{fill:#0f172a;stroke-width:2}.actorText{font:700 17px system-ui,sans-serif;fill:#f8fafc;text-anchor:middle}.actorSub{font:13px system-ui,sans-serif;fill:#94a3b8;text-anchor:middle}
+      .life{stroke:#475569;stroke-width:2;stroke-dasharray:8 8}.msg{stroke:#cbd5e1;stroke-width:2;marker-end:url(#arrow)}.reply{stroke:#94a3b8;stroke-width:2;stroke-dasharray:7 6;marker-end:url(#arrow)}
+      .label{font:15px system-ui,sans-serif;fill:#e2e8f0;text-anchor:middle}.note{font:14px system-ui,sans-serif;fill:#cbd5e1}.tiny{font:12px ui-monospace,monospace;fill:#94a3b8}
+      .step{font:700 13px ui-monospace,monospace;fill:#22d3ee}.activation{fill:#164e63;stroke:#22d3ee;stroke-width:1.5}.group{fill:#0f172a;fill-opacity:.76;stroke:#334155;stroke-width:1.5}.groupTitle{font:700 14px system-ui,sans-serif;fill:#fbbf24}
+    </style>
+  </defs>
+  <rect width="1800" height="1450" fill="#020617"/><rect width="1800" height="1450" fill="url(#grid)"/>
+  <text x="70" y="60" class="title">Visual PR Review, sequence</text>
+  <text x="70" y="90" class="subtitle">One deterministic journey from Git diff to human review evidence</text>
+
+  <!-- actors -->
+  <g><rect x="35" y="125" width="170" height="76" rx="12" class="actor" stroke="#94a3b8"/><text x="120" y="158" class="actorText">PR raiser</text><text x="120" y="181" class="actorSub">human author</text></g>
+  <g><rect x="275" y="125" width="210" height="76" rx="12" class="actor" stroke="#22d3ee"/><text x="380" y="158" class="actorText">Visual Review CLI</text><text x="380" y="181" class="actorSub">orchestrator</text></g>
+  <g><rect x="565" y="125" width="150" height="76" rx="12" class="actor" stroke="#94a3b8"/><text x="640" y="158" class="actorText">Git</text><text x="640" y="181" class="actorSub">repository</text></g>
+  <g><rect x="810" y="125" width="180" height="76" rx="12" class="actor" stroke="#fbbf24"/><text x="900" y="158" class="actorText">Base app</text><text x="900" y="181" class="actorSub">before revision</text></g>
+  <g><rect x="1060" y="125" width="200" height="76" rx="12" class="actor" stroke="#a78bfa"/><text x="1160" y="158" class="actorText">Head app</text><text x="1160" y="181" class="actorSub">after revision</text></g>
+  <g><rect x="1320" y="125" width="200" height="76" rx="12" class="actor" stroke="#34d399"/><text x="1420" y="158" class="actorText">Playwright</text><text x="1420" y="181" class="actorSub">browser capture</text></g>
+  <g><rect x="1595" y="125" width="170" height="76" rx="12" class="actor" stroke="#fb7185"/><text x="1680" y="158" class="actorText">Reviewer</text><text x="1680" y="181" class="actorSub">human decision</text></g>
+
+  <!-- lifelines -->
+  <path d="M120 201V1360M380 201V1360M640 201V1360M900 201V1360M1160 201V1360M1420 201V1360M1680 201V1360" class="life"/>
+  <rect x="369" y="245" width="22" height="1030" rx="5" class="activation"/>
+
+  <!-- 1 invoke -->
+  <text x="54" y="246" class="step">01</text><path d="M120 260H369" class="msg"/><text x="245" y="249" class="label">run with base, head, config</text>
+
+  <!-- git metadata -->
+  <text x="420" y="306" class="step">02</text><path d="M391 320H629" class="msg"/><text x="510" y="309" class="label">resolve refs + read diff</text>
+  <path d="M629 365H391" class="reply"/><text x="510" y="354" class="label">SHAs, files, patch, statistics</text>
+
+  <!-- worktree -->
+  <text x="420" y="411" class="step">03</text><path d="M391 425H629" class="msg"/><text x="510" y="414" class="label">create detached worktrees</text>
+  <path d="M629 470H391" class="reply"/><text x="510" y="459" class="label">base/ and head/ paths</text>
+
+  <!-- startup group -->
+  <rect x="760" y="495" width="540" height="250" rx="14" class="group"/><text x="780" y="522" class="groupTitle">PARALLEL STARTUP</text>
+  <text x="420" y="556" class="step">04</text><path d="M391 570H889" class="msg"/><text x="640" y="559" class="label">optional install, then start {port}</text>
+  <path d="M911 615H391" class="reply"/><text x="650" y="604" class="label">base ready on 127.0.0.1:4173</text>
+  <path d="M391 665H1149" class="msg"/><text x="770" y="654" class="label">optional install, then start {port}</text>
+  <path d="M1149 710H391" class="reply"/><text x="770" y="699" class="label">head ready on 127.0.0.1:4174</text>
+
+  <!-- browser -->
+  <text x="420" y="781" class="step">05</text><path d="M391 795H1409" class="msg"/><text x="900" y="784" class="label">launch Chromium with fixed viewport</text>
+
+  <!-- loop -->
+  <rect x="760" y="825" width="800" height="290" rx="14" class="group"/><text x="780" y="852" class="groupTitle">FOR EACH CONFIGURED ROUTE</text>
+  <text x="420" y="881" class="step">06</text><path d="M1409 895H911" class="msg"/><text x="1160" y="884" class="label">open route, wait, capture</text>
+  <path d="M911 940H1409" class="reply"/><text x="1160" y="929" class="label">before.png</text>
+  <path d="M1409 985H1171" class="msg"/><text x="1290" y="974" class="label">same route + state</text>
+  <path d="M1171 1030H1409" class="reply"/><text x="1290" y="1019" class="label">after.png</text>
+  <path d="M1409 1075H391" class="reply"/><text x="900" y="1064" class="label">matching captures returned</text>
+
+  <!-- artifacts -->
+  <text x="420" y="1141" class="step">07</text><path d="M391 1155H490V1190H391" class="msg"/><text x="565" y="1178" class="label">calculate pixel diff</text>
+  <path d="M391 1220H1409" class="msg"/><text x="900" y="1209" class="label">compose labeled side-by-side image</text>
+  <path d="M1409 1255H391" class="reply"/><text x="900" y="1244" class="label">side-by-side.png</text>
+  <text x="420" y="1286" class="step">08</text><path d="M391 1300H1669" class="msg"/><text x="1030" y="1289" class="label">report.md + manifest.json + image evidence</text>
+
+  <!-- final human boundary -->
+  <text x="1588" y="1341" class="step">09</text><path d="M1669 1355H131" class="reply"/><text x="900" y="1344" class="label">review code and visual impact, then decide</text>
+  <rect x="1460" y="1375" width="305" height="54" rx="10" fill="#4c0519" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="1612" y="1398" class="note" text-anchor="middle">The tool supplies evidence.</text><text x="1612" y="1418" class="tiny" text-anchor="middle">Approval remains human-owned.</text>
+</svg>

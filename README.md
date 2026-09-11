@@ -2,6 +2,12 @@
 
 A GitHub-friendly agent skill and CLI that turns web code changes into reviewer evidence.
 
+The application under review may use any programming language. The current capture adapter supports browser-renderable applications that can start on a supplied local port. See [language and runtime support](docs/language-support.md) for the exact contract and examples.
+
+## Sequence
+
+![Visual PR Review sequence](docs/visual-pr-review-sequence.svg)
+
 The PR raiser runs it. The reviewer gets:
 
 - before screenshot

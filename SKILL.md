@@ -1,7 +1,7 @@
 ---
 name: visual-pr-review
 description: Generate before-and-after evidence for web changes.
-version: 0.1.0
+version: 0.2.0
 author: Arys, Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -31,6 +31,8 @@ Do not use this skill as proof of correctness, accessibility, security, or compl
 - A `visual-review.json` configuration file in the target repository.
 
 The configured install and start commands execute code from both revisions. Run this only on code you trust or inside an appropriate sandbox.
+
+The application under review can use any programming language. The current adapter requires it to expose a deterministic HTTP preview on the supplied local port. Git diff collection is language-independent. Native mobile, native desktop, CLI, library, worker, API-only, and infrastructure changes need a different capture adapter or an explicit visual fixture. Read `docs/language-support.md` for the portable preview contract and stack examples.
 
 ## How to Run
 
