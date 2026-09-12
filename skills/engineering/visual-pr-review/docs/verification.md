@@ -80,7 +80,7 @@ commits could exist without committing anything here. It contained only a copy o
 `#65d1ff` to `#ffb35c`, changed the `h1` text, and added a head-only `console.error`.
 
 ```bash
-node <repo>/scripts/visual-pr-review.mjs \
+node <visual-pr-review-directory>/scripts/visual-pr-review.mjs \
   --base HEAD~1 --head HEAD \
   --config examples/demo/visual-review.json \
   --output out
@@ -230,36 +230,29 @@ none
 No leftover review worktree, no orphaned preview process on either port. The scratch repository
 at `/tmp/vpr-e2e` was removed after verification.
 
-## 10. `npm run demo` in this repository
+## 10. Collection-layout verification
+
+After moving the skill to `skills/engineering/visual-pr-review/`, verification was rerun from the
+nested skill directory:
 
 ```bash
-npm run demo
+npm test
+npm audit --audit-level=high
+npm pack --dry-run
 ```
 
-Observed exit code `1`:
+Observed: 96 tests passed with Chromium, zero dependency vulnerabilities, and 51 intended package
+files including `SKILL.md` and `LICENSE`.
 
-```text
-Capturing Home @ desktop...
-Capturing Home @ mobile...
-Capturing Home with the evidence panel open @ desktop...
-Capturing Details @ desktop...
-Visual review written to .../visual-review-output
-At least one scenario could not be captured. The report is partial.
+From the collection root:
+
+```bash
+npx skills@latest add . --list
 ```
 
-```text
-counts {"capture-failed":1,"review-required":0,"changed-within-threshold":0,"unchanged":3}
- - home-evidence-open desktop capture-failed ["base capture failed: step 1 (click #open-evidence) failed: locator.click: Timeout 10000ms exceeded...", ...]
- - details desktop unchanged []
- - home desktop unchanged []
- - home mobile unchanged []
-```
-
-This is correct, not a defect: the demo app's `#open-evidence` button lives in the **uncommitted**
-working tree, so neither `HEAD~1` nor `HEAD` contains it. The tool reports the missing selector
-honestly and still produces evidence for the three scenarios it could capture. Once these changes
-are committed, `npm run demo` compares two commits that both contain the button. This is stated
-in `README.md`.
+Observed: exactly one installable skill, `visual-pr-review`. A new two-commit scratch repository
+then invoked the nested CLI path and captured four scenario/viewport cells with 20 artifact hashes
+and zero capture failures.
 
 ## 11. Example configuration validity
 

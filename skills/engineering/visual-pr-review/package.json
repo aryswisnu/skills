@@ -7,8 +7,12 @@
     "visual-pr-review": "scripts/visual-pr-review.mjs"
   },
   "scripts": {
-    "test": "node --test",
-    "demo": "node scripts/visual-pr-review.mjs --base HEAD~1 --head HEAD --config examples/demo/visual-review.json --output visual-review-output --all"
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aryswisnu/skills.git",
+    "directory": "skills/engineering/visual-pr-review"
   },
   "engines": {
     "node": ">=20"

@@ -50,15 +50,15 @@ jobs:
 
       - name: Install visual-pr-review
         run: |
-          git clone --depth 1 https://github.com/<owner>/visual-pr-review.git "$RUNNER_TEMP/visual-pr-review"
-          npm ci --prefix "$RUNNER_TEMP/visual-pr-review"
-          npx --prefix "$RUNNER_TEMP/visual-pr-review" playwright install --with-deps chromium
+          git clone --depth 1 https://github.com/aryswisnu/skills.git "$RUNNER_TEMP/arys-skills"
+          npm ci --prefix "$RUNNER_TEMP/arys-skills/skills/engineering/visual-pr-review"
+          npx --prefix "$RUNNER_TEMP/arys-skills/skills/engineering/visual-pr-review" playwright install --with-deps chromium
 
       - name: Capture before-and-after evidence
         id: capture
         continue-on-error: true
         run: |
-          node "$RUNNER_TEMP/visual-pr-review/scripts/visual-pr-review.mjs" \
+          node "$RUNNER_TEMP/arys-skills/skills/engineering/visual-pr-review/scripts/visual-pr-review.mjs" \
             --base "${{ inputs.base-ref }}" \
             --head "${{ inputs.head-ref }}" \
             --config visual-review.json \
