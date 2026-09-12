@@ -54,9 +54,9 @@ Each item exists somewhere in the survey. The bundle is what is differentiated.
 
 - **N1** Not an approval gate. No verdict, threshold or exit code means "ship it".
 - **N2** Not a CI baseline system. No stored baselines, no approval workflow, no drift database.
-- **N3** Not a hosted service, and never sends anything anywhere. No account, no token, no bucket.
-- **N4** Does not post PR comments, reviews or statuses. The shipped GitHub Actions example
-  uploads artifacts and stops.
+- **N3** Not a hosted service. The core CLI writes locally and requires no account, token, or bucket.
+- **N4** Does not post PR comments, reviews, descriptions, or statuses. The shipped GitHub Actions
+  example is manual and uploads artifacts only when its human-triggered opt-in input is enabled.
 - **N5** Not a correctness, accessibility, security or coverage oracle. An ARIA snapshot diff is
   evidence about the accessibility tree, not an accessibility audit.
 - **N6** No native mobile or desktop capture. See L16 in the survey for the honest alternative.

@@ -15,6 +15,8 @@ You can then select the skills you want to add to your agent or project.
 ## Engineering
 
 - [`visual-pr-review`](skills/engineering/visual-pr-review/SKILL.md): Boot two Git revisions locally and produce reviewer-ready visual, semantic, and runtime evidence for a web change.
+  - [README](skills/engineering/visual-pr-review/README.md)
+  - [Usage examples](skills/engineering/visual-pr-review/docs/usage-examples.md), including shipped local workflows and clearly marked future GitHub, Bitbucket, GitLab, Azure DevOps, API, CLI, schema, image-pair, and lightweight CDP interfaces.
 
 ## Repository layout
 

@@ -94,9 +94,23 @@ node /path/to/visual-pr-review/scripts/visual-pr-review.mjs \
 
 Open `visual-review-output/report.md`.
 
-Full annotated examples: [`examples/configs/minimal.json`](examples/configs/minimal.json) and
-[`examples/configs/full.json`](examples/configs/full.json). Reference for every key:
+Full annotated configurations: [`examples/configs/minimal.json`](examples/configs/minimal.json) and
+[`examples/configs/full.json`](examples/configs/full.json). Reference for every current key:
 [docs/configuration.md](docs/configuration.md).
+
+## Usage examples
+
+See [docs/usage-examples.md](docs/usage-examples.md) for:
+
+- Installation and local branch comparison
+- Static HTML, Node, Python, and Go previews
+- Desktop and mobile viewports
+- Interactive scenarios, masks, impact rules, and focused runs
+- Manual GitHub Actions usage
+- Clearly marked, not-yet-implemented designs for GitHub, Bitbucket, GitLab, Azure DevOps,
+  backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
+
+Only examples under **Available now, v0.3.0** describe executable behavior in this release.
 
 ## CLI
 
