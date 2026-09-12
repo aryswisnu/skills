@@ -32,11 +32,11 @@
   <text x="54" y="246" class="step">01</text><path d="M120 260H369" class="msg"/><text x="245" y="249" class="label">run with base, head, config</text>
 
   <!-- git metadata -->
-  <text x="420" y="306" class="step">02</text><path d="M391 320H629" class="msg"/><text x="510" y="309" class="label">resolve refs + read diff</text>
+  <text x="404" y="290" class="step">02</text><path d="M391 320H629" class="msg"/><text x="510" y="309" class="label">resolve refs, read diff, map impact</text>
   <path d="M629 365H391" class="reply"/><text x="510" y="354" class="label">SHAs, files, patch, statistics</text>
 
   <!-- worktree -->
-  <text x="420" y="411" class="step">03</text><path d="M391 425H629" class="msg"/><text x="510" y="414" class="label">create detached worktrees</text>
+  <text x="404" y="395" class="step">03</text><path d="M391 425H629" class="msg"/><text x="510" y="414" class="label">create detached worktrees</text>
   <path d="M629 470H391" class="reply"/><text x="510" y="459" class="label">base/ and head/ paths</text>
 
   <!-- startup group -->
@@ -47,21 +47,21 @@
   <path d="M1149 710H391" class="reply"/><text x="770" y="699" class="label">head ready on 127.0.0.1:4174</text>
 
   <!-- browser -->
-  <text x="420" y="781" class="step">05</text><path d="M391 795H1409" class="msg"/><text x="900" y="784" class="label">launch Chromium with fixed viewport</text>
+  <text x="420" y="781" class="step">05</text><path d="M391 795H1409" class="msg"/><text x="900" y="784" class="label">launch Chromium for the viewport matrix</text>
 
   <!-- loop -->
-  <rect x="760" y="825" width="800" height="290" rx="14" class="group"/><text x="780" y="852" class="groupTitle">FOR EACH CONFIGURED ROUTE</text>
-  <text x="420" y="881" class="step">06</text><path d="M1409 895H911" class="msg"/><text x="1160" y="884" class="label">open route, wait, capture</text>
+  <rect x="760" y="825" width="800" height="290" rx="14" class="group"/><text x="780" y="852" class="groupTitle">FOR EACH SCENARIO AND VIEWPORT</text>
+  <text x="420" y="881" class="step">06</text><path d="M1409 895H911" class="msg"/><text x="1160" y="884" class="label">replay scenario steps, stabilize, capture</text>
   <path d="M911 940H1409" class="reply"/><text x="1160" y="929" class="label">before.png</text>
-  <path d="M1409 985H1171" class="msg"/><text x="1290" y="974" class="label">same route + state</text>
+  <path d="M1409 985H1171" class="msg"/><text x="1290" y="974" class="label">replay identical steps + state</text>
   <path d="M1171 1030H1409" class="reply"/><text x="1290" y="1019" class="label">after.png</text>
   <path d="M1409 1075H391" class="reply"/><text x="900" y="1064" class="label">matching captures returned</text>
 
   <!-- artifacts -->
-  <text x="420" y="1141" class="step">07</text><path d="M391 1155H490V1190H391" class="msg"/><text x="565" y="1178" class="label">calculate pixel diff</text>
+  <text x="404" y="1130" class="step">07</text><path d="M391 1155H490V1190H391" class="msg"/><text x="565" y="1178" class="label">diff pixels, runtime, semantics</text>
   <path d="M391 1220H1409" class="msg"/><text x="900" y="1209" class="label">compose labeled side-by-side image</text>
   <path d="M1409 1255H391" class="reply"/><text x="900" y="1244" class="label">side-by-side.png</text>
-  <text x="420" y="1286" class="step">08</text><path d="M391 1300H1669" class="msg"/><text x="1030" y="1289" class="label">report.md + manifest.json + image evidence</text>
+  <text x="420" y="1286" class="step">08</text><path d="M391 1300H1669" class="msg"/><text x="1030" y="1289" class="label">report.md + manifest.json + summary.json</text>
 
   <!-- final human boundary -->
   <text x="1588" y="1341" class="step">09</text><path d="M1669 1355H131" class="reply"/><text x="900" y="1344" class="label">review code and visual impact, then decide</text>

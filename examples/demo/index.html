@@ -10,7 +10,10 @@
     main { width: min(760px, calc(100% - 48px)); padding: 56px; background: #19202b; border: 2px solid #65d1ff; box-shadow: 12px 12px 0 #65d1ff; border-radius: 18px; }
     h1 { max-width: 620px; font-size: 3.2rem; line-height: 1.05; }
     p { max-width: 560px; color: #bac7da; }
-    a { display: inline-block; margin-top: 18px; padding: 12px 18px; color: #11151c; background: #65d1ff; text-decoration: none; border-radius: 999px; }
+    button, a.cta { display: inline-block; margin-top: 18px; padding: 12px 18px; color: #11151c; background: #65d1ff; border: 0; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+    #panel[hidden] { display: none; }
+    #panel { margin-top: 24px; padding: 18px; border: 1px dashed #65d1ff; border-radius: 12px; }
+    .rendered-at { color: #55607a; font-size: 0.8rem; }
   </style>
 </head>
 <body>
@@ -18,7 +21,19 @@
     <small>VISUAL PR REVIEW</small>
     <h1>Make the diff easier to see.</h1>
     <p>Authors capture a stable before and after view. Reviewers spend their attention on judgment, not archaeology.</p>
-    <a href="#details">See the evidence</a>
+    <button id="open-evidence" type="button">See the evidence</button>
+    <a class="cta" href="/details">Open details</a>
+    <div id="panel" hidden>
+      <p id="panel-text">Evidence panel: before, after, side-by-side, pixel diff.</p>
+    </div>
+    <p class="rendered-at">rendered at <span id="clock"></span></p>
   </main>
+  <script>
+    document.getElementById('open-evidence').addEventListener('click', () => {
+      document.getElementById('panel').hidden = false;
+    });
+    // Non-deterministic on purpose: the demo config hides it with `capture.hideSelectors`.
+    document.getElementById('clock').textContent = new Date().toISOString();
+  </script>
 </body>
 </html>

@@ -1,89 +1,42 @@
 #!/usr/bin/env node
 
 import { spawn, execFileSync, execSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { chromium } from 'playwright';
 import { PNG } from 'pngjs';
 
-import { normalizeConfig, renderReport, safeArtifactName } from '../src/core.mjs';
+import { parseArgs, usage } from '../src/cli-args.mjs';
+import { publicConfigDigest, normalizeConfig } from '../src/config.mjs';
+import { assertPreviewOrigin, attachRuntimeCollectors, collectSemantic, installLocalNavigationGuard, replaySteps, screenshotMaskLocators, stabilizationCss, summarizeError } from '../src/capture.mjs';
+import { stopProcessTree, worktreePaths } from '../src/cleanup.mjs';
+import { commitRefArgs, parseNulPaths } from '../src/git.mjs';
+import { selectScenarios } from '../src/impact.mjs';
+import { waitForReady } from '../src/network.mjs';
+import { createOwnedOutputDirectory, safeWriteArtifact } from '../src/output.mjs';
+import { cellArtifactNames, hashArtifacts, resolveArtifactPath } from '../src/provenance.mjs';
+import { redactCommand, redactKnownValues } from '../src/redact.mjs';
+import { buildSummary, renderReport } from '../src/report.mjs';
+import { classifyCell, exitCodeFor, runtimeDelta } from '../src/verdict.mjs';
 import {
   buildStartCommand,
   browserLaunchOptions,
   createPixelDiff,
   preserveGitOutput,
   processTreeSpawnOptions,
-  processTreeTarget,
   resolveLocalRoute,
   startCommandForPlatform,
 } from '../src/visual.mjs';
 
-function usage() {
-  return `Usage: visual-pr-review --base <ref> [--head <ref>] [options]
-
-Options:
-  --base <ref>       Base git revision, required
-  --head <ref>       Head git revision, default: HEAD
-  --config <path>    Config path, default: visual-review.json
-  --output <path>    Artifact directory, default: visual-review-output
-  --keep-worktrees   Preserve temporary worktrees for debugging
-  --help             Show this help
-`;
-}
-
-function parseArgs(argv) {
-  const options = {
-    head: 'HEAD',
-    config: 'visual-review.json',
-    output: 'visual-review-output',
-    keepWorktrees: false,
-  };
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index];
-    if (arg === '--help') options.help = true;
-    else if (arg === '--keep-worktrees') options.keepWorktrees = true;
-    else if (['--base', '--head', '--config', '--output'].includes(arg)) {
-      const value = argv[index + 1];
-      if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value`);
-      options[arg.slice(2)] = value;
-      index += 1;
-    } else throw new Error(`unknown argument: ${arg}`);
-  }
-  if (!options.help && !options.base) throw new Error('--base is required');
-  return options;
-}
-
 function git(args, cwd, { trim = true } = {}) {
-  const output = execFileSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    maxBuffer: 100 * 1024 * 1024,
-  });
+  const output = execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 100 * 1024 * 1024 });
   return preserveGitOutput(output, trim);
 }
 
-async function waitForReady(url, timeoutMs, processHandle) {
-  const deadline = Date.now() + timeoutMs;
-  let lastError = 'not ready';
-  while (Date.now() < deadline) {
-    if (processHandle.exitCode !== null) {
-      throw new Error(`preview process exited early with code ${processHandle.exitCode}`);
-    }
-    try {
-      const response = await fetch(url, {
-        redirect: 'follow',
-        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
-      });
-      if (response.ok) return;
-      lastError = `HTTP ${response.status}`;
-    } catch (error) {
-      lastError = error.message;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  throw new Error(`preview did not become ready at ${url}: ${lastError}`);
+function gitBuffer(args, cwd) {
+  return execFileSync('git', args, { cwd, encoding: null, maxBuffer: 100 * 1024 * 1024 });
 }
 
 function startPreview(command, cwd, port, env) {
@@ -111,31 +64,69 @@ function startPreview(command, cwd, port, env) {
   return child;
 }
 
-async function stopPreview(child) {
-  if (!child) return;
-  const target = processTreeTarget(child.pid);
-  try { process.kill(target, 'SIGTERM'); } catch {}
-  await Promise.race([
-    new Promise((resolve) => child.once('exit', resolve)),
-    new Promise((resolve) => setTimeout(resolve, 3000)),
-  ]);
-  try { process.kill(target, 'SIGKILL'); } catch {}
-  await new Promise((resolve) => setTimeout(resolve, 100));
-}
-
-async function captureRoute(browser, baseUrl, route, viewport, outputPath) {
-  const page = await browser.newPage({ viewport });
+async function captureSide(browser, origin, scenario, viewport, capture, outputDir, artifactName) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: viewport.deviceScaleFactor,
+    reducedMotion: capture.reducedMotion ? 'reduce' : 'no-preference',
+  });
+  const page = await context.newPage();
+  const runtime = attachRuntimeCollectors(page, origin);
+  await installLocalNavigationGuard(page, origin);
+  const css = stabilizationCss(capture);
+  const applyCss = async () => {
+    if (css) await page.addStyleTag({ content: css }).catch(() => {});
+  };
   try {
-    await page.goto(resolveLocalRoute(baseUrl, route.path), { waitUntil: 'networkidle' });
-    if (route.waitForSelector) await page.waitForSelector(route.waitForSelector);
-    if (route.waitForMs) await page.waitForTimeout(route.waitForMs);
-    await page.screenshot({ path: outputPath, fullPage: route.fullPage });
+    if (css) await context.addInitScript(({ content }) => {
+      const inject = () => {
+        const style = document.createElement('style');
+        style.textContent = content;
+        (document.head ?? document.documentElement).append(style);
+      };
+      if (document.head) inject();
+      else document.addEventListener('DOMContentLoaded', inject, { once: true });
+    }, { content: css });
+
+    const response = await page.goto(resolveLocalRoute(origin, scenario.path), {
+      waitUntil: capture.waitUntil,
+    });
+    runtime.status = response ? response.status() : null;
+    await applyCss();
+    await replaySteps(page, scenario.steps, origin, runtime);
+    await applyCss();
+    if (scenario.settleMs) await page.waitForTimeout(scenario.settleMs);
+    assertPreviewOrigin(page, origin);
+    runtime.semantic = await collectSemantic(page, scenario.semantic);
+    assertPreviewOrigin(page, origin);
+    const screenshot = await page.screenshot({
+      fullPage: scenario.fullPage,
+      animations: 'disabled',
+      caret: 'hide',
+      mask: screenshotMaskLocators(page, capture, scenario),
+      maskColor: '#ff00ff',
+    });
+    await safeWriteArtifact(outputDir, artifactName, screenshot);
+    runtime.captured = true;
+  } catch (error) {
+    runtime.captureError = summarizeError(error.message);
+    runtime.captured = false;
   } finally {
-    await page.close();
+    await context.close().catch(() => {});
   }
+  return runtime;
 }
 
-async function createSideBySide(browser, beforeBuffer, afterBuffer, outputPath, labels) {
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+async function createSideBySide(browser, beforeBuffer, afterBuffer, outputDir, artifactName, labels) {
   const before = PNG.sync.read(beforeBuffer);
   const after = PNG.sync.read(afterBuffer);
   const width = before.width + after.width + 48;
@@ -153,22 +144,20 @@ async function createSideBySide(browser, beforeBuffer, afterBuffer, outputPath, 
       <section><header>${escapeHtml(labels.before)}</header><img src="${beforeUri}"></section>
       <section><header>${escapeHtml(labels.after)}</header><img src="${afterUri}"></section>
     </main>`);
-    await page.screenshot({ path: outputPath });
+    const screenshot = await page.screenshot({ animations: 'disabled' });
+    await safeWriteArtifact(outputDir, artifactName, screenshot);
   } finally {
     await page.close();
   }
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+function fail(message, code = 2) {
+  console.error(`Error: ${message}`);
+  process.exitCode = code;
 }
 
 async function main() {
+  const startedAt = Date.now();
   let options;
   try {
     options = parseArgs(process.argv.slice(2));
@@ -186,45 +175,114 @@ async function main() {
   const repoRoot = git(['rev-parse', '--show-toplevel'], invocationDir);
   const configPath = path.resolve(invocationDir, options.config);
   const outputDir = path.resolve(invocationDir, options.output);
-  const config = normalizeConfig(JSON.parse(await readFile(configPath, 'utf8')));
-  const baseSha = git(['rev-parse', options.base], repoRoot);
-  const headSha = git(['rev-parse', options.head], repoRoot);
-  const changedFiles = git(['diff', '--name-only', `${baseSha}...${headSha}`], repoRoot)
-    .split('\n').filter(Boolean);
+
+  let config;
+  try {
+    config = normalizeConfig(JSON.parse(await readFile(configPath, 'utf8')));
+  } catch (error) {
+    fail(`${options.config}: ${error.message}`);
+    return;
+  }
+  const digest = publicConfigDigest(config);
+
+  const baseSha = git(commitRefArgs(options.base), repoRoot);
+  const headSha = git(commitRefArgs(options.head), repoRoot);
+  const changedFiles = parseNulPaths(gitBuffer(['diff', '--name-only', '-z', `${baseSha}...${headSha}`, '--'], repoRoot));
   const diffStat = git(['diff', '--stat', `${baseSha}...${headSha}`], repoRoot);
   const codeDiff = git(['diff', '--binary', `${baseSha}...${headSha}`], repoRoot, { trim: false });
 
-  await mkdir(outputDir, { recursive: true });
-  await writeFile(path.join(outputDir, 'changes.patch'), codeDiff);
-  await writeFile(path.join(outputDir, 'changes-stat.txt'), diffStat ? `${diffStat}\n` : '');
+  const allIds = config.scenarios.map((scenario) => scenario.id);
+  let selection;
+  if (options.all) {
+    selection = { scenarioIds: allIds, reason: 'explicit-all-flag', matchedRules: [], unmatchedFiles: [] };
+  } else if (options.scenarios.length > 0) {
+    const unknown = options.scenarios.filter((id) => !allIds.includes(id));
+    if (unknown.length > 0) {
+      fail(`--scenario: unknown scenario(s): ${unknown.join(', ')}`);
+      return;
+    }
+    selection = {
+      scenarioIds: allIds.filter((id) => options.scenarios.includes(id)),
+      reason: 'explicit-scenario-flag',
+      matchedRules: [],
+      unmatchedFiles: [],
+    };
+  } else {
+    selection = selectScenarios(changedFiles, config.impact, allIds);
+  }
+  const selected = config.scenarios.filter((scenario) => selection.scenarioIds.includes(scenario.id));
+  const skippedScenarios = config.scenarios
+    .filter((scenario) => !selection.scenarioIds.includes(scenario.id))
+    .map((scenario) => ({
+      id: scenario.id,
+      name: scenario.name,
+      reason: selection.reason === 'impact-rules'
+        ? 'not selected by impact rules'
+        : `not selected (${selection.reason})`,
+    }));
+
+  try {
+    await createOwnedOutputDirectory(outputDir);
+    await safeWriteArtifact(outputDir, 'changes.patch', codeDiff);
+    await safeWriteArtifact(outputDir, 'changes-stat.txt', diffStat ? `${diffStat}\n` : '');
+  } catch (error) {
+    fail(error.message);
+    return;
+  }
+
   const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'visual-pr-review-'));
   const baseDir = path.join(tempRoot, 'base');
   const headDir = path.join(tempRoot, 'head');
   const processes = [];
+  const worktrees = [];
   let browser;
   let cleanupPromise;
 
   const cleanup = () => {
     if (cleanupPromise) return cleanupPromise;
     cleanupPromise = (async () => {
+      const failures = [];
       if (browser) {
-        try { await browser.close(); } catch {}
+        try { await browser.close(); } catch (error) { failures.push(`browser close: ${error.message}`); }
       }
-      await Promise.all(processes.map(stopPreview));
+      const stopped = await Promise.allSettled(processes.map((child) => stopProcessTree(child)));
+      for (const result of stopped) {
+        if (result.status === 'rejected') failures.push(`preview stop: ${result.reason.message}`);
+      }
       if (!options.keepWorktrees) {
-        for (const dir of [baseDir, headDir]) {
-          try { git(['worktree', 'remove', '--force', dir], repoRoot); } catch {}
+        for (const dir of worktrees) {
+          try { git(['worktree', 'remove', '--force', dir], repoRoot); }
+          catch (error) { failures.push(`git worktree remove ${dir}: ${error.message}`); }
         }
-        await rm(tempRoot, { recursive: true, force: true });
+        let registered = worktreePaths(git(['worktree', 'list', '--porcelain'], repoRoot, { trim: false }))
+          .filter((entry) => worktrees.includes(entry));
+        if (registered.length > 0) {
+          try { git(['worktree', 'prune'], repoRoot); }
+          catch (error) { failures.push(`git worktree prune: ${error.message}`); }
+          registered = worktreePaths(git(['worktree', 'list', '--porcelain'], repoRoot, { trim: false }))
+            .filter((entry) => worktrees.includes(entry));
+        }
+        if (registered.length > 0) {
+          failures.push(`worktree registrations remain: ${registered.join(', ')}; recover with: git -C ${repoRoot} worktree remove --force <path>`);
+        } else {
+          try { await rm(tempRoot, { recursive: true, force: true }); }
+          catch (error) { failures.push(`remove temporary directory ${tempRoot}: ${error.message}`); }
+        }
       } else {
         console.log(`Temporary worktrees preserved at ${tempRoot}`);
       }
+      if (failures.length > 0) throw new Error(`cleanup failed:\n- ${failures.join('\n- ')}\nTemporary state preserved when worktree removal could not be verified.`);
     })();
     return cleanupPromise;
   };
   const handleSignal = (signal) => {
     const exitCode = signal === 'SIGINT' ? 130 : 143;
-    cleanup().finally(() => process.exit(exitCode));
+    cleanup()
+      .then(() => process.exit(exitCode))
+      .catch((error) => {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+      });
   };
   const handleSigint = () => handleSignal('SIGINT');
   const handleSigterm = () => handleSignal('SIGTERM');
@@ -233,25 +291,29 @@ async function main() {
 
   try {
     git(['worktree', 'add', '--detach', baseDir, baseSha], repoRoot);
+    worktrees.push(baseDir);
     git(['worktree', 'add', '--detach', headDir, headSha], repoRoot);
+    worktrees.push(headDir);
 
     if (config.installCommand) {
-      console.log('Installing base revision dependencies...');
-      execSync(config.installCommand, { cwd: baseDir, env: process.env, stdio: 'inherit' });
-      console.log('Installing head revision dependencies...');
-      execSync(config.installCommand, { cwd: headDir, env: process.env, stdio: 'inherit' });
+      for (const [label, dir] of [['base', baseDir], ['head', headDir]]) {
+        console.log(`Installing ${label} revision dependencies...`);
+        execSync(config.installCommand, { cwd: dir, env: process.env, stdio: 'inherit' });
+      }
     }
 
     const basePort = config.basePort;
     const headPort = config.basePort + 1;
+    const baseOrigin = `http://127.0.0.1:${basePort}`;
+    const headOrigin = `http://127.0.0.1:${headPort}`;
     const baseProcess = startPreview(config.startCommand, baseDir, basePort, config.env);
     const headProcess = startPreview(config.startCommand, headDir, headPort, config.env);
     processes.push(baseProcess, headProcess);
 
     try {
       await Promise.all([
-        waitForReady(`http://127.0.0.1:${basePort}${config.readyPath}`, config.startupTimeoutMs, baseProcess),
-        waitForReady(`http://127.0.0.1:${headPort}${config.readyPath}`, config.startupTimeoutMs, headProcess),
+        waitForReady(`${baseOrigin}${config.readyPath}`, config.startupTimeoutMs, baseProcess),
+        waitForReady(`${headOrigin}${config.readyPath}`, config.startupTimeoutMs, headProcess),
       ]);
     } catch (error) {
       throw new Error(`${error.message}\n\nBase logs:\n${baseProcess.getLogs()}\n\nHead logs:\n${headProcess.getLogs()}`);
@@ -259,79 +321,174 @@ async function main() {
 
     browser = await chromium.launch(browserLaunchOptions());
     const browserVersion = browser.version();
-    const results = [];
-    for (const route of config.routes) {
-      const slug = safeArtifactName(route.name);
-      const beforeName = `${slug}-before.png`;
-      const afterName = `${slug}-after.png`;
-      const sideBySideName = `${slug}-side-by-side.png`;
-      const diffName = `${slug}-diff.png`;
-      const beforePath = path.join(outputDir, beforeName);
-      const afterPath = path.join(outputDir, afterName);
-      const sideBySidePath = path.join(outputDir, sideBySideName);
-      const diffPath = path.join(outputDir, diffName);
 
-      console.log(`Capturing ${route.name}...`);
-      await captureRoute(browser, `http://127.0.0.1:${basePort}`, route, config.viewport, beforePath);
-      await captureRoute(browser, `http://127.0.0.1:${headPort}`, route, config.viewport, afterPath);
-      const beforeBuffer = await readFile(beforePath);
-      const afterBuffer = await readFile(afterPath);
-      const diff = createPixelDiff(beforeBuffer, afterBuffer, config.pixelThreshold);
-      await writeFile(diffPath, diff.buffer);
-      await createSideBySide(browser, beforeBuffer, afterBuffer, sideBySidePath, {
-        before: `BEFORE · ${options.base} · ${baseSha.slice(0, 7)}`,
-        after: `AFTER · ${options.head} · ${headSha.slice(0, 7)}`,
-      });
-      results.push({
-        name: route.name,
-        path: route.path,
-        before: beforeName,
-        after: afterName,
-        sideBySide: sideBySideName,
-        diff: diffName,
-        changedPixels: diff.changedPixels,
-        totalPixels: diff.totalPixels,
-        changePercent: diff.changePercent,
-      });
+    const cells = [];
+    const artifactNames = ['changes.patch', 'changes-stat.txt'];
+    for (const scenario of selected) {
+      const evidenceSecrets = [
+        ...Object.values(config.env),
+        ...scenario.steps
+          .filter((step) => step.action === 'fill' && step.secret)
+          .map((step) => step.value),
+      ];
+      for (const viewportName of scenario.viewports) {
+        const viewport = config.viewports.find((entry) => entry.name === viewportName);
+        const names = cellArtifactNames(scenario.id, viewport.name);
+        console.log(`Capturing ${scenario.name} @ ${viewport.name}...`);
+
+        const beforePath = resolveArtifactPath(outputDir, names.before);
+        const afterPath = resolveArtifactPath(outputDir, names.after);
+        const base = redactKnownValues(
+          await captureSide(browser, baseOrigin, scenario, viewport, config.capture, outputDir, names.before),
+          evidenceSecrets,
+        );
+        const head = redactKnownValues(
+          await captureSide(browser, headOrigin, scenario, viewport, config.capture, outputDir, names.after),
+          evidenceSecrets,
+        );
+
+        const artifacts = {};
+        let pixel = null;
+        let sizeMismatch = null;
+        if (base.captured && head.captured) {
+          artifacts.before = names.before;
+          artifacts.after = names.after;
+          const beforeBuffer = await readFile(beforePath);
+          const afterBuffer = await readFile(afterPath);
+          try {
+            const diff = createPixelDiff(beforeBuffer, afterBuffer, config.thresholds.pixelmatch);
+            await safeWriteArtifact(outputDir, names.diff, diff.buffer);
+            artifacts.diff = names.diff;
+            pixel = {
+              changedPixels: diff.changedPixels,
+              totalPixels: diff.totalPixels,
+              changeRatio: diff.totalPixels ? diff.changedPixels / diff.totalPixels : 0,
+            };
+          } catch (error) {
+            sizeMismatch = error.message.replace(/^screenshot dimensions differ: /, '');
+          }
+          await createSideBySide(browser, beforeBuffer, afterBuffer, outputDir, names.sideBySide, {
+            before: `BEFORE · ${options.base} · ${baseSha.slice(0, 7)} · ${viewport.name}`,
+            after: `AFTER · ${options.head} · ${headSha.slice(0, 7)} · ${viewport.name}`,
+          });
+          artifacts.sideBySide = names.sideBySide;
+        } else {
+          if (base.captured) artifacts.before = names.before;
+          if (head.captured) artifacts.after = names.after;
+        }
+        artifactNames.push(...Object.values(artifacts));
+
+        const classified = classifyCell({ pixel, base, head, sizeMismatch, thresholds: config.thresholds });
+        cells.push({
+          scenarioId: scenario.id,
+          scenarioName: scenario.name,
+          path: scenario.path,
+          description: scenario.description,
+          viewport: viewport.name,
+          viewportSize: { width: viewport.width, height: viewport.height },
+          verdict: classified.verdict,
+          reasons: classified.reasons,
+          artifacts,
+          pixel,
+          runtime: {
+            base: runtimeRecord(base),
+            head: runtimeRecord(head),
+            delta: runtimeDelta(base, head),
+          },
+          semantic: {
+            ...classified.semantic,
+            base: base.semantic ?? null,
+            head: head.semantic ?? null,
+          },
+        });
+      }
     }
 
-    const manifest = {
+    const artifactHashes = await hashArtifacts(outputDir, artifactNames);
+    const commandSecrets = [
+      ...Object.values(config.env),
+      ...config.scenarios.flatMap((scenario) => scenario.steps
+        .filter((step) => step.action === 'fill' && step.secret)
+        .map((step) => step.value)),
+    ];
+    const recordedCommand = (command) => redactCommand(redactKnownValues(command, commandSecrets));
+    const provenance = {
+      publicConfigDigest: digest,
+      browser: {
+        version: browserVersion,
+        executable: process.env.VISUAL_REVIEW_BROWSER_PATH ?? 'playwright-managed',
+      },
+      commands: {
+        install: config.installCommand ? recordedCommand(config.installCommand) : null,
+        startTemplate: recordedCommand(config.startCommand),
+        basePreview: recordedCommand(buildStartCommand(config.startCommand, basePort)),
+        headPreview: recordedCommand(buildStartCommand(config.startCommand, headPort)),
+      },
+      envKeys: config.envKeys,
+      ports: { base: basePort, head: headPort },
+      platform: `${process.platform}-${process.arch}`,
+      node: process.version,
+      artifactHashes,
+    };
+
+    const report = {
       generatedAt: new Date().toISOString(),
+      durationMs: Date.now() - startedAt,
       base: { ref: options.base, sha: baseSha },
       head: { ref: options.head, sha: headSha },
       changedFiles,
       diffStat,
-      artifacts: { codeDiff: 'changes.patch', diffStat: 'changes-stat.txt' },
-      capture: {
-        viewport: config.viewport,
-        pixelThreshold: config.pixelThreshold,
-        readyPath: config.readyPath,
-        startupTimeoutMs: config.startupTimeoutMs,
-        ports: { base: basePort, head: headPort },
-        routes: config.routes,
-        browser: {
-          version: browserVersion,
-          executable: process.env.VISUAL_REVIEW_BROWSER_PATH ?? 'playwright-managed',
-        },
-      },
-      results,
+      selection,
+      skippedScenarios,
+      cells,
+      provenance,
     };
-    await writeFile(path.join(outputDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-    await writeFile(path.join(outputDir, 'report.md'), renderReport({
-      baseRef: options.base,
-      baseSha: baseSha.slice(0, 7),
-      headRef: options.head,
-      headSha: headSha.slice(0, 7),
-      changedFiles,
-      diffStat,
-      results,
-    }));
+
+    await safeWriteArtifact(outputDir, 'report.md', renderReport(report));
+    await safeWriteArtifact(
+      outputDir,
+      'summary.json',
+      `${JSON.stringify(buildSummary(report), null, 2)}\n`,
+    );
+    const manifest = {
+      schemaVersion: 2,
+      ...report,
+      config: config.public,
+      artifacts: { codeDiff: 'changes.patch', diffStat: 'changes-stat.txt', report: 'report.md', summary: 'summary.json' },
+      provenance: {
+        ...provenance,
+        artifactHashesNote: 'Self-consistency SHA-256 hashes of every artifact except manifest.json itself; not signed or externally attested',
+        artifactHashes: await hashArtifacts(outputDir, [...artifactNames, 'report.md', 'summary.json']),
+      },
+    };
+    await safeWriteArtifact(
+      outputDir,
+      'manifest.json',
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+
+    const code = exitCodeFor(cells);
     console.log(`Visual review written to ${outputDir}`);
+    if (code !== 0) {
+      console.error('At least one scenario could not be captured. The report is partial.');
+    }
+    process.exitCode = code;
   } finally {
     process.removeListener('SIGINT', handleSigint);
     process.removeListener('SIGTERM', handleSigterm);
     await cleanup();
   }
+}
+
+function runtimeRecord(runtime) {
+  return {
+    status: runtime.status,
+    pageErrors: runtime.pageErrors,
+    consoleErrors: runtime.consoleErrors,
+    failedRequests: runtime.failedRequests,
+    assertionFailures: runtime.assertionFailures,
+    captureError: runtime.captureError ?? null,
+  };
 }
 
 await main();

@@ -6,7 +6,11 @@ export function buildStartCommand(template, port) {
 }
 
 export function startCommandForPlatform(command, platform = process.platform) {
-  return platform === 'win32' ? command : `exec ${command}`;
+  if (platform === 'win32') return command;
+  // `exec FOO=bar cmd` is invalid: the shell treats FOO=bar as the program name.
+  // `env` keeps the assignments while still replacing the shell process.
+  const prefix = /^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/.test(command) ? 'exec env ' : 'exec ';
+  return `${prefix}${command}`;
 }
 
 export function preserveGitOutput(output, trim = true) {

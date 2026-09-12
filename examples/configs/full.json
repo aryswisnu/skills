@@ -1,0 +1,76 @@
+{
+  "installCommand": "npm ci",
+  "startCommand": "npm run preview -- --host 127.0.0.1 --port {port}",
+  "readyPath": "/",
+  "basePort": 4173,
+  "startupTimeoutMs": 120000,
+  "env": { "APP_ENV": "review", "SEED": "42" },
+
+  "viewports": [
+    { "name": "desktop", "width": 1440, "height": 900 },
+    { "name": "tablet", "width": 834, "height": 1112 },
+    { "name": "mobile", "width": 390, "height": 844, "deviceScaleFactor": 2 }
+  ],
+
+  "capture": {
+    "reducedMotion": true,
+    "disableAnimations": true,
+    "hideSelectors": [".relative-timestamp", "[data-testid='live-feed']"],
+    "maskSelectors": [".user-avatar"],
+    "settleMs": 300,
+    "waitUntil": "networkidle"
+  },
+
+  "thresholds": {
+    "pixelmatch": 0.1,
+    "changedRatio": 0.0005,
+    "reviewRatio": 0.02
+  },
+
+  "scenarios": [
+    {
+      "id": "home",
+      "name": "Home",
+      "path": "/",
+      "viewports": ["desktop", "mobile"],
+      "semantic": { "title": true, "textSelectors": ["h1"], "aria": "main" }
+    },
+    {
+      "id": "checkout-empty",
+      "name": "Checkout with an empty cart",
+      "description": "The state a first-time visitor lands on.",
+      "path": "/checkout",
+      "viewports": ["desktop"],
+      "fullPage": true,
+      "steps": [
+        { "action": "waitForSelector", "selector": "[data-testid='cart']" },
+        { "action": "assertVisible", "selector": "[data-testid='empty-state']" }
+      ]
+    },
+    {
+      "id": "checkout-payment-error",
+      "name": "Checkout showing a declined card",
+      "path": "/checkout",
+      "viewports": ["desktop", "tablet"],
+      "steps": [
+        { "action": "fill", "selector": "#card-number", "value": "4000000000000002" },
+        { "action": "fill", "selector": "#card-cvc", "value": "123", "secret": true },
+        { "action": "select", "selector": "#country", "value": "SG" },
+        { "action": "press", "selector": "#card-cvc", "key": "Enter" },
+        { "action": "click", "selector": "#pay" },
+        { "action": "waitForSelector", "selector": "[role='alert']" },
+        { "action": "assertText", "selector": "[role='alert']", "contains": "declined" }
+      ],
+      "semantic": { "title": true, "textSelectors": ["[role='alert']"], "aria": "form" }
+    }
+  ],
+
+  "impact": {
+    "rules": [
+      { "glob": "src/checkout/**", "scenarios": ["checkout-empty", "checkout-payment-error"] },
+      { "globs": ["src/home/**", "src/marketing/**"], "scenarios": ["home"] },
+      { "glob": "**/*.css", "scenarios": ["home", "checkout-empty", "checkout-payment-error"] }
+    ],
+    "smokeScenarios": ["home"]
+  }
+}

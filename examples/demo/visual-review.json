@@ -1,11 +1,53 @@
 {
-  "installCommand": "npm install",
   "startCommand": "node examples/demo/server.mjs {port}",
   "readyPath": "/",
   "basePort": 4317,
   "startupTimeoutMs": 30000,
-  "viewport": { "width": 900, "height": 620 },
-  "routes": [
-    { "name": "Demo home", "path": "/", "fullPage": false, "waitForMs": 100 }
-  ]
+  "viewports": [
+    { "name": "desktop", "width": 900, "height": 620 },
+    { "name": "mobile", "width": 390, "height": 720 }
+  ],
+  "capture": {
+    "reducedMotion": true,
+    "disableAnimations": true,
+    "hideSelectors": [".rendered-at"],
+    "settleMs": 100
+  },
+  "thresholds": { "changedRatio": 0.0005, "reviewRatio": 0.02 },
+  "scenarios": [
+    {
+      "id": "home",
+      "name": "Home",
+      "path": "/",
+      "viewports": ["desktop", "mobile"],
+      "semantic": { "title": true, "textSelectors": ["h1"], "aria": "main" }
+    },
+    {
+      "id": "home-evidence-open",
+      "name": "Home with the evidence panel open",
+      "path": "/",
+      "viewports": ["desktop"],
+      "steps": [
+        { "action": "click", "selector": "#open-evidence" },
+        { "action": "waitForSelector", "selector": "#panel-text" },
+        { "action": "assertVisible", "selector": "#panel-text" }
+      ],
+      "semantic": { "title": true, "textSelectors": ["#panel-text"] }
+    },
+    {
+      "id": "details",
+      "name": "Details",
+      "path": "/details",
+      "viewports": ["desktop"],
+      "semantic": { "title": true, "textSelectors": ["h1"] }
+    }
+  ],
+  "impact": {
+    "rules": [
+      { "glob": "examples/demo/index.html", "scenarios": ["home", "home-evidence-open"] },
+      { "glob": "examples/demo/details.html", "scenarios": ["details"] },
+      { "glob": "src/**", "scenarios": ["home", "details"] }
+    ],
+    "smokeScenarios": ["home"]
+  }
 }

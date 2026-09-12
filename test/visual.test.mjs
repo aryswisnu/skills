@@ -89,3 +89,20 @@ test('createPixelDiff rejects mismatched screenshot dimensions', () => {
   const twoPixels = pngWithPixels([[255, 255, 255, 255], [0, 0, 0, 255]]);
   assert.throws(() => createPixelDiff(onePixel, twoPixels, 0.1), /dimensions differ/);
 });
+
+test('startCommandForPlatform keeps inline environment assignments executable', () => {
+  // `exec FOO=bar cmd` is invalid: exec treats FOO=bar as the program name.
+  assert.equal(
+    startCommandForPlatform('FOO=bar node server.mjs 80', 'linux'),
+    'exec env FOO=bar node server.mjs 80',
+  );
+  assert.equal(
+    startCommandForPlatform('A=1 B=2 npm start', 'darwin'),
+    'exec env A=1 B=2 npm start',
+  );
+  assert.equal(
+    startCommandForPlatform('FOO=bar node server.mjs', 'win32'),
+    'FOO=bar node server.mjs',
+  );
+  assert.equal(startCommandForPlatform('npm start', 'linux'), 'exec npm start');
+});
