@@ -1,11 +1,12 @@
 # Usage Examples
 
-> **Implementation status:** The local Git and browser workflow in [Available now](#available-now-v03x)
-> is implemented and tested in v0.3.x. The provider URL commands and non-web adapters in
+> **Implementation status:** The local Git and browser workflow and the GitHub pull request URL
+> entry point in [Available now](#available-now-v04x) are implemented and tested in v0.4.x. The
+> remaining provider URLs (Bitbucket, GitLab, Azure) and non-web adapters in
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
-## Available now, v0.3.x
+## Available now, v0.4.x
 
 ### Install the skill collection
 
@@ -39,6 +40,22 @@ node /path/to/skills/skills/engineering/visual-pr-review/scripts/visual-pr-revie
 
 The command writes `report.md`, `summary.json`, `manifest.json`, the Git patch and statistics, and
 before, after, and side-by-side PNGs, plus a diff PNG when base and head dimensions match.
+
+### Review a GitHub pull request
+
+From a clone of the repository, pass the pull request URL with `--pr`:
+
+```bash
+node /path/to/skills/skills/engineering/visual-pr-review/scripts/visual-pr-review.mjs \
+  --pr https://github.com/acme/orders/pull/123 \
+  --config visual-review.json \
+  --output visual-review-output
+```
+
+The CLI resolves the PR's base and head SHAs, fetches them, captures evidence, and writes a
+`pr-comment.md` draft next to the report. Add `--post-comment` to publish the comment to the PR;
+posting requires `GITHUB_TOKEN` (or `GH_TOKEN`) in the environment. The default only writes the
+local draft.
 
 ### Minimal web application
 
@@ -229,24 +246,20 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended lightweight, provider-neutral direction. The current
-v0.3.x CLI rejects these commands and configuration keys.
+The following examples describe the intended lightweight, provider-neutral direction. The v0.4.x
+CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v04x));
+the `/visualize-pr` shorthand below, remote description updates, and non-GitHub providers remain
+planned.
 
-### Pull request URL entry point
-
-```text
-/visualize-pr <pull-request-url>
-```
-
-The future workflow will read the change request, resolve exact base and head commits, select the
-appropriate evidence adapters, generate a managed Markdown section, show the draft, and require
-explicit approval before updating the remote description.
-
-### GitHub pull request
+### Slash-command shorthand
 
 ```text
 /visualize-pr https://github.com/acme/orders/pull/123
 ```
+
+This is the future shorthand for the implemented `--pr` flow. It will additionally manage a
+Markdown description section, show the draft, and require explicit approval before updating the
+remote description.
 
 ### Bitbucket Cloud pull request
 

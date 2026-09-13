@@ -23,7 +23,30 @@ test('parseArgs rejects unknown flags and missing values', () => {
   assert.throws(() => parseArgs(['--base', 'main', '--nope']), /unknown argument: --nope/);
   assert.throws(() => parseArgs(['--base']), /--base requires a value/);
   assert.throws(() => parseArgs(['--base', '--head']), /--base requires a value/);
-  assert.throws(() => parseArgs([]), /--base is required/);
+  assert.throws(() => parseArgs([]), /--base or --pr is required/);
+});
+
+test('parseArgs accepts --pr as the revision source', () => {
+  const options = parseArgs(['--pr', 'https://github.com/acme/orders/pull/123']);
+  assert.equal(options.pr, 'https://github.com/acme/orders/pull/123');
+  assert.equal(options.base, undefined);
+  assert.equal(options.postComment, false);
+});
+
+test('parseArgs rejects --pr combined with --base or --head', () => {
+  assert.throws(
+    () => parseArgs(['--pr', 'https://github.com/a/b/pull/1', '--base', 'main']),
+    /--pr cannot be combined with --base/,
+  );
+  assert.throws(
+    () => parseArgs(['--pr', 'https://github.com/a/b/pull/1', '--head', 'HEAD']),
+    /--pr cannot be combined with --head/,
+  );
+});
+
+test('parseArgs requires --pr for --post-comment', () => {
+  assert.throws(() => parseArgs(['--base', 'main', '--post-comment']), /--post-comment requires --pr/);
+  assert.equal(parseArgs(['--pr', 'https://github.com/a/b/pull/1', '--post-comment']).postComment, true);
 });
 
 test('parseArgs rejects combining --all with --scenario', () => {

@@ -1,5 +1,21 @@
 # Verification
 
+## v0.4.0 GitHub PR support, 2026-09-13
+
+- Added `--pr <github-url>` and `--post-comment`. `--pr` parses the URL, resolves base and head SHAs
+  through the GitHub REST API (`GITHUB_TOKEN`/`GH_TOKEN`, or unauthenticated for public repos),
+  fetches both commits, runs the normal capture pipeline, and writes a `pr-comment.md` draft.
+  `--post-comment` publishes the draft as a PR comment and requires a token.
+- New modules: `src/pr-url.mjs`, `src/provider-github.mjs`, `src/pr-comment.mjs`. New tests:
+  `test/pr-url.test.mjs`, `test/provider-github.test.mjs`, `test/pr-comment.test.mjs`,
+  `test/pr-cli.test.mjs` (a full `--pr` flow against a local bare remote and a mock GitHub API,
+  exercised with real Chromium).
+- Verified against live GitHub: `resolvePr` resolved `nodejs/node#66015` to full 40-char base and
+  head SHAs, refs, and title without a token.
+- `npm test`: 122 tests, 122 passed, 0 failed, 0 skipped.
+- `git fetch origin <baseSha> <headSha>` confirmed to materialize both commits against a local bare
+  remote before worktree creation.
+
 ## v0.3.1 Astra remediation, 2026-09-13
 
 The Astra audit findings were addressed with a leaner `SKILL.md`, corrected safety and selection

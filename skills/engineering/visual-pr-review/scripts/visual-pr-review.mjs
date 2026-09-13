@@ -30,6 +30,10 @@ import {
   startCommandForPlatform,
 } from '../src/visual.mjs';
 
+import { parsePrUrl } from '../src/pr-url.mjs';
+import { githubTokenFrom, postPrComment, resolvePr } from '../src/provider-github.mjs';
+import { buildPrComment } from '../src/pr-comment.mjs';
+
 function git(args, cwd, { trim = true } = {}) {
   const output = execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 100 * 1024 * 1024 });
   return preserveGitOutput(output, trim);
@@ -80,6 +84,15 @@ function runInstall(command, cwd, processes) {
       else reject(new Error(`Command failed: install exited with ${signal ? `signal ${signal}` : `code ${code}`}`));
     });
   });
+}
+
+function fetchPrCommits(repoRoot, baseSha, headSha, token) {
+  const args = ['fetch', '--quiet', 'origin', baseSha, headSha];
+  if (token) {
+    const auth = Buffer.from(`x-access-token:${token}`).toString('base64');
+    args.unshift('-c', `http.extraheader=AUTHORIZATION: basic ${auth}`);
+  }
+  git(args, repoRoot);
 }
 
 async function captureSide(browser, origin, scenario, viewport, capture, outputDir, artifactName) {
@@ -202,6 +215,17 @@ async function main() {
     return;
   }
   const digest = publicConfigDigest(config);
+
+  let pr = null;
+  if (options.pr) {
+    pr = parsePrUrl(options.pr);
+    const token = githubTokenFrom(process.env);
+    const resolved = await resolvePr(token, pr.owner, pr.repo, pr.number);
+    pr = { ...pr, ...resolved };
+    fetchPrCommits(repoRoot, resolved.baseSha, resolved.headSha, token);
+    options.base = resolved.baseSha;
+    options.head = resolved.headSha;
+  }
 
   const baseSha = git(commitRefArgs(options.base), repoRoot);
   const headSha = git(commitRefArgs(options.head), repoRoot);
@@ -551,6 +575,19 @@ async function main() {
       console.error('At least one scenario could not be captured. The report is partial.');
     }
     process.exitCode = code;
+
+    if (pr) {
+      const comment = buildPrComment(report, pr);
+      await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
+      console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
+      if (options.postComment) {
+        phase = 'pr-comment-post';
+        const token = githubTokenFrom(process.env);
+        if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
+        const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
+        console.log(`Posted comment: ${posted.htmlUrl}`);
+      }
+    }
   } catch (error) {
     runError = error;
   } finally {

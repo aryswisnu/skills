@@ -104,20 +104,23 @@ Full annotated configurations: [`examples/configs/minimal.json`](examples/config
 See [docs/usage-examples.md](docs/usage-examples.md) for:
 
 - Installation and local branch comparison
+- A GitHub pull request URL (`--pr`), with a draft comment and opt-in posting
 - Static HTML, Node, Python, and Go previews
 - Desktop and mobile viewports
 - Interactive scenarios, masks, impact rules, and focused runs
 - Manual GitHub Actions usage
-- Clearly marked, not-yet-implemented designs for GitHub, Bitbucket, GitLab, Azure DevOps,
-  backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
+- Clearly marked, not-yet-implemented designs for Bitbucket, GitLab, Azure DevOps,
+  GitHub description-update, backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
 
-Only examples under **Available now, v0.3.x** describe executable behavior in this release.
+Only examples under **Available now, v0.4.x** describe executable behavior in this release.
 
 ## CLI
 
 ```text
---base <ref>       Base git revision, required
+--base <ref>       Base git revision, required unless --pr is used
 --head <ref>       Head git revision, default: HEAD
+--pr <url>         GitHub pull request URL; resolves base and head SHAs
+--post-comment     Post the generated review as a PR comment (requires --pr)
 --config <path>    Config path, default: visual-review.json
 --output <path>    Artifact directory, default: visual-review-output
 --scenario <id>    Capture only this scenario, repeatable, overrides impact rules

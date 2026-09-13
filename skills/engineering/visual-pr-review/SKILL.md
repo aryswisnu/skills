@@ -1,7 +1,7 @@
 ---
 name: visual-pr-review
-description: Compare two Git revisions of a browser-rendered web app.
-version: 0.3.1
+description: Compare two Git revisions or a GitHub PR URL of a browser-rendered web app.
+version: 0.4.0
 author: Arys
 license: MIT
 platforms: [linux, macos]
@@ -17,11 +17,13 @@ runtime, and provenance evidence for a human reviewer. The evidence never approv
 
 ## When to Use
 
-Use this skill when a web change must be compared across two Git revisions and both revisions can
-provide deterministic local HTTP previews.
+Use this skill when a web change must be compared across two Git revisions, or a GitHub pull
+request URL should be resolved and reviewed, and both revisions can provide deterministic local
+HTTP previews.
 
 Do not load it for backend-only changes, generic testing, single-page screenshots, supplied image
-pairs, or code without a browser-rendered surface. Those adapters are planned, not shipped.
+pairs, or code without a browser-rendered surface. Those adapters, and non-GitHub providers, are
+planned, not shipped.
 
 ## Prerequisites
 
@@ -53,6 +55,20 @@ node <visual-pr-review-directory>/scripts/visual-pr-review.mjs \
 ```
 
 Use a fresh output path for every attempt. The CLI refuses pre-existing output directories.
+
+To review a GitHub pull request, run from a clone of the repository and pass its URL:
+
+```bash
+node <visual-pr-review-directory>/scripts/visual-pr-review.mjs \
+  --pr https://github.com/<owner>/<repo>/pull/<number> \
+  --config visual-review.json \
+  --output visual-review-output
+```
+
+This resolves the PR's base and head SHAs, fetches them, captures evidence, and writes a draft
+comment to `pr-comment.md`. Add `--post-comment` to publish the comment to the PR (requires
+`GITHUB_TOKEN` or `GH_TOKEN` in the environment); without it, only the local draft is written.
+Other providers are not yet implemented.
 
 ## Workflow and Completion Contract
 
