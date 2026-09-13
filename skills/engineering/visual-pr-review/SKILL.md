@@ -1,6 +1,6 @@
 ---
 name: visual-pr-review
-description: Compare two Git revisions or a GitHub PR URL, for web or backend changes.
+description: Use when reviewing a GitHub PR or two Git revisions; generate browser evidence for web changes or a diff summary and change map for backend changes.
 version: 0.5.0
 author: Arys
 license: MIT
@@ -27,12 +27,19 @@ single-page screenshots, and supplied image pairs remain planned, not shipped.
 
 ## Prerequisites
 
+For every mode:
+
 - Git and Node.js 20 or newer.
-- Both revisions available locally.
-- A trusted or sandboxed repository. Its install, build, start, and application code will run.
+- Both revisions available locally, or a GitHub PR URL resolvable from the repository clone.
+- A trusted or sandboxed repository. Its install, build, start, and application code may run.
+
+For web evidence only:
+
 - A reproducible command that starts each revision on the supplied `{port}`.
 - Playwright Chromium, or a compatible executable selected with `VISUAL_REVIEW_BROWSER_PATH`.
 - A valid `visual-review.json` in the application repository.
+
+Backend mode (`--backend`) does not require a preview command, browser, or `visual-review.json`.
 
 ## Conditional References
 

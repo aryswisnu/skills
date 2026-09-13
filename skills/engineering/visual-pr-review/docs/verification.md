@@ -1,5 +1,12 @@
 # Verification
 
+## Reviewer-facing documentation, 2026-09-14
+
+- Added complete rendered web and backend PR comment examples plus a real CLI-generated side-by-side
+  artifact.
+- Expanded the root and skill READMEs around the reviewer problem, outcomes, supported modes,
+  publication boundary, and direct installation path.
+
 ## v0.5.0 Backend support, 2026-09-13
 
 - Added `--backend`: removes the frontend-only gate. For a non-web change, the CLI emits a change

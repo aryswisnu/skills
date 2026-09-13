@@ -1,12 +1,12 @@
 # Usage Examples
 
-> **Implementation status:** The local Git and browser workflow and the GitHub pull request URL
-> entry point in [Available now](#available-now-v04x) are implemented and tested in v0.4.x. The
-> remaining provider URLs (Bitbucket, GitLab, Azure) and non-web adapters in
+> **Implementation status:** The local Git and browser workflow, GitHub pull request URL entry point,
+> and backend diff-summary path in [Available now](#available-now-v050) are implemented and tested
+> in v0.5.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
-## Available now, v0.4.x
+## Available now, v0.5.0
 
 ### Install the skill collection
 
@@ -57,6 +57,9 @@ The CLI resolves the PR's base and head SHAs, fetches them, captures evidence, a
 a `visual-review-assets` branch, embed them in the comment, and publish it; posting requires
 `GITHUB_TOKEN` (or `GH_TOKEN`) with write access to the repository. The default only writes the
 local draft.
+
+See [What the PR comment looks like](pr-comment-examples.md) for complete rendered web and backend
+examples. The current release posts a comment; it does not modify the pull request description.
 
 ### Backend or non-web change
 
@@ -262,8 +265,8 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended lightweight, provider-neutral direction. The v0.4.x
-CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v04x));
+The following examples describe the intended lightweight, provider-neutral direction. The v0.5.0
+CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v050));
 the `/visualize-pr` shorthand below, remote description updates, and non-GitHub providers remain
 planned.
 
