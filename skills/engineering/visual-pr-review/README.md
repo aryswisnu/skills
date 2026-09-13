@@ -24,12 +24,14 @@ and non-goals.
 - Collision-resistant per-cell `before|after|side-by-side|diff.png` paths listed in `summary.json`
 - `failure.json` — phase, redacted error, and cleanup outcome for infrastructure failures after output creation
 - `changes.patch` — full binary-safe git patch, plus `changes-stat.txt`
+- `pr-comment.md` — draft PR comment with a verdict table and embedded side-by-side images (produced with `--pr`)
 
 ## Capabilities
 
 | | |
 | --- | --- |
 | **Two live revisions** | Both revisions are checked out into detached worktrees and started on separate local ports. Nothing is stored as a baseline. |
+| **Pull request URL** | `--pr <github-url>` resolves base and head SHAs, runs the same capture, and (with `--post-comment`) uploads the images and posts the review as a PR comment. |
 | **Scenario replay** | A validated action list (`goto`, `click`, `fill`, `press`, `select`, `waitForSelector`, `assertVisible`, `assertText`) is replayed identically on base and head. |
 | **Capture matrix** | Scenario x viewport, with deterministic artifact names. |
 | **Deterministic capture** | Reduced motion, animations disabled, caret hidden, plus configurable `hideSelectors` and `maskSelectors`. |
