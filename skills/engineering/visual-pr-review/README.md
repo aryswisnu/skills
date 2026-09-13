@@ -45,6 +45,12 @@ and non-goals.
 
 ![Visual PR Review sequence](docs/visual-pr-review-sequence.svg)
 
+## How to use
+
+![Visualize a PR usage flow](docs/visualize-pr-usage.svg)
+
+Editable source: [docs/visualize-pr-usage.excalidraw](docs/visualize-pr-usage.excalidraw) (open at excalidraw.com).
+
 ## Quick start
 
 ```bash
