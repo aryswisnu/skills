@@ -31,7 +31,7 @@ import {
 } from '../src/visual.mjs';
 
 import { parsePrUrl } from '../src/pr-url.mjs';
-import { githubTokenFrom, postPrComment, resolvePr } from '../src/provider-github.mjs';
+import { ensureAssetsBranch, githubTokenFrom, postPrComment, resolvePr, uploadFile } from '../src/provider-github.mjs';
 import { buildPrComment } from '../src/pr-comment.mjs';
 
 function git(args, cwd, { trim = true } = {}) {
@@ -93,6 +93,21 @@ function fetchPrCommits(repoRoot, baseSha, headSha, token) {
     args.unshift('-c', `http.extraheader=AUTHORIZATION: basic ${auth}`);
   }
   git(args, repoRoot);
+}
+
+async function uploadCellImages(token, pr, outputDir, cells) {
+  const branch = 'visual-review-assets';
+  await ensureAssetsBranch(token, pr.owner, pr.repo, branch);
+  const runId = `pr-${pr.number}-${Date.now()}`;
+  const images = {};
+  for (const cell of cells) {
+    if (!cell.artifacts || !cell.artifacts.sideBySide) continue;
+    const name = cell.artifacts.sideBySide;
+    const buffer = await readFile(path.join(outputDir, name));
+    const url = await uploadFile(token, pr.owner, pr.repo, branch, `${runId}/${name}`, buffer);
+    if (url) images[`${cell.scenarioId}--${cell.viewport}`] = url;
+  }
+  return images;
 }
 
 async function captureSide(browser, origin, scenario, viewport, capture, outputDir, artifactName) {
@@ -577,13 +592,18 @@ async function main() {
     process.exitCode = code;
 
     if (pr) {
-      const comment = buildPrComment(report, pr);
+      const token = githubTokenFrom(process.env);
+      let comment = buildPrComment(report, pr);
+      if (options.postComment) {
+        if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
+        phase = 'pr-asset-upload';
+        const images = await uploadCellImages(token, pr, outputDir, report.cells);
+        comment = buildPrComment(report, pr, images);
+      }
       await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
       console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
       if (options.postComment) {
         phase = 'pr-comment-post';
-        const token = githubTokenFrom(process.env);
-        if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
         const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
         console.log(`Posted comment: ${posted.htmlUrl}`);
       }

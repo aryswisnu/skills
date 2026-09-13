@@ -53,8 +53,9 @@ node /path/to/skills/skills/engineering/visual-pr-review/scripts/visual-pr-revie
 ```
 
 The CLI resolves the PR's base and head SHAs, fetches them, captures evidence, and writes a
-`pr-comment.md` draft next to the report. Add `--post-comment` to publish the comment to the PR;
-posting requires `GITHUB_TOKEN` (or `GH_TOKEN`) in the environment. The default only writes the
+`pr-comment.md` draft next to the report. Add `--post-comment` to upload the side-by-side images to
+a `visual-review-assets` branch, embed them in the comment, and publish it; posting requires
+`GITHUB_TOKEN` (or `GH_TOKEN`) with write access to the repository. The default only writes the
 local draft.
 
 ### Minimal web application

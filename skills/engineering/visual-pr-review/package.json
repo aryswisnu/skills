@@ -1,6 +1,6 @@
 {
   "name": "visual-pr-review",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Boot two git revisions locally and produce visual, semantic and runtime evidence for a web change.",
   "type": "module",
   "bin": {

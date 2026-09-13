@@ -13,9 +13,9 @@ const report = {
   base: { ref: 'main', sha: 'abc1234567890'.padEnd(40, '0') },
   head: { ref: 'feature/decline', sha: 'def5678901234'.padEnd(40, '0') },
   cells: [
-    { scenarioName: 'Home', viewport: 'desktop', verdict: 'unchanged', reasons: [] },
-    { scenarioName: 'Checkout', viewport: 'desktop', verdict: 'review-required', reasons: ['semantic change in text.h1'] },
-    { scenarioName: 'Checkout', viewport: 'mobile', verdict: 'capture-failed', reasons: ['head capture failed'] },
+    { scenarioId: 'home', scenarioName: 'Home', viewport: 'desktop', verdict: 'unchanged', reasons: [] },
+    { scenarioId: 'checkout', scenarioName: 'Checkout', viewport: 'desktop', verdict: 'review-required', reasons: ['semantic change in text.h1'] },
+    { scenarioId: 'checkout', scenarioName: 'Checkout', viewport: 'mobile', verdict: 'capture-failed', reasons: ['head capture failed'] },
   ],
   skippedScenarios: [{ name: 'Account' }],
 };
@@ -36,9 +36,24 @@ test('buildPrComment renders a header, verdict table, attention list and skipped
 
 test('buildPrComment omits the attention and skipped sections when empty', () => {
   const markdown = buildPrComment(
-    { ...report, cells: [{ scenarioName: 'Home', viewport: 'desktop', verdict: 'unchanged', reasons: [] }], skippedScenarios: [] },
+    { ...report, cells: [{ scenarioId: 'home', scenarioName: 'Home', viewport: 'desktop', verdict: 'unchanged', reasons: [] }], skippedScenarios: [] },
     pr,
   );
   assert.doesNotMatch(markdown, /Needs attention/);
   assert.doesNotMatch(markdown, /Skipped:/);
+});
+
+test('buildPrComment embeds side-by-side images when supplied', () => {
+  const images = {
+    'home--desktop': 'https://raw.githubusercontent.com/acme/orders/visual-review-assets/run/home--desktop-side-by-side.png',
+  };
+  const markdown = buildPrComment(report, pr, images);
+  assert.match(markdown, /## Evidence/);
+  assert.match(markdown, /### Home @ desktop/);
+  assert.match(
+    markdown,
+    /!\[Home desktop\]\(https:\/\/raw\.githubusercontent\.com\/acme\/orders\/visual-review-assets\/run\/home--desktop-side-by-side\.png\)/,
+  );
+  assert.match(markdown, /images are embedded above/);
+  assert.doesNotMatch(markdown, /### Checkout @ mobile/);
 });

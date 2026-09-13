@@ -1,5 +1,16 @@
 # Verification
 
+## v0.4.1 Image embedding, 2026-09-13
+
+- `--post-comment` now uploads the side-by-side PNGs to a `visual-review-assets` branch (created via
+  the git refs API, files added via the contents API) and embeds them in the comment via
+  `raw.githubusercontent.com` URLs. The draft (`--pr` without `--post-comment`) still writes no
+  remote state.
+- Verified live: created the branch, uploaded a test PNG, fetched the raw URL (HTTP 200,
+  `image/png`), then deleted the branch. GitHub's contents API does not auto-create branches, so
+  `ensureAssetsBranch` creates it first via `POST /git/refs`.
+- `npm test`: 127 tests, 127 passed, 0 failed, 0 skipped.
+
 ## v0.4.0 GitHub PR support, 2026-09-13
 
 - Added `--pr <github-url>` and `--post-comment`. `--pr` parses the URL, resolves base and head SHAs

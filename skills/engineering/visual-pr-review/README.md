@@ -104,7 +104,7 @@ Full annotated configurations: [`examples/configs/minimal.json`](examples/config
 See [docs/usage-examples.md](docs/usage-examples.md) for:
 
 - Installation and local branch comparison
-- A GitHub pull request URL (`--pr`), with a draft comment and opt-in posting
+- A GitHub pull request URL (`--pr`), with a draft comment, embedded side-by-side images, and opt-in posting
 - Static HTML, Node, Python, and Go previews
 - Desktop and mobile viewports
 - Interactive scenarios, masks, impact rules, and focused runs
@@ -120,7 +120,7 @@ Only examples under **Available now, v0.4.x** describe executable behavior in th
 --base <ref>       Base git revision, required unless --pr is used
 --head <ref>       Head git revision, default: HEAD
 --pr <url>         GitHub pull request URL; resolves base and head SHAs
---post-comment     Post the generated review as a PR comment (requires --pr)
+--post-comment     Upload evidence, embed images, and post as a PR comment (requires --pr)
 --config <path>    Config path, default: visual-review.json
 --output <path>    Artifact directory, default: visual-review-output
 --scenario <id>    Capture only this scenario, repeatable, overrides impact rules

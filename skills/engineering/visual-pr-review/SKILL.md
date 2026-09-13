@@ -1,7 +1,7 @@
 ---
 name: visual-pr-review
 description: Compare two Git revisions or a GitHub PR URL of a browser-rendered web app.
-version: 0.4.0
+version: 0.4.1
 author: Arys
 license: MIT
 platforms: [linux, macos]
@@ -66,8 +66,9 @@ node <visual-pr-review-directory>/scripts/visual-pr-review.mjs \
 ```
 
 This resolves the PR's base and head SHAs, fetches them, captures evidence, and writes a draft
-comment to `pr-comment.md`. Add `--post-comment` to publish the comment to the PR (requires
-`GITHUB_TOKEN` or `GH_TOKEN` in the environment); without it, only the local draft is written.
+comment to `pr-comment.md`. Add `--post-comment` to upload the side-by-side images to a
+`visual-review-assets` branch, embed them in the comment, and publish it (requires `GITHUB_TOKEN`
+or `GH_TOKEN` with write access to the repository). Without it, only the local draft is written.
 Other providers are not yet implemented.
 
 ## Workflow and Completion Contract

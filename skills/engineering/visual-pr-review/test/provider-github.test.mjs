@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { githubTokenFrom, postPrComment, resolvePr } from '../src/provider-github.mjs';
+import { ensureAssetsBranch, githubTokenFrom, postPrComment, resolvePr, uploadFile } from '../src/provider-github.mjs';
 
 function jsonResponse(body, status = 200) {
   return {
@@ -76,4 +76,54 @@ test('githubTokenFrom prefers GITHUB_TOKEN then GH_TOKEN', () => {
   assert.equal(githubTokenFrom({ GH_TOKEN: 'b' }), 'b');
   assert.equal(githubTokenFrom({ GITHUB_TOKEN: 'a', GH_TOKEN: 'b' }), 'a');
   assert.equal(githubTokenFrom({}), null);
+});
+
+test('ensureAssetsBranch creates the branch when it is missing', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    if (url.endsWith('/git/ref/heads/visual-review-assets')) return jsonResponse({ message: 'Not Found' }, 404);
+    if (url.endsWith('/repos/acme/orders')) return jsonResponse({ default_branch: 'main' });
+    if (url.endsWith('/git/ref/heads/main')) return jsonResponse({ ref: 'refs/heads/main', object: { sha: 'main-sha' } });
+    if (url.endsWith('/git/refs') && init.method === 'POST') return jsonResponse({ ref: 'refs/heads/visual-review-assets' }, 201);
+    throw new Error(`unexpected request: ${init.method ?? 'GET'} ${url}`);
+  };
+  await ensureAssetsBranch('tok', 'acme', 'orders', 'visual-review-assets', fetchImpl);
+  const create = calls.find((c) => c.url.endsWith('/git/refs') && c.init.method === 'POST');
+  assert.ok(create, 'expected a branch-create POST');
+  assert.deepEqual(JSON.parse(create.init.body), { ref: 'refs/heads/visual-review-assets', sha: 'main-sha' });
+});
+
+test('ensureAssetsBranch is a no-op when the branch exists', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.endsWith('/git/ref/heads/visual-review-assets')) return jsonResponse({ ref: 'refs/heads/visual-review-assets' });
+    throw new Error(`unexpected request: ${url}`);
+  };
+  await ensureAssetsBranch('tok', 'acme', 'orders', 'visual-review-assets', fetchImpl);
+  assert.equal(calls.length, 1);
+});
+
+test('uploadFile PUTs base64 content and returns the download URL', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    return jsonResponse({ content: { download_url: 'https://raw.githubusercontent.com/acme/orders/visual-review-assets/run/x.png' } }, 201);
+  };
+  const url = await uploadFile('tok', 'acme', 'orders', 'visual-review-assets', 'run/x.png', Buffer.from([1, 2, 3]), fetchImpl);
+  assert.equal(calls[0].url, 'https://api.github.com/repos/acme/orders/contents/run/x.png');
+  assert.equal(calls[0].init.method, 'PUT');
+  const body = JSON.parse(calls[0].init.body);
+  assert.equal(body.branch, 'visual-review-assets');
+  assert.equal(body.content, Buffer.from([1, 2, 3]).toString('base64'));
+  assert.equal(url, 'https://raw.githubusercontent.com/acme/orders/visual-review-assets/run/x.png');
+});
+
+test('uploadFile surfaces the API message on failure', async () => {
+  const fetchImpl = async () => jsonResponse({ message: 'Branch not found' }, 404);
+  await assert.rejects(
+    () => uploadFile('tok', 'acme', 'orders', 'visual-review-assets', 'run/x.png', Buffer.from([1]), fetchImpl),
+    /GitHub asset upload failed.*HTTP 404: Branch not found/,
+  );
 });
