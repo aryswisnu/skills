@@ -33,6 +33,12 @@ test('parseArgs accepts --pr as the revision source', () => {
   assert.equal(options.postComment, false);
 });
 
+test('parseArgs accepts --backend without requiring a config', () => {
+  const options = parseArgs(['--base', 'main', '--backend']);
+  assert.equal(options.backend, true);
+  assert.equal(options.config, 'visual-review.json');
+});
+
 test('parseArgs rejects --pr combined with --base or --head', () => {
   assert.throws(
     () => parseArgs(['--pr', 'https://github.com/a/b/pull/1', '--base', 'main']),

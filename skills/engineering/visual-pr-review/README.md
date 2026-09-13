@@ -32,6 +32,7 @@ and non-goals.
 | --- | --- |
 | **Two live revisions** | Both revisions are checked out into detached worktrees and started on separate local ports. Nothing is stored as a baseline. |
 | **Pull request URL** | `--pr <github-url>` resolves base and head SHAs, runs the same capture, and (with `--post-comment`) uploads the images and posts the review as a PR comment. |
+| **Backend / non-web** | `--backend` analyzes the diff and emits a change summary plus an editorial architecture diagram (`architecture.svg`), no browser or config required. |
 | **Scenario replay** | A validated action list (`goto`, `click`, `fill`, `press`, `select`, `waitForSelector`, `assertVisible`, `assertText`) is replayed identically on base and head. |
 | **Capture matrix** | Scenario x viewport, with deterministic artifact names. |
 | **Deterministic capture** | Reduced motion, animations disabled, caret hidden, plus configurable `hideSelectors` and `maskSelectors`. |
@@ -113,6 +114,7 @@ See [docs/usage-examples.md](docs/usage-examples.md) for:
 
 - Installation and local branch comparison
 - A GitHub pull request URL (`--pr`), with a draft comment, embedded side-by-side images, and opt-in posting
+- Backend / non-web changes (`--backend`), with a change summary and architecture diagram
 - Static HTML, Node, Python, and Go previews
 - Desktop and mobile viewports
 - Interactive scenarios, masks, impact rules, and focused runs
@@ -128,6 +130,7 @@ Only examples under **Available now, v0.4.x** describe executable behavior in th
 --base <ref>       Base git revision, required unless --pr is used
 --head <ref>       Head git revision, default: HEAD
 --pr <url>         GitHub pull request URL; resolves base and head SHAs
+--backend          Analyze the diff and emit a change summary + architecture diagram (no browser)
 --post-comment     Upload evidence, embed images, and post as a PR comment (requires --pr)
 --config <path>    Config path, default: visual-review.json
 --output <path>    Artifact directory, default: visual-review-output

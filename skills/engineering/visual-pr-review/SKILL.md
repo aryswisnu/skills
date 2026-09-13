@@ -1,7 +1,7 @@
 ---
 name: visual-pr-review
-description: Compare two Git revisions or a GitHub PR URL of a browser-rendered web app.
-version: 0.4.1
+description: Compare two Git revisions or a GitHub PR URL, for web or backend changes.
+version: 0.5.0
 author: Arys
 license: MIT
 platforms: [linux, macos]
@@ -17,13 +17,13 @@ runtime, and provenance evidence for a human reviewer. The evidence never approv
 
 ## When to Use
 
-Use this skill when a web change must be compared across two Git revisions, or a GitHub pull
-request URL should be resolved and reviewed, and both revisions can provide deterministic local
-HTTP previews.
+Use this skill to compare two Git revisions or review a GitHub pull request URL, whether the
+change is web-rendered (browser screenshots) or backend (a diff summary plus an architecture
+diagram).
 
-Do not load it for backend-only changes, generic testing, single-page screenshots, supplied image
-pairs, or code without a browser-rendered surface. Those adapters, and non-GitHub providers, are
-planned, not shipped.
+Web changes need deterministic local HTTP previews. For backend-only changes, run with `--backend`
+to emit a change summary and an architecture diagram without a browser. Non-GitHub providers,
+single-page screenshots, and supplied image pairs remain planned, not shipped.
 
 ## Prerequisites
 
@@ -70,6 +70,16 @@ comment to `pr-comment.md`. Add `--post-comment` to upload the side-by-side imag
 `visual-review-assets` branch, embed them in the comment, and publish it (requires `GITHUB_TOKEN`
 or `GH_TOKEN` with write access to the repository). Without it, only the local draft is written.
 Other providers are not yet implemented.
+
+For a backend or non-web change, add `--backend` (no config or browser required):
+
+```bash
+node <visual-pr-review-directory>/scripts/visual-pr-review.mjs \
+  --base origin/main --head HEAD --backend --output visual-review-output
+```
+
+This writes `report.md` (a change summary), `architecture.svg` (an editorial change map), and
+`summary.json` from the diff.
 
 ## Workflow and Completion Contract
 

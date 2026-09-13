@@ -33,6 +33,7 @@ import {
 import { parsePrUrl } from '../src/pr-url.mjs';
 import { ensureAssetsBranch, githubTokenFrom, postPrComment, resolvePr, uploadFile } from '../src/provider-github.mjs';
 import { buildPrComment } from '../src/pr-comment.mjs';
+import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, parseNameStatus, parseNumstat, summarizeChange } from '../src/backend.mjs';
 
 function git(args, cwd, { trim = true } = {}) {
   const output = execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 100 * 1024 * 1024 });
@@ -108,6 +109,49 @@ async function uploadCellImages(token, pr, outputDir, cells) {
     if (url) images[`${cell.scenarioId}--${cell.viewport}`] = url;
   }
   return images;
+}
+
+async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, changedFiles, diffStat, codeDiff, pr }) {
+  const nameStatus = parseNameStatus(git(['diff', '--name-status', `${baseSha}...${headSha}`], repoRoot));
+  const numstat = parseNumstat(git(['diff', '--numstat', `${baseSha}...${headSha}`], repoRoot));
+  const summary = summarizeChange(nameStatus, numstat);
+
+  await createOwnedOutputDirectory(outputDir);
+  await safeWriteArtifact(outputDir, 'changes.patch', codeDiff);
+  await safeWriteArtifact(outputDir, 'changes-stat.txt', diffStat ? `${diffStat}\n` : '');
+  await safeWriteArtifact(outputDir, 'report.md', `${buildChangeSummary(summary, baseSha, headSha)}\n`);
+  await safeWriteArtifact(outputDir, 'architecture.svg', buildArchitectureDiagram(summary, baseSha, headSha));
+
+  const payload = {
+    adapter: 'backend',
+    base: { ref: options.base, sha: baseSha },
+    head: { ref: options.head, sha: headSha },
+    changedFiles,
+    totalFiles: summary.totalFiles,
+    totalAdded: summary.totalAdded,
+    totalDeleted: summary.totalDeleted,
+    addedCount: summary.addedCount,
+    modifiedCount: summary.modifiedCount,
+    deletedCount: summary.deletedCount,
+    groups: summary.groups,
+    files: summary.files,
+  };
+  await safeWriteArtifact(outputDir, 'summary.json', `${JSON.stringify(payload, null, 2)}\n`);
+  await safeWriteArtifact(outputDir, 'manifest.json', `${JSON.stringify({ schemaVersion: 2, generatedAt: new Date().toISOString(), ...payload }, null, 2)}\n`);
+
+  console.log(`Backend review written to ${outputDir}`);
+
+  if (pr) {
+    const token = githubTokenFrom(process.env);
+    const comment = buildBackendComment(summary, baseSha, headSha, pr);
+    await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
+    console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
+    if (options.postComment) {
+      if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
+      const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
+      console.log(`Posted comment: ${posted.htmlUrl}`);
+    }
+  }
 }
 
 async function captureSide(browser, origin, scenario, viewport, capture, outputDir, artifactName) {
@@ -222,14 +266,16 @@ async function main() {
   const configPath = path.resolve(invocationDir, options.config);
   const outputDir = path.resolve(invocationDir, options.output);
 
-  let config;
-  try {
-    config = normalizeConfig(JSON.parse(await readFile(configPath, 'utf8')));
-  } catch (error) {
-    fail(`${options.config}: ${error.message}`);
-    return;
+  let config = null;
+  if (!options.backend) {
+    try {
+      config = normalizeConfig(JSON.parse(await readFile(configPath, 'utf8')));
+    } catch (error) {
+      fail(`${options.config}: ${error.message}`);
+      return;
+    }
   }
-  const digest = publicConfigDigest(config);
+  const digest = config ? publicConfigDigest(config) : null;
 
   let pr = null;
   if (options.pr) {
@@ -247,6 +293,15 @@ async function main() {
   const changedFiles = parseNulPaths(gitBuffer(['diff', '--name-only', '-z', `${baseSha}...${headSha}`, '--'], repoRoot));
   const diffStat = git(['diff', '--stat', `${baseSha}...${headSha}`], repoRoot);
   const codeDiff = git(['diff', '--binary', `${baseSha}...${headSha}`], repoRoot, { trim: false });
+
+  if (options.backend) {
+    try {
+      await runBackend({ options, repoRoot, outputDir, baseSha, headSha, changedFiles, diffStat, codeDiff, pr });
+    } catch (error) {
+      fail(error.message);
+    }
+    return;
+  }
 
   const allIds = config.scenarios.map((scenario) => scenario.id);
   let selection;

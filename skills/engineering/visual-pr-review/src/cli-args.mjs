@@ -8,6 +8,7 @@ Options:
   --base <ref>       Base git revision, required unless --pr is used
   --head <ref>       Head git revision, default: HEAD
   --pr <url>         GitHub pull request URL; resolves base and head SHAs
+  --backend          Analyze the diff and emit a change summary + architecture diagram (no browser)
   --config <path>    Config path, default: visual-review.json
   --output <path>    Artifact directory, default: visual-review-output
   --scenario <id>    Capture only this scenario, repeatable, overrides impact rules
@@ -35,6 +36,7 @@ export function parseArgs(argv) {
     all: false,
     pr: null,
     postComment: false,
+    backend: false,
     help: false,
   };
   let headExplicit = false;
@@ -44,6 +46,7 @@ export function parseArgs(argv) {
     else if (arg === '--keep-worktrees') options.keepWorktrees = true;
     else if (arg === '--all') options.all = true;
     else if (arg === '--post-comment') options.postComment = true;
+    else if (arg === '--backend') options.backend = true;
     else if (arg === '--scenario' || VALUE_FLAGS.includes(arg)) {
       const value = argv[index + 1];
       if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value`);

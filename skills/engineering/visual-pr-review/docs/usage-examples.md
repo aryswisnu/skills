@@ -58,6 +58,21 @@ a `visual-review-assets` branch, embed them in the comment, and publish it; post
 `GITHUB_TOKEN` (or `GH_TOKEN`) with write access to the repository. The default only writes the
 local draft.
 
+### Backend or non-web change
+
+For a change with no browser-rendered surface, add `--backend` (no config or browser required):
+
+```bash
+node /path/to/skills/skills/engineering/visual-pr-review/scripts/visual-pr-review.mjs \
+  --base origin/main \
+  --head HEAD \
+  --backend \
+  --output visual-review-output
+```
+
+This writes `report.md` (a change summary), `architecture.svg` (an editorial change map), and
+`summary.json` from the diff.
+
 ### Minimal web application
 
 ```json

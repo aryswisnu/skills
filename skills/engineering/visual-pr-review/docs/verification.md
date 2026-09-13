@@ -1,5 +1,15 @@
 # Verification
 
+## v0.5.0 Backend support, 2026-09-13
+
+- Added `--backend`: removes the frontend-only gate. For a non-web change, the CLI emits a change
+  summary (`report.md`), an editorial architecture "change map" (`architecture.svg`, styled after
+  the diagram-design system: paper/ink/one accent, density 4/10), and `summary.json`, with no
+  config or browser required.
+- New module `src/backend.mjs` (numstat/name-status parsing, change summarization, markdown +
+  SVG generation). New tests `test/backend.test.mjs` and `test/backend-cli.test.mjs`.
+- `npm test`: 135 tests, 135 passed, 0 failed, 0 skipped.
+
 ## v0.4.1 Image embedding, 2026-09-13
 
 - `--post-comment` now uploads the side-by-side PNGs to a `visual-review-assets` branch (created via
