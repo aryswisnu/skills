@@ -1,7 +1,7 @@
 # Usage Examples
 
-> **Implementation status:** The local Git and browser workflow in [Available now](#available-now-v030)
-> is implemented and tested in v0.3.0. The provider URL commands and non-web adapters in
+> **Implementation status:** The local Git and browser workflow in [Available now](#available-now-v03x)
+> is implemented and tested in v0.3.x. The provider URL commands and non-web adapters in
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
@@ -38,7 +38,7 @@ node /path/to/skills/skills/engineering/visual-pr-review/scripts/visual-pr-revie
 ```
 
 The command writes `report.md`, `summary.json`, `manifest.json`, the Git patch and statistics, and
-before/after/side-by-side/diff PNGs.
+before, after, and side-by-side PNGs, plus a diff PNG when base and head dimensions match.
 
 ### Minimal web application
 
