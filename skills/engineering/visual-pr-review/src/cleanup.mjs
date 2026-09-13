@@ -1,3 +1,4 @@
+import path from 'node:path';
 import process from 'node:process';
 
 import { processTreeTarget } from './visual.mjs';
@@ -47,4 +48,9 @@ export function worktreePaths(porcelain) {
   return String(porcelain).split('\n')
     .filter((line) => line.startsWith('worktree '))
     .map((line) => line.slice('worktree '.length));
+}
+
+export function worktreePathsUnder(porcelain, tempRoot) {
+  return worktreePaths(porcelain)
+    .filter((entry) => entry === tempRoot || entry.startsWith(`${tempRoot}${path.sep}`));
 }

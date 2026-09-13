@@ -116,6 +116,7 @@ can still appear in a screenshot. Use synthetic credentials and audit every imag
 
 ## Determinism
 
-Output is byte-identical between runs on the same machine and revisions, except for
-`generatedAt`, `durationMs`, runtime values collected from the application, and the SHA-256 of
-`report.md` and `summary.json` (which embed those timestamps).
+With controlled application state and a stable browser and host environment, output should be
+stable except for `generatedAt`, `durationMs`, runtime values collected from the application, and
+the SHA-256 of `report.md` and `summary.json` (which embed those fields). Live APIs, fonts, browser
+updates, clocks, randomness, and host rendering differences can change the output.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawn, execFileSync, execSync } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,7 +11,7 @@ import { PNG } from 'pngjs';
 import { parseArgs, usage } from '../src/cli-args.mjs';
 import { publicConfigDigest, normalizeConfig } from '../src/config.mjs';
 import { assertPreviewOrigin, attachRuntimeCollectors, collectSemantic, installLocalNavigationGuard, replaySteps, screenshotMaskLocators, stabilizationCss, summarizeError } from '../src/capture.mjs';
-import { stopProcessTree, worktreePaths } from '../src/cleanup.mjs';
+import { stopProcessTree, worktreePathsUnder } from '../src/cleanup.mjs';
 import { commitRefArgs, parseNulPaths } from '../src/git.mjs';
 import { selectScenarios } from '../src/impact.mjs';
 import { waitForReady } from '../src/network.mjs';
@@ -62,6 +62,24 @@ function startPreview(command, cwd, port, env) {
   child.stderr.on('data', collect);
   child.getLogs = () => logs;
   return child;
+}
+
+function runInstall(command, cwd, processes) {
+  const child = spawn(command, {
+    cwd,
+    env: process.env,
+    shell: true,
+    stdio: 'inherit',
+    ...processTreeSpawnOptions(),
+  });
+  processes.push(child);
+  return new Promise((resolve, reject) => {
+    child.once('error', reject);
+    child.once('exit', (code, signal) => {
+      if (code === 0) resolve();
+      else reject(new Error(`Command failed: install exited with ${signal ? `signal ${signal}` : `code ${code}`}`));
+    });
+  });
 }
 
 async function captureSide(browser, origin, scenario, viewport, capture, outputDir, artifactName) {
@@ -221,22 +239,65 @@ async function main() {
         : `not selected (${selection.reason})`,
     }));
 
+  const knownSecrets = [
+    ...Object.values(config.env),
+    ...config.scenarios.flatMap((scenario) => scenario.steps
+      .filter((step) => step.action === 'fill' && step.secret)
+      .map((step) => step.value)),
+  ];
+  const failureRecord = ({ phase, error, cleanupError = null, status = 'infrastructure-failed' }) => ({
+    schemaVersion: 1,
+    status,
+    phase,
+    generatedAt: new Date().toISOString(),
+    durationMs: Date.now() - startedAt,
+    base: { ref: options.base, sha: baseSha },
+    head: { ref: options.head, sha: headSha },
+    error: redactCommand(redactKnownValues(error instanceof Error ? error.message : error, knownSecrets)),
+    cleanup: {
+      completed: cleanupError === null,
+      failures: cleanupError
+        ? [redactCommand(redactKnownValues(cleanupError.message, knownSecrets))]
+        : [],
+    },
+  });
+  const emitFailure = async (failure) => {
+    try {
+      await safeWriteArtifact(outputDir, 'failure.json', `${JSON.stringify(failure, null, 2)}\n`);
+      console.error(`Failure evidence written to ${path.join(outputDir, 'failure.json')}`);
+    } catch (error) {
+      console.error(`Error: could not write failure.json: ${error.message}`);
+    }
+  };
+
+  let outputReady = false;
   try {
     await createOwnedOutputDirectory(outputDir);
+    outputReady = true;
     await safeWriteArtifact(outputDir, 'changes.patch', codeDiff);
     await safeWriteArtifact(outputDir, 'changes-stat.txt', diffStat ? `${diffStat}\n` : '');
   } catch (error) {
+    if (outputReady) await emitFailure(failureRecord({ phase: 'output-initialization', error }));
     fail(error.message);
     return;
   }
 
-  const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'visual-pr-review-'));
+  let tempRoot;
+  try {
+    tempRoot = await mkdtemp(path.join(os.tmpdir(), 'visual-pr-review-'));
+  } catch (error) {
+    await emitFailure(failureRecord({ phase: 'temporary-directory', error }));
+    fail(error.message);
+    return;
+  }
   const baseDir = path.join(tempRoot, 'base');
   const headDir = path.join(tempRoot, 'head');
   const processes = [];
-  const worktrees = [];
   let browser;
   let cleanupPromise;
+  let phase = 'worktree-base';
+  let runError = null;
+  let cleanupError = null;
 
   const cleanup = () => {
     if (cleanupPromise) return cleanupPromise;
@@ -250,17 +311,20 @@ async function main() {
         if (result.status === 'rejected') failures.push(`preview stop: ${result.reason.message}`);
       }
       if (!options.keepWorktrees) {
-        for (const dir of worktrees) {
+        const listUnder = () => worktreePathsUnder(
+          git(['worktree', 'list', '--porcelain'], repoRoot, { trim: false }),
+          tempRoot,
+        );
+        let registered = listUnder();
+        for (const dir of registered) {
           try { git(['worktree', 'remove', '--force', dir], repoRoot); }
           catch (error) { failures.push(`git worktree remove ${dir}: ${error.message}`); }
         }
-        let registered = worktreePaths(git(['worktree', 'list', '--porcelain'], repoRoot, { trim: false }))
-          .filter((entry) => worktrees.includes(entry));
+        registered = listUnder();
         if (registered.length > 0) {
           try { git(['worktree', 'prune'], repoRoot); }
           catch (error) { failures.push(`git worktree prune: ${error.message}`); }
-          registered = worktreePaths(git(['worktree', 'list', '--porcelain'], repoRoot, { trim: false }))
-            .filter((entry) => worktrees.includes(entry));
+          registered = listUnder();
         }
         if (registered.length > 0) {
           failures.push(`worktree registrations remain: ${registered.join(', ')}; recover with: git -C ${repoRoot} worktree remove --force <path>`);
@@ -277,12 +341,26 @@ async function main() {
   };
   const handleSignal = (signal) => {
     const exitCode = signal === 'SIGINT' ? 130 : 143;
-    cleanup()
-      .then(() => process.exit(exitCode))
-      .catch((error) => {
-        console.error(`Error: ${error.message}`);
-        process.exit(1);
+    (async () => {
+      let signalCleanupError = null;
+      try {
+        await cleanup();
+      } catch (error) {
+        signalCleanupError = error;
+      }
+      const failure = failureRecord({
+        phase: `signal-${signal.toLowerCase()}`,
+        error: `interrupted by ${signal}`,
+        cleanupError: signalCleanupError,
+        status: 'interrupted',
       });
+      await emitFailure(failure);
+      if (signalCleanupError) console.error(`Error: ${failure.cleanup.failures.join('\n')}`);
+      process.exit(exitCode);
+    })().catch((error) => {
+      console.error(`Error while recording ${signal}: ${error.message}`);
+      process.exit(exitCode);
+    });
   };
   const handleSigint = () => handleSignal('SIGINT');
   const handleSigterm = () => handleSignal('SIGTERM');
@@ -290,15 +368,16 @@ async function main() {
   process.once('SIGTERM', handleSigterm);
 
   try {
+    phase = 'worktree-base';
     git(['worktree', 'add', '--detach', baseDir, baseSha], repoRoot);
-    worktrees.push(baseDir);
+    phase = 'worktree-head';
     git(['worktree', 'add', '--detach', headDir, headSha], repoRoot);
-    worktrees.push(headDir);
 
     if (config.installCommand) {
       for (const [label, dir] of [['base', baseDir], ['head', headDir]]) {
+        phase = `install-${label}`;
         console.log(`Installing ${label} revision dependencies...`);
-        execSync(config.installCommand, { cwd: dir, env: process.env, stdio: 'inherit' });
+        await runInstall(config.installCommand, dir, processes);
       }
     }
 
@@ -306,11 +385,13 @@ async function main() {
     const headPort = config.basePort + 1;
     const baseOrigin = `http://127.0.0.1:${basePort}`;
     const headOrigin = `http://127.0.0.1:${headPort}`;
+    phase = 'preview-start';
     const baseProcess = startPreview(config.startCommand, baseDir, basePort, config.env);
     const headProcess = startPreview(config.startCommand, headDir, headPort, config.env);
     processes.push(baseProcess, headProcess);
 
     try {
+      phase = 'readiness';
       await Promise.all([
         waitForReady(`${baseOrigin}${config.readyPath}`, config.startupTimeoutMs, baseProcess),
         waitForReady(`${headOrigin}${config.readyPath}`, config.startupTimeoutMs, headProcess),
@@ -319,6 +400,7 @@ async function main() {
       throw new Error(`${error.message}\n\nBase logs:\n${baseProcess.getLogs()}\n\nHead logs:\n${headProcess.getLogs()}`);
     }
 
+    phase = 'browser-launch';
     browser = await chromium.launch(browserLaunchOptions());
     const browserVersion = browser.version();
 
@@ -332,6 +414,7 @@ async function main() {
           .map((step) => step.value),
       ];
       for (const viewportName of scenario.viewports) {
+        phase = `capture:${scenario.id}:${viewportName}`;
         const viewport = config.viewports.find((entry) => entry.name === viewportName);
         const names = cellArtifactNames(scenario.id, viewport.name);
         console.log(`Capturing ${scenario.name} @ ${viewport.name}...`);
@@ -404,14 +487,9 @@ async function main() {
       }
     }
 
+    phase = 'report';
     const artifactHashes = await hashArtifacts(outputDir, artifactNames);
-    const commandSecrets = [
-      ...Object.values(config.env),
-      ...config.scenarios.flatMap((scenario) => scenario.steps
-        .filter((step) => step.action === 'fill' && step.secret)
-        .map((step) => step.value)),
-    ];
-    const recordedCommand = (command) => redactCommand(redactKnownValues(command, commandSecrets));
+    const recordedCommand = (command) => redactCommand(redactKnownValues(command, knownSecrets));
     const provenance = {
       publicConfigDigest: digest,
       browser: {
@@ -473,10 +551,30 @@ async function main() {
       console.error('At least one scenario could not be captured. The report is partial.');
     }
     process.exitCode = code;
+  } catch (error) {
+    runError = error;
   } finally {
     process.removeListener('SIGINT', handleSigint);
     process.removeListener('SIGTERM', handleSigterm);
-    await cleanup();
+    try {
+      await cleanup();
+    } catch (error) {
+      cleanupError = error;
+    }
+  }
+
+  if (runError || cleanupError) {
+    const failure = failureRecord({
+      phase: runError ? phase : 'cleanup',
+      error: runError
+        ? runError
+        : 'capture and report generation completed, but cleanup failed',
+      cleanupError,
+    });
+    await emitFailure(failure);
+    console.error(`Error during ${failure.phase}: ${failure.error}`);
+    if (cleanupError) console.error(`Error: ${failure.cleanup.failures.join('\n')}`);
+    process.exitCode = 2;
   }
 }
 
@@ -491,4 +589,8 @@ function runtimeRecord(runtime) {
   };
 }
 
-await main();
+try {
+  await main();
+} catch (error) {
+  fail(error.message);
+}

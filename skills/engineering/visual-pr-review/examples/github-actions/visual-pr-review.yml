@@ -7,8 +7,9 @@
 # DISCLOSURE: when the "Upload evidence as an artifact" input is enabled, the entire
 # `visual-review-output` directory leaves the runner and is stored by GitHub as a build
 # artifact. That directory can contain screenshots and runtime text captured from your
-# application, which may include sensitive data. INSPECT every file for secrets BEFORE
-# enabling upload, and prefer keeping the output local (upload disabled).
+# application, which may include sensitive data. Enabling this input authorizes the newly
+# generated directory to upload immediately after capture; this workflow has no post-capture
+# inspection checkpoint. Use synthetic data, or keep upload disabled and inspect local output.
 #
 # It runs the install and start commands of BOTH revisions, which is arbitrary code
 # execution. Only run this against revisions you trust.
@@ -56,13 +57,14 @@ jobs:
 
       - name: Capture before-and-after evidence
         id: capture
-        continue-on-error: true
         run: |
+          set +e
           node "$RUNNER_TEMP/arys-skills/skills/engineering/visual-pr-review/scripts/visual-pr-review.mjs" \
             --base "${{ inputs.base-ref }}" \
             --head "${{ inputs.head-ref }}" \
             --config visual-review.json \
             --output visual-review-output
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
 
       - name: Upload evidence (manual opt-in)
         if: inputs.upload-evidence == true
@@ -73,10 +75,18 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Exit code 1 means at least one scenario could not be captured. Failing here makes
-      # the missing evidence visible instead of silent.
+      # Exit code 1 means at least one scenario could not be captured. Exit code 2
+      # means the review failed before capture completed (usage, configuration, or
+      # infrastructure error). They are surfaced separately so the failure.json
+      # distinction is not flattened into a generic "scenarios missing" message.
       - name: Fail if any scenario could not be captured
-        if: steps.capture.outcome == 'failure'
+        if: steps.capture.outputs.exit-code == '1'
         run: |
-          echo "::error::One or more scenarios could not be captured. Inspect the local output directory."
+          echo "::error::One or more scenarios could not be captured. Inspect visual-review-output/report.md and summary.json."
           exit 1
+
+      - name: Fail on usage, configuration, or infrastructure error
+        if: steps.capture.outputs.exit-code == '2'
+        run: |
+          echo "::error::The review failed before capture completed. Inspect visual-review-output/failure.json."
+          exit 2

@@ -5,7 +5,7 @@
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
-## Available now, v0.3.0
+## Available now, v0.3.x
 
 ### Install the skill collection
 
@@ -230,7 +230,7 @@ pull request automatically, and uploads evidence only when the human-triggered
 ## Planned interfaces, not yet implemented
 
 The following examples describe the intended lightweight, provider-neutral direction. The current
-v0.3.0 CLI rejects these commands and configuration keys.
+v0.3.x CLI rejects these commands and configuration keys.
 
 ### Pull request URL entry point
 

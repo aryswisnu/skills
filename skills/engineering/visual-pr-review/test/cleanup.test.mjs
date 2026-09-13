@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { stopProcessTree, worktreePaths } from '../src/cleanup.mjs';
+import { stopProcessTree, worktreePaths, worktreePathsUnder } from '../src/cleanup.mjs';
 
 test('stopProcessTree verifies termination and surfaces a surviving process group', async () => {
   const signals = [];
@@ -36,5 +36,22 @@ test('worktreePaths parses porcelain output without path prefix ambiguity', () =
   assert.deepEqual(
     worktreePaths('worktree /repo\nHEAD abc\n\nworktree /tmp/a b\nHEAD def\n'),
     ['/repo', '/tmp/a b'],
+  );
+});
+
+test('worktreePathsUnder keeps only entries beneath the temporary root', () => {
+  const porcelain = [
+    'worktree /repo',
+    'worktree /tmp/visual-pr-review-abc/base',
+    'worktree /tmp/visual-pr-review-abc/head',
+    'worktree /tmp/visual-pr-review-abc-sibling/base',
+  ].join('\n');
+  assert.deepEqual(
+    worktreePathsUnder(porcelain, '/tmp/visual-pr-review-abc'),
+    ['/tmp/visual-pr-review-abc/base', '/tmp/visual-pr-review-abc/head'],
+  );
+  assert.deepEqual(
+    worktreePathsUnder(porcelain, '/tmp/visual-pr-review-abc/base'),
+    ['/tmp/visual-pr-review-abc/base'],
   );
 });

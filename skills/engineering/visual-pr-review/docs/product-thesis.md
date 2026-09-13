@@ -43,8 +43,8 @@ Each item exists somewhere in the survey. The bundle is what is differentiated.
 - **B7 Thresholded per-cell verdicts.** `unchanged`, `changed-within-threshold`,
   `review-required`, `capture-failed`. A verdict describes evidence. It never approves a PR.
 - **B8 Self-consistency hashes and a public-config digest.** Full 40-char SHAs, a canonical
-  public-config digest, SHA-256 of every artifact, browser build, redacted commands, capture
-  settings, and every failure reason. These hashes let a reviewer recompute that the directory
+  public-config digest, SHA-256 of every listed artifact except the manifest itself, browser build,
+  redacted commands, capture settings, and every failure reason. These hashes let a reviewer recompute that the directory
   is internally consistent; they are not signatures and are not tamper evidence.
 - **B9 Reviewer-first report.** Changed scenarios and runtime regressions first; individual
   captures collapsed behind a details block; uncaptured states labelled as uncaptured rather
@@ -73,13 +73,13 @@ code execution by design, because rendering a branch requires running the branch
 | Adversary / hazard | Mitigation in this repository |
 | --- | --- |
 | Hostile PR branch runs arbitrary code | **Not mitigated in-process.** Documented explicitly: run only on trusted revisions or inside a sandbox/container. The tool refuses to pretend otherwise. |
-| Config exfiltrates data to a remote host | Every navigation is resolved against the preview origin and rejected if the origin differs. `goto` steps take a path, never an absolute external URL. |
+| Config or page attempts off-origin navigation | `goto` steps accept local paths only, and the browser guard rejects off-origin main-frame document navigation. This is not process isolation or a block on every outbound browser request. |
 | Readiness probe used as an SSRF primitive | Readiness polls a fixed `http://127.0.0.1:<port>` URL derived from the allocated port, bounded by `startupTimeoutMs` and an abort signal. |
 | Secrets leak into shareable artifacts | Config `env` records key names only, never values. Recorded commands are scanned and redacted for inline `KEY=value` assignments, `--token`/`--password`-style flags (quoted or not), and URL userinfo. Scenario `fill` values are recorded as a length-only descriptor when the step is marked `secret`. This covers structured text artifacts; screenshots are masked only at configured selectors, so rendered secrets outside those selectors still require human review. |
 | Artifact path escape / overwrite | Artifacts are written into a freshly created, tool-owned empty output directory with exclusive no-follow file creation; symlink components and pre-existing targets are rejected. Scenario ids and viewport names are slugified to `[a-z0-9-]`, and length-prefixed cell names make collisions across scenario/viewport boundaries impossible and are still validated at config time. |
 | Orphaned preview processes | Previews are spawned detached into their own process group and the whole group is signalled on exit and on SIGINT/SIGTERM. |
 | Worktrees left behind | Removed in a `finally` block unless `--keep-worktrees` is passed. |
-| Evidence silently drifting from the commits | Full SHAs, a public-config digest and per-artifact SHA-256 in the manifest; a reviewer can recompute all of them. These are self-consistency checks, not tamper evidence. |
+| Evidence silently drifting from the commits | Full SHAs, a public-config digest, and SHA-256 for every artifact listed by the manifest except the manifest itself; a reviewer can recompute them. These are self-consistency checks, not tamper evidence. |
 | Binary/patch corruption | The patch is produced with `git diff --binary` and written without trimming. |
 
 What is **out** of the threat model: a malicious *reviewer* (they already have the repo), and a
@@ -91,14 +91,14 @@ compromised local machine (nothing here can help).
 | --- | --- | --- |
 | A1 | A scenario with steps replays identically on base and head | unit test on the compiled step plan; end-to-end demo run |
 | A2 | An unknown action type, an external `goto`, a duplicate scenario id, a bad viewport, an out-of-range threshold, or an unknown config key is rejected at config time | unit tests, one per rejection |
-| A3 | Capture matrix produces `<scenario>-<viewport>-{before,after,side-by-side,diff}.png` deterministically | unit test on the naming function; demo run inspects the files |
+| A3 | Capture matrix produces collision-resistant, length-prefixed per-cell before, after, side-by-side, and optional diff PNGs | unit test on the naming function; demo run inspects paths from `summary.json` |
 | A4 | Changed files map to scenarios via globs, and fall back to smoke scenarios with an explicit reason when no rule matches | unit tests for match, no-match fallback, and empty-smoke case |
 | A5 | Verdicts follow the documented threshold ordering | unit tests at each boundary |
 | A6 | Runtime evidence is recorded separately for base and head | unit test on the merge function; demo run with an induced console error |
 | A7 | One broken scenario yields a partial report, a `capture-failed` verdict with a reason, and exit code 1 — other scenarios still capture | unit test on exit-code selection; demo run with a deliberately broken scenario |
 | A8 | No secret value appears in `manifest.json`, `summary.json` or `report.md` | unit tests on the redactor; grep over demo output |
-| A9 | Manifest contains full 40-char SHAs, a public-config digest, and a SHA-256 per artifact | unit tests; demo run verified programmatically |
-| A10 | Output is byte-identical across runs except for documented timestamp/duration/runtime fields | two demo runs diffed with those fields removed |
+| A9 | Manifest contains full 40-char SHAs, a public-config digest, and a SHA-256 for every listed artifact except itself | unit tests; demo run verified programmatically |
+| A10 | Controlled application state under a stable browser and host produces repeatable output apart from documented variable fields | two demo runs diffed with those fields removed |
 | A11 | `npm test` passes and `npm audit` reports no vulnerabilities | verification run, recorded in `docs/verification.md` |
 
 ## 6. Deliberate omissions

@@ -10,7 +10,7 @@
 
 Boot **two git revisions side by side on your own machine**, replay the same reviewer states
 against both, and write a single directory of evidence a human can act on. No baseline images to
-commit, no account, no cloud, no bucket, and nothing posted anywhere.
+commit, no account, no hosted service, and no remote publishing by the core CLI.
 
 See [docs/competitive-landscape.md](docs/competitive-landscape.md) for what 16 checked projects do
 and do not do, and [docs/product-thesis.md](docs/product-thesis.md) for the scope, threat model,
@@ -20,8 +20,9 @@ and non-goals.
 
 - `report.md` — evidence ordered by severity, with the individual captures behind a details block
 - `summary.json` — machine-readable verdicts, counts, and artifact paths
-- `manifest.json` — full provenance: 40-char SHAs, public-config digest, SHA-256 per artifact
-- `<scenario>-<viewport>-before|after|side-by-side|diff.png`
+- `manifest.json` — full provenance: 40-char SHAs, public-config digest, SHA-256 for every listed artifact except the manifest itself
+- Collision-resistant per-cell `before|after|side-by-side|diff.png` paths listed in `summary.json`
+- `failure.json` — phase, redacted error, and cleanup outcome for infrastructure failures after output creation
 - `changes.patch` — full binary-safe git patch, plus `changes-stat.txt`
 
 ## Capabilities
@@ -34,9 +35,9 @@ and non-goals.
 | **Deterministic capture** | Reduced motion, animations disabled, caret hidden, plus configurable `hideSelectors` and `maskSelectors`. |
 | **Runtime evidence** | Page errors, console errors, failed requests, document status and assertion failures, recorded separately for each revision. |
 | **Semantic evidence** | Normalized title, selected DOM text, and an optional Playwright ARIA snapshot. |
-| **Code-aware selection** | Explicit glob-to-scenario rules. When no rule matches, the configured smoke scenarios run and the report says exactly why. |
+| **Code-aware selection** | No rules means all scenarios. With rules, matches run; no match uses configured smoke scenarios, or all when the smoke list is empty. |
 | **Thresholded verdicts** | `unchanged`, `changed-within-threshold`, `review-required`, `capture-failed`. None of them approves a pull request. |
-| **Provenance** | Public-config digest, per-artifact SHA-256, browser build, redacted commands, env key names only. |
+| **Provenance** | Public-config digest, SHA-256 for every listed artifact except the manifest itself, browser build, redacted commands, env key names only. |
 
 ## Sequence
 
@@ -110,7 +111,7 @@ See [docs/usage-examples.md](docs/usage-examples.md) for:
 - Clearly marked, not-yet-implemented designs for GitHub, Bitbucket, GitLab, Azure DevOps,
   backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
 
-Only examples under **Available now, v0.3.0** describe executable behavior in this release.
+Only examples under **Available now, v0.3.x** describe executable behavior in this release.
 
 ## CLI
 
@@ -125,15 +126,18 @@ Only examples under **Available now, v0.3.0** describe executable behavior in th
 ```
 
 Exit codes: `0` every selected scenario produced comparable evidence, `1` at least one scenario
-could not be captured and the report is partial, `2` usage or configuration error.
+could not be captured and the report is partial, `2` usage, configuration, or infrastructure
+failure, `130` interrupted by SIGINT, and `143` interrupted by SIGTERM. Infrastructure failures
+and interruptions write `failure.json` when the output directory has been created.
 
 ## CI
 
 [`examples/github-actions/visual-pr-review.yml`](examples/github-actions/visual-pr-review.yml)
 is a manual, opt-in `workflow_dispatch` example. It does not run automatically, and it only
 uploads the evidence directory when the `upload-evidence` input is explicitly enabled. The file
-carries a prominent disclosure that uploaded evidence leaves the runner and must be inspected
-for secrets first. It never posts comments, reviews or statuses.
+carries a prominent disclosure that enabling upload authorizes newly generated evidence to leave
+the runner without a post-capture inspection checkpoint. Use synthetic data and keep upload off
+when the generated files must be inspected first. It never posts comments, reviews, or statuses.
 
 ## Platforms
 
@@ -144,9 +148,10 @@ tested on POSIX.
 
 The tool runs the install and start commands of **both** git revisions, which is arbitrary code
 execution by design. Use trusted revisions or a sandbox. Navigation is pinned to the local
-preview origin, env values are never written into structured text artifacts, and recorded
-commands are redacted. Screenshots are evidence of rendered output, not an approval verdict, and
-are masked only at configured selectors.
+preview origin for main-frame documents, but application processes and every outbound browser
+request are not isolated. Environment values are redacted from structured artifacts, and recorded
+commands are redacted. Screenshots are evidence, not approval, and are masked only at configured
+selectors.
 
 ## Development
 

@@ -1,5 +1,56 @@
 # Verification
 
+## v0.3.1 Astra remediation, 2026-09-13
+
+The Astra audit findings were addressed with a leaner `SKILL.md`, corrected safety and selection
+contracts, and structured infrastructure-failure evidence.
+
+Observed on Linux with an existing compatible Chromium executable:
+
+- `npm test`: 105 tests, 105 passed, 0 failed, 0 skipped.
+- `npm audit --audit-level=high`: zero vulnerabilities.
+- `node --check scripts/visual-pr-review.mjs`: exit 0.
+- Relative Markdown links: 10 checked, none missing.
+- Version alignment: `SKILL.md`, `package.json`, and both package-lock locations are `0.3.1`.
+- Skill description: 56 characters; root document: 118 lines.
+- `npm pack --dry-run`: 53 files, including `test/cli-failure.test.mjs`, with no ZIP or
+  `node_modules` payload.
+- `git diff --check`: exit 0.
+- Fresh two-commit browser run: 3 selected cells, 3 `review-required`, 0 capture failures,
+  16 artifact hashes, 18 output files, and exit 0.
+- Visual inspection: desktop, mobile, and replayed-open-panel side-by-side images had readable
+  labels, loaded intended states, visible before/after changes, and no clipping, loading shell,
+  consent overlay, or error page.
+- Forced install failure: exit 2, `failure.json` status `infrastructure-failed`, phase
+  `install-base`, cleanup complete, zero cleanup failures, no normal report, and zero registered
+  temporary worktrees.
+- Unavailable temporary directory after output creation: exit 2 with `failure.json` phase
+  `temporary-directory` and cleanup complete.
+- Preview readiness failure: exit 2 with `failure.json` phase `readiness`, cleanup complete, and no
+  registered temporary worktrees.
+- Invalid browser executable: exit 2 with `failure.json` phase `browser-launch`, cleanup complete,
+  and no registered temporary worktrees.
+- SIGTERM during a live run: exit 143 with `failure.json` status `interrupted`, phase
+  `signal-sigterm`, cleanup complete, and no registered temporary worktrees.
+- Invalid Git revision: exit 2 with a concise error and no unhandled Node stack trace.
+- Secret-bearing install failure test: the configured secret was absent from `failure.json`.
+- Partial worktree registration: a shim registered the head worktree then reported exit 128, and
+  cleanup removed both worktrees by discovering them from `git worktree list --porcelain` rather
+  than a manually tracked array.
+- Cleanup discovery helper: `worktreePathsUnder` keeps only paths beneath the temporary root and
+  excludes sibling directories that share its name as a prefix.
+- GitHub Actions example: the capture step records the CLI exit code and surfaces exit 1 (scenario
+  capture failure) and exit 2 (usage, configuration, or infrastructure failure) as distinct
+  failure steps instead of flattening both into a generic "scenarios missing" message.
+- Install phase is interruptible: `config.installCommand` runs via an asynchronous, process-group
+  tracked spawn instead of a synchronous `execSync`, so SIGTERM during a long install (such as
+  `npm ci`) exits 143 with `failure.json` phase `signal-sigterm` and cleans worktrees instead of
+  hanging until the install finishes.
+
+The remainder of this document preserves the earlier v0.3.0 verification record.
+
+## v0.3.0 verification, 2026-09-12
+
 Every command and every number below was run and observed on 2026-09-12. Nothing here is
 predicted or reconstructed. Where a run produced a non-zero exit code, that is recorded as
 observed rather than explained away.
@@ -101,9 +152,9 @@ Exit code `0`. Files produced in `out/`:
 
 ```text
 changes-stat.txt  changes.patch  manifest.json  report.md  summary.json
-home-desktop-{before,after,side-by-side,diff}.png
-home-mobile-{before,after,side-by-side,diff}.png
-home-evidence-open-desktop-{before,after,side-by-side,diff}.png
+4-home--7-desktop-{before,after,side-by-side,diff}.png
+4-home--6-mobile-{before,after,side-by-side,diff}.png
+18-home-evidence-open--7-desktop-{before,after,side-by-side,diff}.png
 ```
 
 `details` was **not** captured. Only `examples/demo/index.html` changed, and the impact rules map
@@ -137,14 +188,14 @@ own in `reasons`.
 
 Three generated images were opened and read:
 
-- `home-desktop-side-by-side.png` — BEFORE and AFTER panes with readable labels
+- `4-home--7-desktop-side-by-side.png` — BEFORE and AFTER panes with readable labels
   `BEFORE · HEAD~1 · 666e6cc · desktop` and `AFTER · HEAD · 0c8685a · desktop`. The blue-to-orange
   accent change and the `Make the diff easier to see.` → `Make the diff obvious.` heading change
   are both visible. The non-deterministic `rendered at <timestamp>` line is absent from both
   panes, confirming `capture.hideSelectors` worked.
-- `home-evidence-open-desktop-after.png` — the evidence panel is expanded, confirming the
+- `18-home-evidence-open--7-desktop-after.png` — the evidence panel is expanded, confirming the
   `click` → `waitForSelector` → `assertVisible` scenario replay reached the intended state.
-- `home-desktop-diff.png` — a pixelmatch diff showing the changed heading, borders and buttons.
+- `4-home--7-desktop-diff.png` — a pixelmatch diff showing the changed heading, borders and buttons.
 
 ## 6. Scenario failure handling
 

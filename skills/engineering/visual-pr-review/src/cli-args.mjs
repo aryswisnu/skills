@@ -16,7 +16,9 @@ Options:
 Exit codes:
   0  every selected scenario produced comparable evidence
   1  at least one scenario could not be captured, a partial report was still written
-  2  usage or configuration error, nothing was captured
+  2  usage, configuration, or infrastructure failure; failure.json is written when possible
+  130 interrupted by SIGINT after cleanup and interruption evidence
+  143 interrupted by SIGTERM after cleanup and interruption evidence
 `;
 }
 
