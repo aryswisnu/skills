@@ -114,14 +114,19 @@ boundary.
 
 ## Live example
 
-This repository keeps a real, open demonstration:
+This repository keeps two real, open demonstrations:
 
-- [PR #1: docs/live-visual-review-demo](https://github.com/aryswisnu/skills/pull/1) is a genuine public pull request
-  produced by this CLI,
-- [its generated review comment](https://github.com/aryswisnu/skills/pull/1#issuecomment-5657518950) shows the posted,
-  image-bearing form with three embedded side-by-side artifacts.
+Web:
 
-The comment was posted with `--post-comment`; the PR description was not modified.
+- [PR #1: docs/live-visual-review-demo](https://github.com/aryswisnu/skills/pull/1) is a genuine web pull request produced by this CLI,
+- [its generated review comment](https://github.com/aryswisnu/skills/pull/1#issuecomment-5657518950) shows the posted, image-bearing form with three embedded side-by-side artifacts.
+
+Backend:
+
+- [PR #2: docs/live-backend-review-demo](https://github.com/aryswisnu/skills/pull/2) is a genuine non-web pull request produced by this CLI,
+- [its generated review comment](https://github.com/aryswisnu/skills/pull/2#issuecomment-5657923277) shows the posted form with an embedded change-map image.
+
+Each comment was posted with `--post-comment`; the PR descriptions were not modified.
 
 ## Quick start
 
