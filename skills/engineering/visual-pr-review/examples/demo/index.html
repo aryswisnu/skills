@@ -6,21 +6,21 @@
   <title>Visual PR Review Demo</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #11151c; color: #ecf2ff; font: 18px/1.5 system-ui, sans-serif; }
-    main { width: min(760px, calc(100% - 48px)); padding: 56px; background: #19202b; border: 2px solid #65d1ff; box-shadow: 12px 12px 0 #65d1ff; border-radius: 18px; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f5f5f5; color: #2d3142; font: 18px/1.5 system-ui, sans-serif; }
+    main { width: min(760px, calc(100% - 48px)); padding: 56px; background: #fff; border: 2px solid #2d3142; box-shadow: 12px 12px 0 #eb6c36; border-radius: 18px; }
     h1 { max-width: 620px; font-size: 3.2rem; line-height: 1.05; }
-    p { max-width: 560px; color: #bac7da; }
-    button, a.cta { display: inline-block; margin-top: 18px; padding: 12px 18px; color: #11151c; background: #65d1ff; border: 0; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+    p { max-width: 560px; color: #555b70; }
+    button, a.cta { display: inline-block; margin-top: 18px; padding: 12px 18px; color: #11151c; background: #eb6c36; border: 0; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; }
     #panel[hidden] { display: none; }
-    #panel { margin-top: 24px; padding: 18px; border: 1px dashed #65d1ff; border-radius: 12px; }
-    .rendered-at { color: #55607a; font-size: 0.8rem; }
+    #panel { margin-top: 24px; padding: 18px; border: 1px dashed #eb6c36; border-radius: 12px; }
+    .rendered-at { color: #6b7080; font-size: 0.8rem; }
   </style>
 </head>
 <body>
   <main>
     <small>VISUAL PR REVIEW</small>
-    <h1>Make the diff easier to see.</h1>
-    <p>Authors capture a stable before and after view. Reviewers spend their attention on judgment, not archaeology.</p>
+    <h1>Review the change, not the setup.</h1>
+    <p>Authors capture stable before and after evidence. Reviewers can focus on judgment instead of rebuilding both revisions.</p>
     <button id="open-evidence" type="button">See the evidence</button>
     <a class="cta" href="/details">Open details</a>
     <div id="panel" hidden>
