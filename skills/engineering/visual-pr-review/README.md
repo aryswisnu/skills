@@ -88,6 +88,17 @@ See [the complete web and backend comment examples](docs/pr-comment-examples.md)
 the verdict table, attention list, evidence placement, backend change summary, and exact publication
 boundary.
 
+## Live example
+
+This repository keeps a real, open demonstration:
+
+- [PR #1: docs/live-visual-review-demo](https://github.com/aryswisnu/skills/pull/1) is a genuine public pull request
+  produced by this CLI,
+- [its generated review comment](https://github.com/aryswisnu/skills/pull/1#issuecomment-5657518950) shows the posted,
+  image-bearing form with three embedded side-by-side artifacts.
+
+The comment was posted with `--post-comment`; the PR description was not modified.
+
 ## Quick start
 
 ```bash

@@ -11,7 +11,9 @@
 
 <p align="center">
   <a href="skills/engineering/visual-pr-review/README.md"><strong>Explore the skill</strong></a> ·
-  <a href="skills/engineering/visual-pr-review/docs/pr-comment-examples.md">See the PR comment</a> ·
+  <a href="https://github.com/aryswisnu/skills/pull/1"><strong>Inspect the live PR</strong></a> ·
+  <a href="https://github.com/aryswisnu/skills/pull/1#issuecomment-5657518950">See the generated comment</a> ·
+  <a href="skills/engineering/visual-pr-review/docs/pr-comment-examples.md">Comment examples</a> ·
   <a href="skills/engineering/visual-pr-review/docs/usage-examples.md">Usage examples</a>
 </p>
 
