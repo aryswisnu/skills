@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Orchestration entry point: resolve two revisions, route to web capture or
+// backend diff analysis, and optionally upload evidence and post a PR comment.
+
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';

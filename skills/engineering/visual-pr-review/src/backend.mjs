@@ -9,6 +9,10 @@ const PAPER = '#f5f5f5';
 const INK = '#2d3142';
 const MUTED = '#6b7280';
 
+// The editorial palette: paper background, ink text, one accent for focal
+// modules, and a muted tone for secondary text. Kept as named constants so the
+// change map and the summary share one source of truth.
+
 function topSegment(filePath) {
   const idx = filePath.indexOf('/');
   return idx === -1 ? filePath : filePath.slice(0, idx);
