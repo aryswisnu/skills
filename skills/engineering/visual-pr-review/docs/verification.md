@@ -1,5 +1,18 @@
 # Verification
 
+## v0.6.0 Backend change-map embedding, 2026-09-14
+
+- Backend `--post-comment` now rasterizes `architecture.svg` to a PNG (browser-free, via
+  `@resvg/resvg-js`) and embeds it in the posted comment, mirroring the web evidence flow. GitHub
+  refuses inline SVG in comments, so a PNG is the only way to show the change map directly.
+- Backend change-summary grouping now strips a common directory prefix, so a monorepo change groups
+  by its real modules (e.g. `src`, `scripts`, `test`) instead of collapsing into one umbrella
+  directory.
+- New module `src/svg-to-png.mjs` (lazy-loaded Rust SVG rasterizer). New tests
+  `test/svg-to-png.test.mjs` (valid PNG + rendered glyphs) and `test/backend-post-cli.test.mjs`
+  (full browser-free `--backend --post-comment` flow against a mock GitHub API).
+- `npm test`: 140 tests, 140 passed, 0 failed, 0 skipped.
+
 ## Reviewer-facing documentation, 2026-09-14
 
 - Added complete rendered web and backend PR comment examples plus a real CLI-generated side-by-side

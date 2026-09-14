@@ -1,12 +1,12 @@
 # Usage Examples
 
 > **Implementation status:** The local Git and browser workflow, GitHub pull request URL entry point,
-> and backend diff-summary path in [Available now](#available-now-v050) are implemented and tested
-> in v0.5.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
+> and backend diff-summary path in [Available now](#available-now-v060) are implemented and tested
+> in v0.6.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
-## Available now, v0.5.0
+## Available now, v0.6.0
 
 ### Install the skill collection
 
@@ -53,10 +53,11 @@ node /path/to/skills/skills/engineering/visual-pr-review/scripts/visual-pr-revie
 ```
 
 The CLI resolves the PR's base and head SHAs, fetches them, captures evidence, and writes a
-`pr-comment.md` draft next to the report. Add `--post-comment` to upload the side-by-side images to
-a `visual-review-assets` branch, embed them in the comment, and publish it; posting requires
-`GITHUB_TOKEN` (or `GH_TOKEN`) with write access to the repository. The default only writes the
-local draft.
+`pr-comment.md` draft next to the report. Add `--post-comment` to upload the evidence to a
+`visual-review-assets` branch, embed it in the comment, and publish it; posting requires
+`GITHUB_TOKEN` (or `GH_TOKEN`) with write access to the repository. For web reviews the evidence is
+the side-by-side images; for backend reviews it is a rasterized change-map PNG. The default only
+writes the local draft.
 
 See [What the PR comment looks like](pr-comment-examples.md) for complete rendered web and backend
 examples. The current release posts a comment; it does not modify the pull request description.
@@ -74,7 +75,8 @@ node /path/to/skills/skills/engineering/visual-pr-review/scripts/visual-pr-revie
 ```
 
 This writes `report.md` (a change summary), `architecture.svg` (an editorial change map), and
-`summary.json` from the diff.
+`summary.json` from the diff. With `--pr` and `--post-comment`, it rasterizes the change map to a
+PNG (browser-free, via a Rust SVG renderer) and embeds that PNG in the posted comment.
 
 ### Minimal web application
 
@@ -265,8 +267,8 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended lightweight, provider-neutral direction. The v0.5.0
-CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v050));
+The following examples describe the intended lightweight, provider-neutral direction. The v0.6.0
+CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v060));
 the `/visualize-pr` shorthand below, remote description updates, and non-GitHub providers remain
 planned.
 

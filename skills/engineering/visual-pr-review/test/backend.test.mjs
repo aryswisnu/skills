@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   buildArchitectureDiagram,
+  buildBackendComment,
   buildChangeSummary,
   parseNameStatus,
   parseNumstat,
@@ -37,7 +38,7 @@ test('parseNameStatus reads status and path, including rename triplets', () => {
   ]);
 });
 
-test('summarizeChange groups by top segment and computes counts', () => {
+test('summarizeChange groups by module directory and computes counts', () => {
   const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
   assert.equal(summary.totalFiles, 4);
   assert.equal(summary.totalAdded, 57);
@@ -50,6 +51,26 @@ test('summarizeChange groups by top segment and computes counts', () => {
   assert.deepEqual({ files: src.files, added: src.added, deleted: src.deleted }, { files: 3, added: 55, deleted: 42 });
   // most churn first
   assert.equal(summary.groups[0].name, 'src');
+});
+
+test('summarizeChange strips a common directory prefix so a monorepo groups by its modules', () => {
+  const nameStatus = [
+    'M\tskills/engineering/visual-pr-review/src/backend.mjs',
+    'M\tskills/engineering/visual-pr-review/scripts/visual-pr-review.mjs',
+    'M\tskills/engineering/visual-pr-review/test/backend.test.mjs',
+  ].join('\n');
+  const numstat = [
+    '10\t2\tskills/engineering/visual-pr-review/src/backend.mjs',
+    '4\t1\tskills/engineering/visual-pr-review/scripts/visual-pr-review.mjs',
+    '6\t0\tskills/engineering/visual-pr-review/test/backend.test.mjs',
+  ].join('\n');
+  const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
+  assert.deepEqual(
+    summary.groups.map((g) => g.name).sort(),
+    ['scripts', 'src', 'test'],
+  );
+  const src = summary.groups.find((g) => g.name === 'src');
+  assert.deepEqual({ files: src.files, added: src.added, deleted: src.deleted }, { files: 1, added: 10, deleted: 2 });
 });
 
 test('buildChangeSummary renders a markdown summary', () => {
@@ -80,4 +101,25 @@ test('buildArchitectureDiagram handles an empty change set', () => {
   const svg = buildArchitectureDiagram(summarizeChange([], []), 'a'.repeat(40), 'b'.repeat(40));
   assert.match(svg, /Change map/);
   assert.match(svg, /<\/svg>$/);
+});
+
+test('buildBackendComment references the local SVG when no image URL is supplied', () => {
+  const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
+  const pr = { title: 'Refactor billing', baseRef: 'main', headRef: 'feature/billing' };
+  const md = buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), pr);
+  assert.match(md, /^## Visual review/);
+  assert.match(md, /## Change summary/);
+  assert.match(md, /architecture\.svg/);
+  assert.doesNotMatch(md, /## Evidence/);
+});
+
+test('buildBackendComment embeds the rasterized change map when an image URL is supplied', () => {
+  const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
+  const pr = { title: 'Refactor billing', baseRef: 'main', headRef: 'feature/billing' };
+  const url = 'https://raw.githubusercontent.com/acme/orders/visual-review-assets/pr-9-123/architecture.png';
+  const md = buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), pr, url);
+  assert.match(md, /## Evidence/);
+  assert.match(md, /!\[Architecture change map\]\(https:\/\/raw\.githubusercontent\.com\/acme\/orders\/visual-review-assets\/pr-9-123\/architecture\.png\)/);
+  assert.doesNotMatch(md, /open in a browser/);
+  assert.match(md, /editable `architecture\.svg` remains/);
 });

@@ -34,6 +34,7 @@ import { parsePrUrl } from '../src/pr-url.mjs';
 import { ensureAssetsBranch, githubTokenFrom, postPrComment, resolvePr, uploadFile } from '../src/provider-github.mjs';
 import { buildPrComment } from '../src/pr-comment.mjs';
 import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, parseNameStatus, parseNumstat, summarizeChange } from '../src/backend.mjs';
+import { rasterizeSvgToPng } from '../src/svg-to-png.mjs';
 
 function git(args, cwd, { trim = true } = {}) {
   const output = execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 100 * 1024 * 1024 });
@@ -143,11 +144,20 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
 
   if (pr) {
     const token = githubTokenFrom(process.env);
-    const comment = buildBackendComment(summary, baseSha, headSha, pr);
+    let imageUrl = null;
+    if (options.postComment) {
+      if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
+      const png = await rasterizeSvgToPng(buildArchitectureDiagram(summary, baseSha, headSha));
+      await safeWriteArtifact(outputDir, 'architecture.png', png);
+      const branch = 'visual-review-assets';
+      await ensureAssetsBranch(token, pr.owner, pr.repo, branch);
+      const runId = `pr-${pr.number}-${Date.now()}`;
+      imageUrl = await uploadFile(token, pr.owner, pr.repo, branch, `${runId}/architecture.png`, png);
+    }
+    const comment = buildBackendComment(summary, baseSha, headSha, pr, imageUrl);
     await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
     console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
     if (options.postComment) {
-      if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
       const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
       console.log(`Posted comment: ${posted.htmlUrl}`);
     }

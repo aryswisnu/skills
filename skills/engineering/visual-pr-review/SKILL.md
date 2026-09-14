@@ -1,7 +1,7 @@
 ---
 name: visual-pr-review
 description: Use when reviewing a GitHub PR or two Git revisions; generate browser evidence for web changes or a diff summary and change map for backend changes.
-version: 0.5.0
+version: 0.6.0
 author: Arys
 license: MIT
 platforms: [linux, macos]
@@ -73,10 +73,11 @@ node <visual-pr-review-directory>/scripts/visual-pr-review.mjs \
 ```
 
 This resolves the PR's base and head SHAs, fetches them, captures evidence, and writes a draft
-comment to `pr-comment.md`. Add `--post-comment` to upload the side-by-side images to a
-`visual-review-assets` branch, embed them in the comment, and publish it (requires `GITHUB_TOKEN`
-or `GH_TOKEN` with write access to the repository). Without it, only the local draft is written.
-Other providers are not yet implemented.
+comment to `pr-comment.md`. Add `--post-comment` to upload the evidence to a
+`visual-review-assets` branch, embed it in the comment, and publish it (requires `GITHUB_TOKEN`
+or `GH_TOKEN` with write access to the repository). For web reviews the embedded evidence is the
+side-by-side images; for backend reviews it is a rasterized PNG of the change map. Without
+`--post-comment`, only the local draft is written. Other providers are not yet implemented.
 
 For a backend or non-web change, add `--backend` (no config or browser required):
 
@@ -86,7 +87,8 @@ node <visual-pr-review-directory>/scripts/visual-pr-review.mjs \
 ```
 
 This writes `report.md` (a change summary), `architecture.svg` (an editorial change map), and
-`summary.json` from the diff.
+`summary.json` from the diff. With `--pr` and `--post-comment`, it rasterizes the change map to a
+PNG (browser-free, via a Rust SVG renderer) and embeds that PNG in the posted comment.
 
 ## Workflow and Completion Contract
 
