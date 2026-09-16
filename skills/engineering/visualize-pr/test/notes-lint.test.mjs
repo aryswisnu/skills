@@ -16,8 +16,17 @@ test('lintNotes accepts bullets plus a fenced pseudocode block', () => {
   assert.deepEqual(lintNotes(good), []);
 });
 
-test('lintNotes accepts an indented code block as pseudocode', () => {
-  assert.deepEqual(lintNotes('- one\n- two\n\n    for v in values:\n        expand(v)\n'), []);
+test('lintNotes warns on an indented block after a list: CommonMark renders it as plain text', () => {
+  const findings = lintNotes('- one\n- two\n\n    for v in values:\n        expand(v)\n');
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].line, 4);
+  assert.match(findings[0].message, /indented/i);
+  assert.match(findings[0].message, /fence/i);
+});
+
+test('lintNotes counts only fenced blocks as pseudocode', () => {
+  assert.deepEqual(lintNotes('- one\n\n~~~\nfor v in values: expand(v)\n~~~\n'), []);
+  assert.deepEqual(lintNotes('- one\n\n```text\nfor v in values: expand(v)\n```\n'), []);
 });
 
 test('lintNotes warns when there is no pseudocode block', () => {

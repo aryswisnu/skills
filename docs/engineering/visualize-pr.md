@@ -25,25 +25,29 @@ Git, Node.js 20+, and both revisions available locally (or a GitHub, Bitbucket C
 
 The block is ordered the way a reviewer needs it, and for a small change the generated part is one line plus the diagrams. A real one, trimmed, from a Bitbucket PR that changed how an endpoint parses its filters:
 
-```markdown
+~~~markdown
 - `property_type`, `listing_type`, `status` accept an array or a comma list.
 - A plain object or a non-string item is a 400, so `?uid[$ne]=0` never reaches `$match`.
 - Each value expands to every stored spelling of the same concept; exact matching had
   undercounted (206 of 363 in one district) because `room` is not a case variant of `room rental`.
 - A value in no group passes through and is listed in `meta.unrecognized`.
 
-    for v in values:
-        group = VALUE_GROUPS[filter].find(g => g.includes(v))
-        expanded += group ? group : [v]
-    match[filter] = { $in: expanded }
+```
+for v in values:
+    group = VALUE_GROUPS[filter].find(g => g.includes(v))
+    expanded += group ? group : [v]
+match[filter] = { $in: expanded }
+```
 
 1 file changed (+110 -20): `src/controllers/agentStats.controller.js`
 
-    Change map  6934b9a -> 434fab5  (1 changed file)
-      [M] agentStats.controller.js  -> property.model.js
+```text
+Change map  6934b9a -> 434fab5  (1 changed file)
+  [M] agentStats.controller.js  -> property.model.js
 ```
+~~~
 
-Everything above the numbers line is the agent's, from `--notes`. The module table appears only with two or more modules and the most-changed ranking only with more than three files, so a one-file change is not padded with tables that repeat the one line. The markers around the block are CommonMark link reference definitions, invisible on every forge.
+Everything above the numbers line is the agent's, from `--notes`. The pseudocode is a fenced block; an indented one after a bullet list renders as plain text on every forge, and the CLI warns when it sees that. The module table appears only with two or more modules and the most-changed ranking only with more than three files, so a one-file change is not padded with tables that repeat the one line. The markers around the block are CommonMark link reference definitions, invisible on every forge.
 
 ## Evidence, not approval
 
@@ -67,7 +71,7 @@ Only with `--update-description`. It inserts one block delimited by invisible Co
 Write a few bullets and a short pseudocode block, pass the file with `--notes`, and it lands directly under the title, above everything generated. The pseudocode is required whenever the change alters behavior; a no-logic change carries the bullet "No pseudocode: no logic changed." instead. The CLI warns, with line numbers, when the block is missing or a prose paragraph slips in.
 
 **The PR has bullets but no pseudocode.**
-Either the box runs a skill older than v0.14.0, which had no `--notes` at all (the footer then reads "The change map shows changed files…" rather than "Evidence for a reviewer, not an approval."), or the agent left the block out. Since v0.14.3 the CLI warns on the second case and SKILL.md no longer makes it optional. The generated part is one line for a small change: the module table and the most-changed ranking only appear when there is more than one module or more than three files.
+Most often the pseudocode is there but indented instead of fenced. After a bullet list, CommonMark treats an indented block as a paragraph of the last bullet, so it renders as one wrapped sentence on Bitbucket, GitHub, and GitLab alike. Re-run with a fenced block and `--publish --update-description` replaces the block in place. Since v0.14.4 the CLI warns on an indented block. The other causes: a skill older than v0.14.0, which had no `--notes` at all (its footer reads "The change map shows changed files…"), or the agent leaving the block out, which SKILL.md no longer allows and the CLI warns about. The generated part is one line for a small change: the module table and the most-changed ranking only appear when there is more than one module or more than three files.
 
 **Where is the sequence diagram?**
 The CLI draws the file-level change map on its own. A sequence diagram needs to understand behavior, so the agent writes it from `changes.patch` and passes it back with `--diagram`. If you ran the CLI by hand and see no sequence section, that step was skipped.

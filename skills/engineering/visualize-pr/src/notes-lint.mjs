@@ -37,10 +37,18 @@ export function lintNotes(text) {
     }
     if (inFence) return;
     if (INDENTED_CODE.test(raw)) {
-      // An indented line directly under a wrapped bullet is the bullet's
-      // continuation, not code; only a blank line before it makes it a block.
+      // Not counted as pseudocode. In CommonMark an indented block that follows
+      // a bullet list is a paragraph of the last bullet, not code, and the
+      // notes are always bullets; Bitbucket, GitHub, and GitLab all render it
+      // as wrapped plain text. Only a fenced block is unambiguous.
       const previous = lines[index - 1] ?? '';
-      if (previous.trim() === '' || INDENTED_CODE.test(previous)) hasCode = true;
+      const startsBlock = previous.trim() === '' && !INDENTED_CODE.test(lines[index - 2] ?? '');
+      if (startsBlock) {
+        findings.push({
+          line: number,
+          message: 'indented block. After a bullet list, CommonMark renders an indented block as plain text inside the last bullet. Use a fence (three backticks) so it renders as code on every forge.',
+        });
+      }
       flush();
       return;
     }
