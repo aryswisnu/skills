@@ -38,7 +38,15 @@ export function mergeDescription(existingBody, section, { collapse = false } = {
   const block = markedBlock(section);
   const body = typeof existingBody === 'string' ? existingBody : '';
   const found = findBlock(body);
-  if (found) return body.slice(0, found.start) + block + body.slice(found.end);
+  if (found) {
+    const leading = body.slice(0, found.start).trim();
+    // Already on top: swap the block, leave the fold and everything else alone.
+    if (!leading) return body.slice(0, found.start) + block + body.slice(found.end);
+    // Below the original (an older layout): lift it out and fall through to
+    // the first-insert path, so the block leads and the rest gets folded once.
+    const remainder = `${leading}\n\n${body.slice(found.end).trim()}`.trim();
+    return mergeDescription(remainder, section, { collapse });
+  }
   const trimmed = body.trim();
   if (!trimmed) return block;
   const original = collapse

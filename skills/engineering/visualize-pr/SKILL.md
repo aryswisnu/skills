@@ -4,7 +4,7 @@ description: Turn a pull request on GitHub, Bitbucket Cloud, or GitLab, or any t
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.17.0
+  version: 0.17.1
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
