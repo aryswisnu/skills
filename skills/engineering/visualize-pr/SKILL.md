@@ -1,10 +1,10 @@
 ---
 name: visualize-pr
-description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence. Browser screenshots and runtime errors for web changes, a diff summary and change map for backend changes, plus an optional PR comment draft.
+description: Turn a pull request on GitHub, Bitbucket Cloud, or GitLab, or any two Git revisions, into reviewer-ready evidence in the PR itself. Your notes first, then a change map and sequence diagram, and for web changes before/after screenshots with runtime errors. Drafts locally; publishes only on your approval.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.14.1
+  version: 0.14.2
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -17,14 +17,14 @@ runtime, and provenance evidence for a human reviewer. The evidence never approv
 
 ## When to Use
 
-Use this skill to compare two Git revisions or review a GitHub pull request URL, whether the
-change is web-rendered (browser screenshots) or backend (a diff summary plus an architecture
-diagram).
+Use this skill to compare two Git revisions or review a pull request URL on GitHub, Bitbucket
+Cloud, or GitLab (self-hosted included), whether the change is web-rendered (browser screenshots
+and runtime errors) or backend (a change map of changed files and their imports, plus the
+sequence diagram you write). The PR text leads with your notes.
 
-Web changes need deterministic local HTTP previews. For backend-only changes, run with `--backend`
-to emit a change summary and an architecture diagram without a browser. `--pr` accepts GitHub,
-Bitbucket Cloud, and GitLab URLs, self-hosted included. Azure DevOps, Bitbucket Server,
-single-page screenshots, and supplied image pairs remain planned, not shipped.
+Web changes need deterministic local HTTP previews. For backend-only changes, run with `--backend`;
+no browser or config is needed. Azure DevOps, Bitbucket Server, single-page screenshots, and
+supplied image pairs remain planned, not shipped.
 
 ## Prerequisites
 
