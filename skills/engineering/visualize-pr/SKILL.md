@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.10.2
+  version: 0.11.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -22,7 +22,8 @@ change is web-rendered (browser screenshots) or backend (a diff summary plus an 
 diagram).
 
 Web changes need deterministic local HTTP previews. For backend-only changes, run with `--backend`
-to emit a change summary and an architecture diagram without a browser. Non-GitHub providers,
+to emit a change summary and an architecture diagram without a browser. `--pr` accepts GitHub,
+Bitbucket Cloud, and GitLab URLs, self-hosted included. Azure DevOps, Bitbucket Server,
 single-page screenshots, and supplied image pairs remain planned, not shipped.
 
 ## Prerequisites
@@ -73,15 +74,20 @@ node <visualize-pr-directory>/scripts/visualize-pr.mjs \
   --output visual-review-output
 ```
 
-This resolves the PR's base and head SHAs, fetches them, captures evidence, and writes a draft
-comment to `pr-comment.md`. Add `--post-comment` to upload the evidence to a
-`visual-review-assets` branch, embed it in the comment, and publish it (requires `GITHUB_TOKEN`
-or `GH_TOKEN` with write access to the repository). For web reviews the embedded evidence is the
-side-by-side images. Backend reviews upload nothing: the change map is a Mermaid block that
-GitHub renders natively. Without `--post-comment`, only the local draft is written. Add `--update-description` to write the same
-markdown into the PR description between `<!-- visualize-pr:start -->` and `<!-- visualize-pr:end -->`
-markers, which a repeat run replaces in place; it can be combined with `--post-comment`. Other
-providers are not yet implemented.
+The URL may be a GitHub pull request, a Bitbucket Cloud pull request, or a GitLab merge request;
+the provider is read from the path shape, so self-hosted GitLab and GitHub Enterprise work too.
+This resolves the base and head SHAs, fetches them, captures evidence, and writes a draft comment
+to `pr-comment.md`. Add `--post-comment` to publish it, or `--update-description` to write the
+same markdown into the PR description between `<!-- visualize-pr:start -->` and
+`<!-- visualize-pr:end -->` markers, which a repeat run replaces in place. The two can be
+combined. Publishing needs a token with write access in the environment: `GITHUB_TOKEN` or
+`GH_TOKEN`; `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD`;
+`GITLAB_TOKEN`. Backend reviews upload nothing on any provider: the change map is a Mermaid block
+that all three render natively. Web reviews embed the side-by-side screenshots only on GitHub,
+where they are uploaded to a `visual-review-assets` branch; on Bitbucket and GitLab the verdicts
+and diagrams still publish and the images stay in the output directory, which the CLI says at the
+time. Without either flag, only the local draft is written. Bitbucket Server (Data Center) and
+Azure DevOps are not implemented.
 
 For a backend or non-web change, add `--backend` (no config or browser required):
 
