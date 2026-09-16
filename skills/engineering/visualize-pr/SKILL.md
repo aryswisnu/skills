@@ -4,7 +4,7 @@ description: Turn a pull request on GitHub, Bitbucket Cloud, or GitLab, or any t
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.14.3
+  version: 0.14.4
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -118,7 +118,10 @@ statistics. The CLI cannot write that, so the agent authors two files and passes
 1. Run the CLI once (backend or web) to get `changes.patch` and `report.md`.
 2. Read the patch. Write `visual-review-notes.md`: three to six bullets in plain language on what
    changed and why, then one short pseudocode block (under about 15 lines) showing the core rule.
-   The block is required whenever the diff changes behavior, which is the same condition under
+   Write it as a fenced block, three backticks on their own lines, never by indenting: after a
+   bullet list CommonMark treats an indented block as a paragraph of the last bullet, so Bitbucket,
+   GitHub, and GitLab all render it as wrapped plain text. The block is required whenever the diff
+   changes behavior, which is the same condition under
    which you write the sequence diagram; a change with no logic (docs, config, renames) gets the
    bullet `No pseudocode: no logic changed.` instead, so its absence is a decision a reader can
    see. No restating file counts or SHAs; the CLI adds those. No prose paragraphs. The CLI warns,

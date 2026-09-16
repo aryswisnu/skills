@@ -1,6 +1,6 @@
 {
   "name": "visualize-pr",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "description": "Boot two git revisions locally and produce visual, semantic and runtime evidence for a web change, or a diff summary and change map for a backend change.",
   "type": "module",
   "bin": {

@@ -1,5 +1,21 @@
 # aryswisnu-skills
 
+## 0.14.4 (2026-09-16)
+
+Pseudocode must be fenced. Indented pseudocode after a bullet list is plain text.
+
+- A real PR showed "no pseudocode" even though the agent wrote some. The cause is CommonMark: an
+  indented block that follows a bullet list is a paragraph of the last bullet, not a code block,
+  so Bitbucket, GitHub, and GitLab all render it as one wrapped sentence. Verified with a
+  CommonMark renderer: indented after a list is plain text; fenced, or indented after a
+  paragraph, is code.
+- SKILL.md now says fenced, three backticks, never indented, and why. The notes lint no longer
+  counts an indented block as pseudocode and warns on one with the line number. The README and
+  docs-page samples, which used the broken form themselves, now show fenced blocks.
+- To repair an affected PR: re-run with a fenced notes file and `--publish --update-description`;
+  the block is replaced in place.
+- `npm test`: 302 tests, 1 new.
+
 ## 0.14.3 (2026-09-16)
 
 Pseudocode is required, and the notes file is linted.

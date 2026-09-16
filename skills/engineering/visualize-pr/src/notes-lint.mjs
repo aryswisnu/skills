@@ -16,6 +16,7 @@ export function lintNotes(text) {
   let inFence = false;
   let hasCode = false;
   let hasOptOut = false;
+  let sawIndented = false;
   let run = [];
   const flush = () => {
     if (run.length >= 3) {
@@ -37,10 +38,19 @@ export function lintNotes(text) {
     }
     if (inFence) return;
     if (INDENTED_CODE.test(raw)) {
-      // An indented line directly under a wrapped bullet is the bullet's
-      // continuation, not code; only a blank line before it makes it a block.
+      // Not counted as pseudocode. In CommonMark an indented block that follows
+      // a bullet list is a paragraph of the last bullet, not code, and the
+      // notes are always bullets; Bitbucket, GitHub, and GitLab all render it
+      // as wrapped plain text. Only a fenced block is unambiguous.
       const previous = lines[index - 1] ?? '';
-      if (previous.trim() === '' || INDENTED_CODE.test(previous)) hasCode = true;
+      const startsBlock = previous.trim() === '' && !INDENTED_CODE.test(lines[index - 2] ?? '');
+      if (startsBlock) {
+        sawIndented = true;
+        findings.push({
+          line: number,
+          message: 'indented block. After a bullet list, CommonMark renders an indented block as plain text inside the last bullet. Use a fence (three backticks) so it renders as code on every forge.',
+        });
+      }
       flush();
       return;
     }
@@ -55,7 +65,8 @@ export function lintNotes(text) {
   });
   flush();
 
-  if (!hasCode && !hasOptOut) {
+  // An indented block already got its own warning naming the same fix.
+  if (!hasCode && !hasOptOut && !sawIndented) {
     findings.push({
       line: 1,
       message: 'no pseudocode block. Add a fenced or indented block showing the core rule, or a bullet "No pseudocode: no logic changed." when the diff changes no behavior.',
