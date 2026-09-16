@@ -1,5 +1,17 @@
 # aryswisnu-skills
 
+## 0.14.3 (2026-09-16)
+
+Pseudocode is required, and the notes file is linted.
+
+- SKILL.md said to add pseudocode "when there is one", a judgment the agent could decline. It is
+  now required whenever the diff changes behavior, the same condition as the sequence diagram; a
+  no-logic change carries the bullet "No pseudocode: no logic changed." so the absence is visible.
+- New notes lint on `--notes`: warns, with line numbers, when there is no fenced or indented code
+  block and no opt-out bullet, and when a prose paragraph of three or more lines appears. Wrapped
+  bullets and code blocks are not flagged. Warnings only.
+- `npm test`: 301 tests, 7 new.
+
 ## 0.14.2 (2026-09-16)
 
 The three layers say the same thing.

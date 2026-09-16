@@ -1,6 +1,6 @@
 {
   "name": "aryswisnu-skills",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "description": "Arys's agent skills for real engineering. Starts with visualize-pr: before/after evidence for a pull request.",
   "author": {
     "name": "Arys",

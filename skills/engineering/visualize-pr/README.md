@@ -432,7 +432,7 @@ Review
   --base <ref>          Base git revision, required unless --pr is used
   --head <ref>          Head git revision, default: HEAD
   --backend             Diff summary + change map, no browser or config
-  --notes <path>        Agent-written markdown (bullets, pseudocode) placed at the top of the PR text
+  --notes <path>        Agent-written markdown (bullets, pseudocode) placed at the top of the PR text; linted, warnings only
   --diagram <path>      Mermaid file (for example a sequenceDiagram) to include; linted, warnings only
   --ascii               Draw the change map and sequence diagram as ASCII (automatic on Bitbucket Cloud)
   --config <path>       Config path, default: visual-review.json

@@ -64,7 +64,10 @@ The review run posts nothing; it writes `pr-comment.md` and stops. The agent sho
 Only with `--update-description`. It inserts one block delimited by invisible CommonMark markers (`[//]: # (visualize-pr:start)` and the matching end) and replaces that block on every re-run, so the rest of the description is untouched. Older blocks that used HTML-comment markers, which Bitbucket showed as text, are recognized and rewritten. `--post-comment` posts a comment instead. Both can be combined.
 
 **The generated text is long. Where does my own summary go?**
-Write a few bullets and a short pseudocode block, pass the file with `--notes`, and it lands directly under the title, above everything generated. The generated part is one line for a small change: the module table and the most-changed ranking only appear when there is more than one module or more than three files.
+Write a few bullets and a short pseudocode block, pass the file with `--notes`, and it lands directly under the title, above everything generated. The pseudocode is required whenever the change alters behavior; a no-logic change carries the bullet "No pseudocode: no logic changed." instead. The CLI warns, with line numbers, when the block is missing or a prose paragraph slips in.
+
+**The PR has bullets but no pseudocode.**
+Either the box runs a skill older than v0.14.0, which had no `--notes` at all (the footer then reads "The change map shows changed files…" rather than "Evidence for a reviewer, not an approval."), or the agent left the block out. Since v0.14.3 the CLI warns on the second case and SKILL.md no longer makes it optional. The generated part is one line for a small change: the module table and the most-changed ranking only appear when there is more than one module or more than three files.
 
 **Where is the sequence diagram?**
 The CLI draws the file-level change map on its own. A sequence diagram needs to understand behavior, so the agent writes it from `changes.patch` and passes it back with `--diagram`. If you ran the CLI by hand and see no sequence section, that step was skipped.
