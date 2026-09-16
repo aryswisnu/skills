@@ -198,7 +198,7 @@ See [docs/usage-examples.md](docs/usage-examples.md) for:
 - Clearly marked, not-yet-implemented designs for Bitbucket, GitLab, Azure DevOps,
   GitHub description-update, backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
 
-Only examples under **Available now, v0.6.0** describe executable behavior in this release.
+Only examples under **Available now, v0.6.1** describe executable behavior in this release.
 
 ## CLI
 

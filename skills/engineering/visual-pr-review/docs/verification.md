@@ -1,5 +1,17 @@
 # Verification
 
+## v0.6.1 macOS worktree cleanup, 2026-09-16
+
+- Fixed: on macOS `os.tmpdir()` is a symlink (`/var` -> `/private/var`) while `git worktree list`
+  reports real paths, so `worktreePathsUnder` matched nothing and temporary worktrees leaked after
+  every run. `tempRoot` is now resolved with `realpath` before use.
+- Six `test/cli-failure.test.mjs` cases failed on macOS before the fix and pass after it.
+- Moved non-spec SKILL.md frontmatter keys (`version`, `author`, `platforms`) under `metadata`.
+- Added `.github/workflows/test.yml`: `npm ci`, Chromium install, `npm test`, `npm audit` on
+  Ubuntu and macOS.
+- Removed two unreferenced PNG exports from `docs/`.
+- `npm test`: 141 tests, 141 passed, 0 failed, 0 skipped (macOS 15, Node 22).
+
 ## v0.6.0 Backend change-map embedding, 2026-09-14
 
 - Backend `--post-comment` now rasterizes `architecture.svg` to a PNG (browser-free, via

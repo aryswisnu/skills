@@ -19,6 +19,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/aryswisnu/skills/actions/workflows/test.yml"><img src="https://github.com/aryswisnu/skills/actions/workflows/test.yml/badge.svg" alt="test"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/node-%3E%3D20-brightgreen" alt="Node.js >= 20">
   <img src="https://img.shields.io/badge/platform-linux%20%7C%20macos-lightgrey" alt="Platform: linux | macos">
@@ -144,7 +145,7 @@ For a backend or non-web PR, add `--backend`; no preview config or browser is re
 
 ## Project status
 
-**Current release: v0.6.0**
+**Current release: v0.6.1**
 
 Available now:
 

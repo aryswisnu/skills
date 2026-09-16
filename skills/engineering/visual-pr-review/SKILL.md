@@ -1,12 +1,12 @@
 ---
 name: visual-pr-review
 description: Use when reviewing a GitHub PR or two Git revisions; generate browser evidence for web changes or a diff summary and change map for backend changes.
-version: 0.6.0
-author: Arys
 license: MIT
-platforms: [linux, macos]
 metadata:
-  tags: [code-review, visual-testing, playwright, git, evidence]
+  version: 0.6.1
+  author: Arys
+  platforms: linux, macos
+  tags: code-review, visual-testing, playwright, git, evidence
 ---
 
 # Visual PR Review

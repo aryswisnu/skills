@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -388,7 +388,8 @@ async function main() {
 
   let tempRoot;
   try {
-    tempRoot = await mkdtemp(path.join(os.tmpdir(), 'visual-pr-review-'));
+    // realpath: macOS tmpdir is a symlink (/var -> /private/var); git reports real paths
+    tempRoot = await realpath(await mkdtemp(path.join(os.tmpdir(), 'visual-pr-review-')));
   } catch (error) {
     await emitFailure(failureRecord({ phase: 'temporary-directory', error }));
     fail(error.message);
