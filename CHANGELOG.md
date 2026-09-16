@@ -16,7 +16,7 @@ Leaner PR text, invisible markers, and a place for the agent's own summary.
   showed as literal text on Bitbucket. A block delimited by the old markers is recognized and
   rewritten with the new ones on the next run.
 - `pr.json` records the notes so `--publish` keeps them in a rebuilt web comment.
-- `npm test`: 295 tests, 8 new.
+- `npm test`: 294 tests, 7 new.
 
 ## 0.13.2 (2026-09-16)
 
