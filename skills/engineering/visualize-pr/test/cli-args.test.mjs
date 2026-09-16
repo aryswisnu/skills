@@ -130,3 +130,16 @@ test('parseArgs accepts --setup and refuses to mix it with review flags', () => 
   assert.throws(() => parseArgs(['--setup', '--pr', 'https://github.com/a/b/pull/1']), /--setup cannot be combined with --pr/);
   assert.match(usage(), /--setup/);
 });
+
+test('parseArgs accepts --publish <dir> with a publish flag and nothing else', () => {
+  const post = parseArgs(['--publish', 'out', '--post-comment']);
+  assert.equal(post.publish, 'out');
+  assert.equal(post.postComment, true);
+  const both = parseArgs(['--publish', 'out', '--post-comment', '--update-description']);
+  assert.equal(both.updateDescription, true);
+  assert.throws(() => parseArgs(['--publish', 'out']), /--publish requires --post-comment or --update-description/);
+  assert.throws(() => parseArgs(['--publish', 'out', '--post-comment', '--pr', 'https://github.com/a/b/pull/1']), /--publish cannot be combined with --pr/);
+  assert.throws(() => parseArgs(['--publish', 'out', '--post-comment', '--backend']), /--publish cannot be combined with --backend/);
+  assert.throws(() => parseArgs(['--publish']), /--publish requires a value/);
+  assert.match(usage(), /--publish <dir>/);
+});

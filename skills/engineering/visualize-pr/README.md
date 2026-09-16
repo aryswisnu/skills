@@ -98,7 +98,10 @@ Editable source: [docs/visualize-pr-usage.excalidraw](docs/visualize-pr-usage.ex
 
 ## What the PR comment looks like
 
-`--pr` writes a local `pr-comment.md` containing the verdict table and attention list. For web
+`--pr` writes a local `pr-comment.md` containing the verdict table and attention list. Read it,
+then `--publish <output-dir> --post-comment` or `--publish <output-dir> --update-description` posts
+that file verbatim in under a second, with no second review run. Passing the publish flags on the
+review run itself still works and skips the checkpoint. For web
 reviews, `--post-comment` first uploads the side-by-side images, rebuilds `pr-comment.md` with an
 Evidence section, and posts that image-bearing version. Backend reviews carry their change map as a
 Mermaid block, so `--post-comment` uploads nothing. `--update-description`
@@ -254,6 +257,7 @@ Only examples under **Available now, v0.10.0** describe executable behavior in t
 --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
                    (linted for comment and label mistakes that render wrong; warnings only)
 --update-description  Insert or refresh the review section in the PR description (requires --pr)
+--publish <dir>    Post the reviewed draft in <dir>/pr-comment.md as-is; nothing is recomputed
 --config <path>    Config path, default: visual-review.json
 --init             Write a starter visual-review.json for this repo, then exit
 --setup            Install this skill's npm dependencies and Chromium, then exit

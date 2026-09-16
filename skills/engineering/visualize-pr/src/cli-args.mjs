@@ -1,4 +1,4 @@
-const VALUE_FLAGS = ['--base', '--head', '--config', '--output', '--pr', '--diagram'];
+const VALUE_FLAGS = ['--base', '--head', '--config', '--output', '--pr', '--diagram', '--publish'];
 
 export function usage() {
   return `Usage: visualize-pr --base <ref> [--head <ref>] [options]
@@ -13,6 +13,8 @@ Options:
   --config <path>    Config path, default: visual-review.json
   --init             Write a starter visual-review.json for this repo, then exit
   --setup            Install this skill's npm dependencies and Chromium, then exit
+  --publish <dir>    Post the reviewed draft in <dir>/pr-comment.md as-is, with --post-comment
+                     and/or --update-description; nothing is recomputed
                      (add --backend to skip the browser download)
   --output <path>    Artifact directory, default: visual-review-output
   --scenario <id>    Capture only this scenario, repeatable, overrides impact rules
@@ -46,6 +48,7 @@ export function parseArgs(argv) {
     backend: false,
     init: false,
     setup: false,
+    publish: null,
     help: false,
   };
   let headExplicit = false;
@@ -71,6 +74,24 @@ export function parseArgs(argv) {
   if (options.help) return options;
   if (options.all && options.scenarios.length > 0) {
     throw new Error('--all cannot be combined with --scenario');
+  }
+  if (options.publish) {
+    const conflicts = [
+      ['--pr', Boolean(options.pr)],
+      ['--base', Boolean(options.base)],
+      ['--init', options.init],
+      ['--setup', options.setup],
+      ['--backend', options.backend],
+      ['--diagram', Boolean(options.diagram)],
+      ['--all', options.all],
+      ['--scenario', options.scenarios.length > 0],
+    ];
+    const conflict = conflicts.find(([, present]) => present);
+    if (conflict) throw new Error(`--publish cannot be combined with ${conflict[0]}`);
+    if (!options.postComment && !options.updateDescription) {
+      throw new Error('--publish requires --post-comment or --update-description');
+    }
+    return options;
   }
   if (options.setup) {
     const conflicts = [
