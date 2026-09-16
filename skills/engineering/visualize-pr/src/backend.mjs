@@ -125,7 +125,7 @@ export function summarizeChange(nameStatus, numstat) {
   };
 }
 
-export function buildChangeSummary(summary, base, head, mermaid = null) {
+export function buildChangeSummary(summary, base, head, mermaid = null, diagram = null) {
   const lines = [];
   lines.push('## Change summary');
   lines.push('');
@@ -139,6 +139,12 @@ export function buildChangeSummary(summary, base, head, mermaid = null) {
     lines.push('### Change map');
     lines.push('');
     lines.push(mermaid);
+    lines.push('');
+  }
+
+  const sequence = diagramSection(diagram);
+  if (sequence) {
+    lines.push(sequence);
     lines.push('');
   }
 
@@ -166,12 +172,12 @@ export function buildChangeSummary(summary, base, head, mermaid = null) {
   return lines.join('\n');
 }
 
-export function diagramSection(diagram) {
+export function diagramSection(diagram, heading = '### Sequence') {
   if (!diagram) return null;
   const text = String(diagram).trim();
   if (!text) return null;
   const fenced = text.startsWith('```') ? text : `\`\`\`mermaid\n${text}\n\`\`\``;
-  return ['### Sequence', '', fenced].join('\n');
+  return [heading, '', fenced].join('\n');
 }
 
 export function buildBackendComment(summary, base, head, pr, imageUrl = null, mermaid = null, diagram = null) {

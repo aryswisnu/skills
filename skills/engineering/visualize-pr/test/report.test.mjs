@@ -140,3 +140,10 @@ test('buildSummary emits a compact machine-readable result', () => {
   assert.equal(summary.reviewRequired, true);
   assert.equal('artifactHashes' in summary.provenance, true);
 });
+
+test('renderReport puts a --diagram file into report.md as a Sequence section', () => {
+  const plain = renderReport(report());
+  const withDiagram = renderReport(report(), 'sequenceDiagram\n  A->>B: hi');
+  assert.match(withDiagram, /## Sequence\n\n```mermaid\nsequenceDiagram\n  A->>B: hi\n```/);
+  assert.equal(renderReport(report(), null), plain);
+});

@@ -179,3 +179,12 @@ test('buildBackendComment includes a --diagram file as a Sequence section, fenci
   assert.equal((fenced.match(/```mermaid/g) || []).length, 1);
   assert.equal(buildBackendComment(summary, base, head, pr, null, null, '   '), buildBackendComment(summary, base, head, pr));
 });
+
+test('buildChangeSummary puts a --diagram file into report.md as a Sequence section', () => {
+  const summary = summarizeChange(parseNameStatus('M\tsrc/a.js\n'), parseNumstat('1\t1\tsrc/a.js\n'));
+  const base = 'a'.repeat(40);
+  const head = 'b'.repeat(40);
+  const withDiagram = buildChangeSummary(summary, base, head, null, 'sequenceDiagram\n  A->>B: hi');
+  assert.match(withDiagram, /### Sequence\n\n```mermaid\nsequenceDiagram\n  A->>B: hi\n```/);
+  assert.equal(buildChangeSummary(summary, base, head, null, null), buildChangeSummary(summary, base, head));
+});

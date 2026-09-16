@@ -70,3 +70,60 @@ test('the CLI has no top-level browser dependency imports so backend mode runs w
     .filter((line) => /^import\b/.test(line) && /from '(playwright|pngjs|pixelmatch)'/.test(line));
   assert.deepEqual(visualBrowserDeps, [], `top-level browser imports found:\n${visualBrowserDeps.join('\n')}`);
 });
+
+test('--backend --diagram without --pr still reaches report.md', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'vpr-backend-diagram-'));
+  try {
+    git(['init', '-q'], root);
+    git(['config', 'user.name', 'Test'], root);
+    git(['config', 'user.email', 'test@example.invalid'], root);
+    git(['branch', '-M', 'main'], root);
+    await writeFile(path.join(root, 'app.js'), 'export const a = 1;\n');
+    git(['add', '.'], root);
+    git(['commit', '-qm', 'base'], root);
+    await writeFile(path.join(root, 'app.js'), 'export const a = 2;\n');
+    git(['add', '.'], root);
+    git(['commit', '-qm', 'head'], root);
+    await writeFile(path.join(root, 'seq.mmd'), 'sequenceDiagram\n  Caller->>App: renders\n');
+
+    const result = spawnSync(process.execPath, [
+      cli, '--base', 'HEAD~1', '--backend', '--diagram', 'seq.mmd', '--output', 'review-output',
+    ], { cwd: root, encoding: 'utf8', timeout: 30_000 });
+
+    assert.equal(result.status, 0, result.stderr);
+    const report = await readFile(path.join(root, 'review-output', 'report.md'), 'utf8');
+    assert.match(report, /### Sequence/);
+    assert.match(report, /Caller->>App: renders/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('a missing --diagram file fails before any worktree is created', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'vpr-diagram-missing-'));
+  try {
+    git(['init', '-q'], root);
+    git(['config', 'user.name', 'Test'], root);
+    git(['config', 'user.email', 'test@example.invalid'], root);
+    await writeFile(path.join(root, 'app.js'), 'export const a = 1;\n');
+    git(['add', '.'], root);
+    git(['commit', '-qm', 'base'], root);
+    await writeFile(path.join(root, 'app.js'), 'export const a = 2;\n');
+    git(['add', '.'], root);
+    git(['commit', '-qm', 'head'], root);
+    await writeFile(path.join(root, 'visual-review.json'), `${JSON.stringify({
+      startCommand: 'node -e "setInterval(() => {}, 1000)"',
+      scenarios: [{ id: 'home', path: '/' }],
+    })}\n`);
+
+    const result = spawnSync(process.execPath, [
+      cli, '--base', 'HEAD~1', '--diagram', 'nope.mmd', '--output', 'review-output',
+    ], { cwd: root, encoding: 'utf8', timeout: 30_000 });
+
+    assert.equal(result.status, 2, result.stdout);
+    assert.match(result.stderr, /nope\.mmd/);
+    assert.equal(git(['worktree', 'list', '--porcelain'], root).includes('visualize-pr-'), false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
