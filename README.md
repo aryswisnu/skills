@@ -9,7 +9,7 @@ Agent skills for real engineering work. Each one is small, composable, and built
 evidence rather than a verdict. Install once, type a slash command, review what it drafted,
 approve with one click.
 
-Current release: **v0.12.1**. One skill shipped, more on the way.
+Current release: **v0.13.0**. One skill shipped, more on the way.
 
 ---
 
@@ -185,6 +185,19 @@ flowchart LR
   class n_more unchanged
 ```
 
+On Bitbucket Cloud, which does not render Mermaid, the same map arrives as text:
+
+```text
+Change map  f6f7429 -> 825fc07  (2 changed files)
+
+  scripts/
+    [M] visual-pr-review.mjs  -> backend.mjs, +17 unchanged imports
+  src/
+    [M] backend.mjs
+
+  [A] added  [M] modified  [D] deleted  [R] renamed  [ ] unchanged
+```
+
 Above it: abbreviated SHAs, files changed, a per-module table, the most changed files. Green means
 added, amber modified, red deleted, grey untouched. When a file imports more than five unchanged
 modules they fold into one node so the diagram stays readable. The import graph covers JavaScript
@@ -224,14 +237,15 @@ Every web cell gets a verdict: `unchanged`, `changed-within-threshold`, `review-
 The provider is read from the URL's path shape, not its host, so self-hosted instances work with
 no configuration.
 
-| Provider | URL shape | Token | Screenshots |
-| --- | --- | --- | --- |
-| GitHub | `/owner/repo/pull/N` | `GITHUB_TOKEN` or `GH_TOKEN` | uploaded and embedded |
-| Bitbucket Cloud | `/workspace/repo/pull-requests/N` | `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD` | stay local; verdicts and diagrams post |
-| GitLab | `/group/.../repo/-/merge_requests/N` | `GITLAB_TOKEN` (or `CI_JOB_TOKEN`) | stay local; verdicts and diagrams post |
+| Provider | URL shape | Token | Diagrams | Screenshots |
+| --- | --- | --- | --- | --- |
+| GitHub | `/owner/repo/pull/N` | `GITHUB_TOKEN` or `GH_TOKEN` | Mermaid | uploaded and embedded |
+| Bitbucket Cloud | `/workspace/repo/pull-requests/N` | `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD` | ASCII (Bitbucket does not render Mermaid) | stay local; verdicts and diagrams post |
+| GitLab | `/group/.../repo/-/merge_requests/N` | `GITLAB_TOKEN` (or `CI_JOB_TOKEN`) | Mermaid | stay local; verdicts and diagrams post |
 
-Backend reviews are identical everywhere, because the change map is Mermaid and all three render
-it natively; nothing is uploaded. Nested GitLab groups are handled. Bitbucket returns abbreviated
+Backend reviews upload nothing anywhere. The change map is Mermaid on GitHub and GitLab, which
+render it, and ASCII on Bitbucket Cloud, which renders CommonMark only; `--ascii` forces the text
+form anywhere, including the local `report.md`. Nested GitLab groups are handled. Bitbucket returns abbreviated
 commit hashes, so the CLI fetches the PR's branches with the clone's own credentials and resolves
 the hashes locally. Bitbucket Server (Data Center) is detected and refused with a message; Azure
 DevOps is not implemented.
@@ -245,6 +259,7 @@ DevOps is not implemented.
 | Needs | Git, Node 20+ | plus `visual-review.json`, Chromium |
 | Boots the app | No | Yes, both revisions on separate local ports |
 | Produces | change summary, Mermaid change map, `architecture.svg` | before/after/side-by-side/diff PNGs per scenario and viewport, console and request errors, ARIA snapshot |
+| Diagrams | Mermaid, or ASCII where the forge does not render Mermaid or with `--ascii` | sequence diagram from `--diagram`, same rule |
 | Uploads | Nothing, on any provider | GitHub only: side-by-side PNGs to `visual-review-assets`, at publish time |
 | Config | None | `--init` writes a starter |
 
@@ -293,6 +308,7 @@ Review
   --head <ref>          Head git revision, default: HEAD
   --backend             Diff summary + Mermaid change map, no browser or config
   --diagram <path>      Mermaid file (for example a sequenceDiagram) to include; linted, warnings only
+  --ascii               Draw the change map and sequence diagram as ASCII (automatic on Bitbucket Cloud)
   --config <path>       Config path, default: visual-review.json
   --output <path>       Artifact directory, default: visual-review-output (must not exist)
   --scenario <id>       Capture only this scenario, repeatable, overrides impact rules

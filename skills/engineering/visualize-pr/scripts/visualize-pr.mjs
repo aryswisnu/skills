@@ -39,6 +39,7 @@ import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, pars
 import { buildModuleGraph, renderMermaidFlowchart } from '../src/mermaid.mjs';
 import { setupPlan, setupSummary, unsupportedNodeVersion } from '../src/setup.mjs';
 import { formatDiagramWarnings, lintDiagram } from '../src/diagram-lint.mjs';
+import { renderAsciiChangeMap, renderAsciiSequence } from '../src/ascii.mjs';
 import { mergeDescription } from '../src/pr-description.mjs';
 
 // Browser dependencies are loaded on first use in the web path only, so backend
@@ -190,12 +191,16 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
   const graph = await buildModuleGraph({ files: summary.files, readFile: readHeadFile });
   const mermaid = renderMermaidFlowchart(graph, { base: baseSha, head: headSha });
   const diagram = await readDiagram(options.diagram);
+  const ascii = useAsciiFor(options, pr);
+  const changeMap = changeMapBlock(graph, mermaid, baseSha, headSha, ascii);
+  const sequence = sequenceBlock(diagram, ascii);
 
   await createOwnedOutputDirectory(outputDir);
   await safeWriteArtifact(outputDir, 'changes.patch', codeDiff);
   await safeWriteArtifact(outputDir, 'changes-stat.txt', diffStat ? `${diffStat}\n` : '');
-  await safeWriteArtifact(outputDir, 'report.md', `${buildChangeSummary(summary, baseSha, headSha, mermaid, diagram)}\n`);
+  await safeWriteArtifact(outputDir, 'report.md', `${buildChangeSummary(summary, baseSha, headSha, changeMap, sequence)}\n`);
   await safeWriteArtifact(outputDir, 'change-map.mmd', `${mermaid}\n`);
+  await safeWriteArtifact(outputDir, 'change-map.txt', `${renderAsciiChangeMap(graph, { base: baseSha, head: headSha })}\n`);
   await safeWriteArtifact(outputDir, 'architecture.svg', buildArchitectureDiagram(summary, baseSha, headSha));
 
   const payload = {
@@ -222,8 +227,8 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
     const token = provider.tokenFrom(process.env);
     if (options.postComment || options.updateDescription) requirePublishToken(token, options, provider);
     // Mermaid renders natively on GitHub, so backend reviews upload nothing.
-    const comment = buildBackendComment(summary, baseSha, headSha, pr, null, mermaid, diagram);
-    await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'backend', diagram }, null, 2)}\n`);
+    const comment = buildBackendComment(summary, baseSha, headSha, pr, null, changeMap, sequence);
+    await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'backend', diagram, ascii }, null, 2)}\n`);
     await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
     console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
     if (!options.postComment && !options.updateDescription) {
@@ -376,6 +381,26 @@ async function runSetup(options) {
     : 'Setup complete. Backend reviews are ready; re-run --setup without --backend for web reviews.');
 }
 
+const fence = (lang, body) => `\`\`\`${lang}\n${String(body).replace(/\n$/, '')}\n\`\`\``;
+
+// Mermaid where the destination renders it, ASCII where it does not (or on
+// request). The result is already fenced so the comment builders use it as-is.
+function useAsciiFor(options, pr) {
+  if (options.ascii) return true;
+  return Boolean(pr) && !providerFor(pr).rendersMermaid;
+}
+
+function changeMapBlock(graph, mermaid, base, head, ascii) {
+  return ascii ? fence('text', renderAsciiChangeMap(graph, { base, head })) : mermaid;
+}
+
+function sequenceBlock(diagram, ascii) {
+  if (!diagram) return null;
+  if (!ascii) return diagram;
+  const art = renderAsciiSequence(diagram);
+  return art ? fence('text', art) : diagram;
+}
+
 async function runPublish(options) {
   const dir = path.resolve(options.publish);
   const prPath = path.join(dir, 'pr.json');
@@ -403,7 +428,7 @@ async function runPublish(options) {
       const images = await uploadCellImages(token, pr, dir, summary.cells ?? []);
       const count = Object.keys(images).length;
       if (count > 0) {
-        comment = buildPrComment(summary, pr, images, pr.diagram ?? null);
+        comment = buildPrComment(summary, pr, images, sequenceBlock(pr.diagram ?? null, Boolean(pr.ascii)));
         console.log(`Uploaded ${count} screenshot${count === 1 ? '' : 's'} to the visual-review-assets branch and embedded ${count === 1 ? 'it' : 'them'}.`);
       }
     }
@@ -849,7 +874,7 @@ if (options.init) {
       provenance,
     };
 
-    await safeWriteArtifact(outputDir, 'report.md', renderReport(report, webDiagram));
+    await safeWriteArtifact(outputDir, 'report.md', renderReport(report, sequenceBlock(webDiagram, useAsciiFor(options, pr))));
     await safeWriteArtifact(
       outputDir,
       'summary.json',
@@ -882,7 +907,8 @@ if (options.init) {
     if (pr) {
       const provider = providerFor(pr);
       const token = provider.tokenFrom(process.env);
-      const diagram = webDiagram;
+      const ascii = useAsciiFor(options, pr);
+      const diagram = sequenceBlock(webDiagram, ascii);
       let comment = buildPrComment(report, pr, null, diagram);
       if (options.postComment || options.updateDescription) {
         requirePublishToken(token, options, provider);
@@ -897,7 +923,7 @@ if (options.init) {
           console.error(`${provider.name} evidence upload is not implemented. The screenshots stay in ${outputDir}; the comment carries verdicts and diagrams only.`);
         }
       }
-      await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'web', diagram }, null, 2)}\n`);
+      await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'web', diagram: webDiagram, ascii }, null, 2)}\n`);
       await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
       console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
       if (!options.postComment && !options.updateDescription) {

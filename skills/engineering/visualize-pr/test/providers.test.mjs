@@ -42,3 +42,9 @@ test('providerFor passes the parsed parts through to the client', async () => {
 test('providerFor rejects a provider it does not implement', () => {
   assert.throws(() => providerFor({ provider: 'azure' }), /unsupported provider: azure/);
 });
+
+test('providers say whether the forge renders Mermaid, so the CLI can fall back to ASCII', () => {
+  assert.equal(providerFor(parsePrUrl('https://github.com/a/b/pull/1')).rendersMermaid, true);
+  assert.equal(providerFor(parsePrUrl('https://gitlab.com/a/b/-/merge_requests/1')).rendersMermaid, true);
+  assert.equal(providerFor(parsePrUrl('https://bitbucket.org/a/b/pull-requests/1')).rendersMermaid, false, 'Bitbucket Cloud renders CommonMark only');
+});

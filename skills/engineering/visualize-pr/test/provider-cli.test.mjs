@@ -110,7 +110,9 @@ test('--backend --update-description against Bitbucket Cloud', async () => {
     assert.equal(state.puts, 1);
     assert.equal(state.lastPut.title, 'Agent stats', 'Bitbucket rejects a PUT without the title');
     assert.match(state.description, /<!-- visualize-pr:start -->/);
-    assert.match(state.description, /```mermaid\nflowchart LR/);
+    assert.doesNotMatch(state.description, /```mermaid/, 'Bitbucket Cloud does not render Mermaid, so none is sent');
+    assert.match(state.description, /```text\nChange map/, 'the change map falls back to ASCII on Bitbucket');
+    assert.match(state.description, /\[M\] orders\.js/);
     assert.ok(state.description.startsWith('Original body.'), 'the existing body is preserved');
 
     const again = await runCli(
