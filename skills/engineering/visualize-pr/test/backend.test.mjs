@@ -219,3 +219,19 @@ test('buildBackendComment places --notes right after the title, before the chang
   assert.ok(title < notes && notes < change, `order: title ${title}, notes ${notes}, change ${change}`);
   assert.match(md, /```\nfor v in values: expand\(v\)\n```/);
 });
+
+test('buildBackendComment orders the block: title, notes, sequence, change line, change map', () => {
+  const summary = summarizeChange(parseNameStatus('M\tsrc/a.js\n'), parseNumstat('1\t1\tsrc/a.js\n'));
+  const md = buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), { title: 'T', baseRef: 'm', headRef: 'f', number: 1 }, null, '```mermaid\nflowchart LR\n```', 'sequenceDiagram\n  A->>B: hi', '- what changed');
+  const at = (s) => md.indexOf(s);
+  assert.ok(at('**T**') < at('- what changed'), 'title before notes');
+  assert.ok(at('- what changed') < at('### Sequence'), 'notes before sequence');
+  assert.ok(at('### Sequence') < at('1 file changed'), 'sequence before the change line');
+  assert.ok(at('1 file changed') < at('### Change map'), 'change line before change map');
+});
+
+test('buildChangeSummary puts the sequence before the change map in report.md', () => {
+  const summary = summarizeChange(parseNameStatus('M\tsrc/a.js\n'), parseNumstat('1\t1\tsrc/a.js\n'));
+  const md = buildChangeSummary(summary, 'a'.repeat(40), 'b'.repeat(40), '```mermaid\nflowchart LR\n```', 'sequenceDiagram\n  A->>B: hi');
+  assert.ok(md.indexOf('### Sequence') < md.indexOf('### Change map'));
+});

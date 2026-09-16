@@ -6,7 +6,7 @@
 Agent skills for real engineering work. Each one is small, composable, and built to hand a human
 evidence rather than a verdict: the agent drafts, you review, you approve with one click.
 
-Current release: **v0.14.4**. One skill shipped, more on the way.
+Current release: **v0.15.0**. One skill shipped, more on the way.
 
 ## The skills
 
@@ -19,7 +19,7 @@ them. **Model-invoked** skills can also be picked up by the agent when a task fi
 
 | Skill | What it does | Read |
 | --- | --- | --- |
-| [`/visualize-pr`](./skills/engineering/visualize-pr/SKILL.md) | Turns a pull request on GitHub, Bitbucket Cloud, or GitLab, or any two Git revisions, into reviewer-ready evidence and writes it into the PR: your notes and pseudocode first, then a change map, a sequence diagram, and for web changes before/after screenshots. Draft, review, approve. | [README](./skills/engineering/visualize-pr/README.md), [page](./docs/engineering/visualize-pr.md) |
+| [`/visualize-pr`](./skills/engineering/visualize-pr/SKILL.md) | Turns a pull request on GitHub, Bitbucket Cloud, or GitLab, or any two Git revisions, into reviewer-ready evidence and writes it into the PR: your notes first, then the sequence diagram, then a change map, and for web changes before/after screenshots. Draft, review, approve. | [README](./skills/engineering/visualize-pr/README.md), [page](./docs/engineering/visualize-pr.md) |
 
 **Model-invoked**
 

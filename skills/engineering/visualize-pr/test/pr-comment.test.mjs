@@ -63,3 +63,10 @@ test('buildPrComment places --notes right after the title, before the verdict ta
   const md = buildPrComment(report, { title: 'T', baseRef: 'm', headRef: 'f', number: 1 }, null, null, '- what changed');
   assert.ok(md.indexOf('**T**') < md.indexOf('- what changed') && md.indexOf('- what changed') < md.indexOf('| Scenario |'));
 });
+
+test('buildPrComment orders the block: title, notes, sequence, verdict table', () => {
+  const report = { base: { sha: 'a'.repeat(40) }, head: { sha: 'b'.repeat(40) }, cells: [{ scenarioId: 'h', scenarioName: 'Home', viewport: 'desktop', verdict: 'unchanged', reasons: [], artifacts: {} }], skippedScenarios: [] };
+  const md = buildPrComment(report, { title: 'T', baseRef: 'm', headRef: 'f', number: 1 }, null, 'sequenceDiagram\n  A->>B: hi', '- what changed');
+  const at = (s) => md.indexOf(s);
+  assert.ok(at('**T**') < at('- what changed') && at('- what changed') < at('### Sequence') && at('### Sequence') < at('| Scenario |'));
+});

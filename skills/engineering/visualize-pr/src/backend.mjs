@@ -135,16 +135,16 @@ export function buildChangeSummary(summary, base, head, mermaid = null, diagram 
   lines.push(`- Added: ${summary.addedCount} - Modified: ${summary.modifiedCount} - Deleted: ${summary.deletedCount}`);
   lines.push('');
 
+  const sequence = diagramSection(diagram);
+  if (sequence) {
+    lines.push(sequence);
+    lines.push('');
+  }
+
   if (mermaid) {
     lines.push('### Change map');
     lines.push('');
     lines.push(mermaid);
-    lines.push('');
-  }
-
-  const sequence = diagramSection(diagram);
-  if (sequence) {
-    lines.push(sequence);
     lines.push('');
   }
 
@@ -200,6 +200,13 @@ export function buildBackendComment(summary, base, head, pr, imageUrl = null, me
     lines.push(noteText);
     lines.push('');
   }
+  // The sequence diagram is the first piece of evidence, directly under the
+  // headline the notes give it; the file-level map comes last.
+  const sequence = diagramSection(diagram);
+  if (sequence) {
+    lines.push(sequence);
+    lines.push('');
+  }
   lines.push(compactChangeLine(summary));
   lines.push('');
   // The module table and the ranking only earn their space when they say more
@@ -226,11 +233,6 @@ export function buildBackendComment(summary, base, head, pr, imageUrl = null, me
     lines.push('### Change map');
     lines.push('');
     lines.push(mermaid);
-    lines.push('');
-  }
-  const sequence = diagramSection(diagram);
-  if (sequence) {
-    lines.push(sequence);
     lines.push('');
   }
   if (imageUrl) {

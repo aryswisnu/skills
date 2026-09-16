@@ -1,5 +1,17 @@
 # aryswisnu-skills
 
+## 0.15.0 (2026-09-16)
+
+Sequence diagram directly under the notes.
+
+- The PR block now reads: title, notes (bullets and pseudocode), sequence diagram, one line of
+  numbers, change map, footer. The sequence is the first piece of evidence, right under the
+  headline the notes give it; the file-level map comes last. Web comments put the sequence before
+  the verdict table. `report.md` follows the same order.
+- Not strictly first: the bullets stay on top so a reader, and a phone screen, gets what changed
+  before a 12-line diagram.
+- `npm test`: 305 tests, 3 new.
+
 ## 0.14.4 (2026-09-16)
 
 Pseudocode must be fenced. Indented pseudocode after a bullet list is plain text.
