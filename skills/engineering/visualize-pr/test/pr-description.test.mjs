@@ -42,3 +42,17 @@ test('mergeDescription keeps text that follows the marked block', () => {
   assert.ok(merged.includes('new'));
   assert.ok(!merged.includes('old'));
 });
+
+test('markers are CommonMark link reference definitions, invisible on every forge', () => {
+  assert.equal(DESCRIPTION_START, '[//]: # (visualize-pr:start)');
+  assert.equal(DESCRIPTION_END, '[//]: # (visualize-pr:end)');
+  const out = mergeDescription('Body.', '## Visual review\nx');
+  assert.doesNotMatch(out, /<!--/, 'Bitbucket Cloud shows HTML comments as text');
+});
+
+test('mergeDescription upgrades a block delimited by the legacy HTML-comment markers', () => {
+  const legacy = 'Body.\n\n<!-- visualize-pr:start -->\nold\n<!-- visualize-pr:end -->';
+  const out = mergeDescription(legacy, 'new');
+  assert.equal(out, `Body.\n\n${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}`);
+  assert.doesNotMatch(out, /old|<!--/);
+});

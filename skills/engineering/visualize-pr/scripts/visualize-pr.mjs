@@ -159,6 +159,13 @@ function requirePublishToken(token, options, provider) {
   throw new Error(`${flag} requires ${provider.tokenHint} in the environment`);
 }
 
+async function readNotes(filePath) {
+  if (!filePath) return null;
+  const text = await readFile(filePath, 'utf8');
+  if (!text.trim()) throw new Error(`--notes file is empty: ${filePath}`);
+  return text;
+}
+
 async function readDiagram(filePath) {
   if (!filePath) return null;
   const text = await readFile(filePath, 'utf8');
@@ -194,6 +201,7 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
   const ascii = useAsciiFor(options, pr);
   const changeMap = changeMapBlock(graph, mermaid, baseSha, headSha, ascii);
   const sequence = sequenceBlock(diagram, ascii);
+  const notes = await readNotes(options.notes);
 
   await createOwnedOutputDirectory(outputDir);
   await safeWriteArtifact(outputDir, 'changes.patch', codeDiff);
@@ -227,8 +235,8 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
     const token = provider.tokenFrom(process.env);
     if (options.postComment || options.updateDescription) requirePublishToken(token, options, provider);
     // Mermaid renders natively on GitHub, so backend reviews upload nothing.
-    const comment = buildBackendComment(summary, baseSha, headSha, pr, null, changeMap, sequence);
-    await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'backend', diagram, ascii }, null, 2)}\n`);
+    const comment = buildBackendComment(summary, baseSha, headSha, pr, null, changeMap, sequence, notes);
+    await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'backend', diagram, ascii, notes }, null, 2)}\n`);
     await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
     console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
     if (!options.postComment && !options.updateDescription) {
@@ -428,7 +436,7 @@ async function runPublish(options) {
       const images = await uploadCellImages(token, pr, dir, summary.cells ?? []);
       const count = Object.keys(images).length;
       if (count > 0) {
-        comment = buildPrComment(summary, pr, images, sequenceBlock(pr.diagram ?? null, Boolean(pr.ascii)));
+        comment = buildPrComment(summary, pr, images, sequenceBlock(pr.diagram ?? null, Boolean(pr.ascii)), pr.notes ?? null);
         console.log(`Uploaded ${count} screenshot${count === 1 ? '' : 's'} to the visual-review-assets branch and embedded ${count === 1 ? 'it' : 'them'}.`);
       }
     }
@@ -522,9 +530,11 @@ if (options.init) {
   // Read the diagram before any worktree or browser work, so a bad path fails
   // in front of the user instead of after a full capture.
   let webDiagram = null;
+  let webNotes = null;
   if (!options.backend) {
     try {
       webDiagram = await readDiagram(options.diagram);
+      webNotes = await readNotes(options.notes);
     } catch (error) {
       fail(error.message);
       return;
@@ -923,13 +933,13 @@ if (options.init) {
       const token = provider.tokenFrom(process.env);
       const ascii = useAsciiFor(options, pr);
       const diagram = sequenceBlock(webDiagram, ascii);
-      let comment = buildPrComment(report, pr, null, diagram);
+      let comment = buildPrComment(report, pr, null, diagram, webNotes);
       if (options.postComment || options.updateDescription) {
         requirePublishToken(token, options, provider);
         if (provider.supportsEvidenceUpload) {
           phase = 'pr-asset-upload';
           const images = await uploadCellImages(token, pr, outputDir, report.cells);
-          comment = buildPrComment(report, pr, images, diagram);
+          comment = buildPrComment(report, pr, images, diagram, webNotes);
         } else {
           // Only GitHub has a host for the screenshots today. Elsewhere the
           // verdicts and diagrams still post; the images stay in the output
@@ -937,7 +947,7 @@ if (options.init) {
           console.error(`${provider.name} evidence upload is not implemented. The screenshots stay in ${outputDir}; the comment carries verdicts and diagrams only.`);
         }
       }
-      await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'web', diagram: webDiagram, ascii }, null, 2)}\n`);
+      await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'web', diagram: webDiagram, ascii, notes: webNotes }, null, 2)}\n`);
       await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
       console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
       if (!options.postComment && !options.updateDescription) {

@@ -109,7 +109,8 @@ test('--backend --update-description against Bitbucket Cloud', async () => {
     assert.match(result.stdout, /PR description updated/);
     assert.equal(state.puts, 1);
     assert.equal(state.lastPut.title, 'Agent stats', 'Bitbucket rejects a PUT without the title');
-    assert.match(state.description, /<!-- visualize-pr:start -->/);
+    assert.match(state.description, /\[\/\/\]: # \(visualize-pr:start\)/);
+    assert.doesNotMatch(state.description, /<!--/);
     assert.doesNotMatch(state.description, /```mermaid/, 'Bitbucket Cloud does not render Mermaid, so none is sent');
     assert.match(state.description, /```text\nChange map/, 'the change map falls back to ASCII on Bitbucket');
     assert.match(state.description, /\[M\] orders\.js/);
@@ -167,7 +168,7 @@ test('--backend --post-comment against GitLab, including a nested group path', a
     assert.equal(seen.token, 'test-token', 'PRIVATE-TOKEN header reaches GitLab');
     assert.ok(seen.paths.every((p) => !p.includes('group/sub/orders')), 'the nested path is never sent raw');
     assert.ok(seen.paths.some((p) => p.includes('group%2Fsub%2Forders')), 'the nested path is encoded');
-    assert.match(seen.note, /## Change summary/);
+    assert.match(seen.note, /^2 files changed \(\+\d+ -\d+\): `src\/billing\.js`, `src\/orders\.js`$/m);
     assert.match(seen.note, /```mermaid\nflowchart LR/);
   } finally {
     mock?.server.close();

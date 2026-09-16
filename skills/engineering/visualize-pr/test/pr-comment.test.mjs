@@ -57,3 +57,9 @@ test('buildPrComment embeds side-by-side images when supplied', () => {
   assert.match(markdown, /images are embedded above/);
   assert.doesNotMatch(markdown, /### Checkout @ mobile/);
 });
+
+test('buildPrComment places --notes right after the title, before the verdict table', () => {
+  const report = { base: { sha: 'a'.repeat(40) }, head: { sha: 'b'.repeat(40) }, cells: [{ scenarioId: 'h', scenarioName: 'Home', viewport: 'desktop', verdict: 'unchanged', reasons: [], artifacts: {} }], skippedScenarios: [] };
+  const md = buildPrComment(report, { title: 'T', baseRef: 'm', headRef: 'f', number: 1 }, null, null, '- what changed');
+  assert.ok(md.indexOf('**T**') < md.indexOf('- what changed') && md.indexOf('- what changed') < md.indexOf('| Scenario |'));
+});

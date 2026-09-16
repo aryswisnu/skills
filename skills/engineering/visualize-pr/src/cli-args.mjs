@@ -1,4 +1,4 @@
-const VALUE_FLAGS = ['--base', '--head', '--config', '--output', '--pr', '--diagram', '--publish'];
+const VALUE_FLAGS = ['--base', '--head', '--config', '--output', '--pr', '--diagram', '--publish', '--notes'];
 
 export function usage() {
   return `Usage: visualize-pr --base <ref> [--head <ref>] [options]
@@ -10,6 +10,7 @@ Options:
   --pr <url>         GitHub pull request URL; resolves base and head SHAs
   --backend          Analyze the diff and emit a change summary + Mermaid change map (no browser)
   --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
+  --notes <path>     Markdown written by the agent (bullets, pseudocode) placed at the top of the PR text
   --ascii            Render the change map and sequence diagram as ASCII instead of Mermaid
                      (automatic for providers that do not render Mermaid, such as Bitbucket Cloud)
   --config <path>    Config path, default: visual-review.json
@@ -52,6 +53,7 @@ export function parseArgs(argv) {
     setup: false,
     publish: null,
     ascii: false,
+    notes: null,
     help: false,
   };
   let headExplicit = false;
@@ -90,6 +92,7 @@ export function parseArgs(argv) {
       ['--all', options.all],
       ['--scenario', options.scenarios.length > 0],
       ['--ascii', options.ascii],
+      ['--notes', Boolean(options.notes)],
     ];
     const conflict = conflicts.find(([, present]) => present);
     if (conflict) throw new Error(`--publish cannot be combined with ${conflict[0]}`);

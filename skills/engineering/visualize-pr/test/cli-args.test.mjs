@@ -151,3 +151,11 @@ test('parseArgs accepts --ascii on review runs and rejects it on --publish', () 
   assert.throws(() => parseArgs(['--publish', 'out', '--post-comment', '--ascii']), /--publish cannot be combined with --ascii/);
   assert.match(usage(), /--ascii/);
 });
+
+test('parseArgs accepts --notes <path> on review runs and rejects it on --publish', () => {
+  assert.equal(parseArgs(['--base', 'main', '--notes', 'notes.md']).notes, 'notes.md');
+  assert.equal(parseArgs(['--base', 'main']).notes, null);
+  assert.throws(() => parseArgs(['--base', 'main', '--notes']), /--notes requires a value/);
+  assert.throws(() => parseArgs(['--publish', 'out', '--post-comment', '--notes', 'n.md']), /--publish cannot be combined with --notes/);
+  assert.match(usage(), /--notes <path>/);
+});

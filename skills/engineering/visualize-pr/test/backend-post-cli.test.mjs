@@ -159,7 +159,7 @@ test('--backend --post-comment posts a comment with a Mermaid change map and upl
     assert.match(comment, /### Change map/);
     assert.match(comment, /```mermaid\nflowchart LR/);
     assert.doesNotMatch(comment, /raw\.githubusercontent\.com/);
-    assert.match(comment, /## Change summary/);
+    assert.match(comment, /files? changed \(\+\d+ -\d+\)/);
     assert.match(comment, /2 files changed/);
 
     assert.match(posted.body, /```mermaid\nflowchart LR/);
@@ -236,13 +236,13 @@ test('--backend --update-description writes a marked section into the PR body an
     assert.ok(afterFirst.includes(DESCRIPTION_START));
     assert.ok(afterFirst.includes(DESCRIPTION_END));
     assert.ok(afterFirst.startsWith('Original PR body.'));
-    assert.match(afterFirst, /## Change summary/);
+    assert.match(afterFirst, /files? changed \(\+\d+ -\d+\)/);
     assert.match(afterFirst, /2 files changed/);
     assert.match(afterFirst, /```mermaid\nflowchart LR/);
 
     // pr-comment.md is still written locally.
     const comment = await readFile(path.join(clone, 'review-output', 'pr-comment.md'), 'utf8');
-    assert.match(comment, /## Change summary/);
+    assert.match(comment, /files? changed \(\+\d+ -\d+\)/);
 
     await run('review-output-2');
     assert.equal(posted.patchCount, 2);

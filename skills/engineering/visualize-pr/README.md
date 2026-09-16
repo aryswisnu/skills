@@ -98,7 +98,10 @@ Editable source: [docs/visualize-pr-usage.excalidraw](docs/visualize-pr-usage.ex
 
 ## What the PR comment looks like
 
-`--pr` writes a local `pr-comment.md` containing the verdict table and attention list. Read it,
+`--pr` writes a local `pr-comment.md`: the agent's notes from `--notes` first, then a one-line
+change summary, then the diagrams and, for web, the verdict table. The block is delimited by
+CommonMark link reference definitions, which render as nothing on GitHub, GitLab, and Bitbucket
+Cloud, so a re-run replaces it in place with no visible markers. Read it,
 then `--publish <output-dir> --post-comment` or `--publish <output-dir> --update-description` posts
 that file in under a second, with no second review run. For a web review on GitHub the
 side-by-side screenshots are uploaded at that moment and embedded; the text you read is unchanged.
@@ -255,6 +258,7 @@ Only examples under **Available now, v0.10.0** describe executable behavior in t
 --pr <url>         GitHub, Bitbucket Cloud, or GitLab pull/merge request URL; resolves base and head SHAs
 --backend          Analyze the diff and emit a change summary + architecture diagram (no browser)
 --post-comment     Upload evidence, embed images, and post as a PR comment (requires --pr)
+--notes <path>     Agent-written markdown (bullets, pseudocode) placed at the top of the PR text
 --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
                    (linted for comment and label mistakes that render wrong; warnings only)
 --ascii            Render the change map and sequence diagram as ASCII instead of Mermaid
