@@ -2,81 +2,305 @@
   <img src="docs/visualize-pr-logo.svg" alt="Visualize PR" width="900">
 </p>
 
-<h1 align="center">Visual PR Review</h1>
+<h1 align="center">Visualize PR</h1>
 
-<p align="center"><code>/visualize-pr</code> turns code changes into reviewer-ready visual, semantic and runtime evidence.</p>
+<p align="center"><code>/visualize-pr</code> turns a pull request into reviewer-ready evidence and writes it into the PR itself.</p>
 
 <p align="center"><sub>Type <code>/visualize-pr</code> in Claude Code (with the plugin installed) or run the CLI directly.</sub></p>
 
-Boot **two exact Git revisions side by side on your own machine**, replay equivalent reviewer states,
-and write one evidence directory a human can act on. Web changes get real browser screenshots and
-runtime evidence. Backend changes get a diff summary and editorial change map. No committed
-baselines, hosted review account, or silent publication.
+Boot **two exact Git revisions side by side on your own machine**, replay the same reviewer
+states on both, and write one evidence directory a human can act on. Web changes get real browser
+screenshots and runtime evidence. Backend changes get a change map and a sequence diagram. Your
+own notes go first. Nothing is published until you say so.
 
 ## Table of contents
 
 - [Why this exists](#why-this-exists)
-- [What the reviewer gets](#what-the-reviewer-gets)
+- [In 60 seconds](#in-60-seconds)
+- [Review, then approve](#review-then-approve)
+- [What lands in the PR](#what-lands-in-the-pr)
+- [ASCII fallback](#ascii-fallback)
+- [Providers](#providers)
+- [Two review modes](#two-review-modes)
 - [Capabilities](#capabilities)
-- [Sequence](#sequence)
-- [How to use](#how-to-use)
-- [What the PR comment looks like](#what-the-pr-comment-looks-like)
-- [Live example](#live-example)
-- [Quick start](#quick-start)
+- [How the agent runs it](#how-the-agent-runs-it)
+- [Live examples](#live-examples)
+- [Setup and quick start](#setup-and-quick-start)
 - [Usage examples](#usage-examples)
-- [CLI](#cli)
+- [CLI reference](#cli-reference)
 - [CI](#ci)
-- [Platforms](#platforms)
+- [Requirements](#requirements)
 - [Safety boundary](#safety-boundary)
 - [Development](#development)
 - [License](#license)
 
 ## Why this exists
 
-A line diff can prove which code changed. It cannot prove what the checkout looked like, whether the
-mobile state broke, whether the new page emitted runtime errors, or which backend modules absorbed
-the change. Visual PR Review captures those reviewer-facing facts while the author still has the
-context to explain them.
+A line diff can prove which code changed. It cannot prove what the checkout looked like, whether
+the mobile state broke, whether the new page emitted runtime errors, or which backend modules
+absorbed the change. This skill captures those reviewer-facing facts while the author still has
+the context to explain them, and puts the author's explanation first.
 
 Use it when:
 
 - a web PR needs reproducible before-and-after evidence,
-- a backend PR needs a concise change map rather than a wall of files,
+- a backend PR needs a concise change map and a sequence diagram rather than a wall of files,
 - a reviewer should receive the same evidence without rebuilding both revisions,
-- a team wants a local draft before deciding whether anything leaves the machine.
+- a team wants a local draft, and a one-click approval, before anything leaves the machine.
 
-See [what the generated PR comment looks like](docs/pr-comment-examples.md).
+[docs/competitive-landscape.md](docs/competitive-landscape.md) covers what 16 checked projects do
+and do not do; [docs/product-thesis.md](docs/product-thesis.md) covers scope, threat model, and
+non-goals.
 
-See [docs/competitive-landscape.md](docs/competitive-landscape.md) for what 16 checked projects do
-and do not do, and [docs/product-thesis.md](docs/product-thesis.md) for the scope, threat model,
-and non-goals.
+## In 60 seconds
 
-## What the reviewer gets
+From a clone of the repository the PR belongs to. Step one drafts and posts nothing:
 
-Both modes write `report.md`, `summary.json`, `manifest.json`, `changes.patch`, and
-`changes-stat.txt`. With `--pr`, both also write
-[`pr-comment.md`](docs/pr-comment-examples.md).
+```bash
+node <skill>/scripts/visualize-pr.mjs --pr https://github.com/<owner>/<repo>/pull/<n> --backend --output out
+```
 
-Web reviews additionally produce collision-resistant per-cell
-`before|after|side-by-side|diff.png` paths. Their manifest records full commit SHAs, the public-config
-digest, browser details, redacted commands, environment key names, and SHA-256 hashes for every
-listed artifact except the manifest itself. Browser infrastructure failures after output creation
-write `failure.json` with the phase, redacted error, and cleanup outcome.
+That resolves the PR's exact base and head commits, analyzes the diff, and writes `out/report.md`
+and `out/pr-comment.md` with a change map. Read the draft. Step two publishes it as written, in
+under a second:
 
-Backend reviews additionally produce `change-map.mmd` (a Mermaid import graph of the changed
-files, also embedded in `report.md` and `pr-comment.md`) and `architecture.svg` (a churn chart).
-Their smaller manifest records the backend summary, full commit SHAs, and
-generation time, but does not contain the web manifest's config, browser, command, or artifact-hash
-provenance.
+```bash
+node <skill>/scripts/visualize-pr.mjs --publish out --update-description
+```
+
+The review block lands in the PR description between invisible markers; re-run and it is replaced
+in place. Swap `--update-description` for `--post-comment`, or pass both. A Bitbucket Cloud or
+GitLab URL works the same way; see [Providers](#providers) for the token each one reads.
+
+For a web change, generate a config first, then run without `--backend`:
+
+```bash
+node <skill>/scripts/visualize-pr.mjs --init
+```
+
+`--init` detects the framework (Next, Vite, Astro, Nuxt, Angular, SvelteKit, Remix, Django, Rails,
+Laravel, Go, static HTML, and more), picks the install command from your lockfile, and seeds a home
+scenario on desktop and mobile. Edit the start command if needed, add scenarios for the pages the
+PR touches, and run.
+
+## Review, then approve
+
+Nothing leaves your machine until you say so, and saying so is one click in every harness.
+
+1. The review run writes the draft and stops. It prints the publish command.
+2. The agent shows you the draft inline and asks: **post as a comment**, **update the
+   description**, **both**, or **not now**.
+   - In Claude Code those four choices render as buttons.
+   - In Codex and other harnesses the agent proposes the single publish command, and the
+     harness's own command-approval prompt is the button.
+3. Approval runs `--publish <dir>` with the flag you picked. No re-diff, no fetch, no browser.
+   What you read is what lands. A GitHub web review uploads its screenshots at that moment and
+   appends them below the text you already read.
+
+"Not now" ends with the draft path and the publish command written out, so you can run it later
+yourself. Passing `--post-comment` or `--update-description` on the review run itself still works
+and skips the checkpoint; the agent only does that when you asked for it up front.
+
+## What lands in the PR
+
+The block reads top down in the order a reviewer needs it: what changed and why, in the agent's
+words; one line of numbers; then the diagrams as evidence. For a one-file change the whole
+generated part is that one line plus the diagrams. Here is a real one, a Bitbucket PR that changed
+how a listing-count endpoint parses its filters:
+
+```markdown
+## Visual review
+
+**AI-4176 accept value arrays and match every spelling** `development` (`6934b9a`) -> `AI-4176` (`434fab5`)
+
+- `property_type`, `listing_type`, `status` accept an array or a comma list; `?x[]=A&x[]=B`,
+  `?x=A&x=B`, and `?x=A,B` are equivalent.
+- A plain object or a non-string array item is a 400, so `?uid[$ne]=0` never reaches `$match`.
+- Each value expands to every stored spelling of the same concept. Exact matching undercounted:
+  district 1024, `for rent` plus `room rental` returned 206 of 363, and the missing 157 were
+  mostly `room`, a different string, not a case variant.
+- A value in no group passes through unchanged and is listed in `meta.unrecognized`.
+- Existing callers see more rows: `for sale` now also matches `For Sale` and `SALE`. Intended.
+
+    for each filter in [property_type, listing_type, status]:
+        values = isArray(raw) ? raw : raw.split(",")
+        if raw is a plain object or any value is not a string: 400
+        expanded = []
+        for v in values:
+            group = VALUE_GROUPS[filter].find(g => g.includes(v))
+            expanded += group ? group : [v]        # unknown: pass through, report
+        match[filter] = { $in: expanded }
+
+1 file changed (+110 -20): `src/controllers/agentStats.controller.js`
+
+### Change map
+
+    Change map  6934b9a -> 434fab5  (1 changed file)
+      [M] agentStats.controller.js  -> property.model.js
+
+### Sequence
+
+           Caller        listingCount()      expandValues()        MongoDB
+             |                 |                   |                  |
+             |  GET listing_count                  |                  |
+             |---------------->|                   |                  |
+             |                 [ 400 on object or non-string value ]  |
+             |                 |  expand each value|                  |
+             |                 |------------------>|                  |
+             |                 |  spellings, unrecognized             |
+             |                 <- - - - - - - - - -|                  |
+             |                 |  aggregate $in expanded              |
+             |                 |------------------------------------->|
+
+> Generated by `visualize-pr`. Evidence for a reviewer, not an approval.
+```
+
+Everything above the numbers line came from the agent through `--notes`: a few bullets and a
+short pseudocode block, no prose, no restated statistics. SKILL.md asks for exactly that. The
+module table appears only with two or more modules, the most-changed ranking only with more than
+three files, so a small change is not padded. The block sits between CommonMark link reference
+definitions, `[//]: # (visualize-pr:start)` and its end, which render as nothing on GitHub,
+GitLab, and Bitbucket Cloud; a re-run replaces it in place with no visible markers. This example
+is on Bitbucket, so the diagrams arrived as text; on GitHub and GitLab they are Mermaid.
+
+The Mermaid form of a change map, from [PR #2](https://github.com/aryswisnu/skills/pull/2),
+trimmed:
+
+```mermaid
+flowchart LR
+  subgraph dir_scripts ["scripts"]
+    n_scripts["scripts/visual-pr-review.mjs"]
+  end
+  subgraph dir_src ["src"]
+    n_backend["src/backend.mjs"]
+    n_more["+17 unchanged imports"]
+  end
+  n_scripts --> n_backend
+  n_scripts --> n_more
+  classDef modified fill:#fef3c7,stroke:#d97706,color:#78350f
+  classDef unchanged fill:#f3f4f6,stroke:#9ca3af,color:#374151
+  class n_scripts modified
+  class n_backend modified
+  class n_more unchanged
+```
+
+Green means added, amber modified, red deleted, grey untouched. When a file imports more than five
+unchanged modules they fold into one node so the diagram stays readable. The import graph covers
+JavaScript and TypeScript, Python, Go, Ruby, PHP, Java and Kotlin, Rust, and C#.
+
+The `--diagram` file is linted for the two Mermaid mistakes that render wrong instead of failing:
+a `%%` comment that is not at the start of a line, and angle brackets inside a label. Both are
+warnings with line numbers; the run continues.
+
+A web review adds real browser evidence, uploaded to a `visual-review-assets` branch and embedded:
+
+[![Before and after evidence generated by visualize-pr](docs/example-pr-comment-side-by-side.png)](docs/pr-comment-examples.md)
+
+Every web cell gets a verdict: `unchanged`, `changed-within-threshold`, `review-required`, or
+`capture-failed`. None of them approves anything. Full rendered examples:
+[docs/pr-comment-examples.md](docs/pr-comment-examples.md).
+
+## ASCII fallback
+
+Mermaid is only useful where it is rendered. GitHub and GitLab render it; Bitbucket Cloud renders
+CommonMark only, so a Mermaid fence there shows as raw source. The CLI therefore picks the diagram
+form per provider, and `--ascii` forces text anywhere, including the local `report.md`, for a
+terminal, an email, or any renderer without Mermaid. Both `change-map.mmd` and `change-map.txt`
+are written on every backend run regardless.
+
+The change map as text, real output from this repository over six commits, trimmed:
+
+```text
+Change map  713e339 -> e31d673  (19 changed files)
+
+  scripts/
+    [M] visualize-pr.mjs             -> ascii.mjs, providers.mjs, report.mjs, +21 unchanged imports
+  src/
+    [A] ascii.mjs
+    [M] backend.mjs
+    [A] provider-bitbucket.mjs
+    [ ] provider-github.mjs          (imported by 1)
+    [A] provider-gitlab.mjs
+    [A] providers.mjs                -> provider-bitbucket.mjs, provider-github.mjs, provider-gitlab.mjs
+    [M] report.mjs                   -> backend.mjs
+  test/
+    [A] ascii.test.mjs               -> ascii.mjs
+    [A] providers.test.mjs           -> pr-url.mjs, providers.mjs
+
+  [A] added  [M] modified  [D] deleted  [R] renamed  [ ] unchanged
+```
+
+Files group by directory. Each line carries a status marker, the file, and the in-repo files it
+imports; an unchanged file that a changed file imports shows how many import it instead. More than
+five unchanged imports from one file fold into a single `+N unchanged imports` target, listed
+last.
+
+The `--diagram` sequence diagram gets the same treatment. A Mermaid `sequenceDiagram` is redrawn
+as text: participants and aliases, solid and dashed arrows, self-messages, notes, and
+loop/alt/opt/par blocks. Real output:
+
+```text
+       Dev        visualize-pr      Bitbucket
+        |               |               |
+        |  --pr <url> --backend         |
+        |--------------->               |
+        |               |  GET pullrequests/N
+        |               |--------------->
+        |               |  200          |
+        |               <- - - - - - - -|
+        |               [ draft written ]
+        |  --publish out|               |
+        |--------------->               |
+        |               |  PUT description
+        |               |--------------->
+```
+
+Any Mermaid the renderer cannot parse is shown as fenced source rather than dropped, so nothing
+the agent wrote is lost. Which form was used is recorded in `pr.json`, so `--publish` keeps it.
+
+## Providers
+
+The provider is read from the URL's path shape, not its host, so self-hosted instances work with
+no configuration.
+
+| Provider | URL shape | Token | Diagrams | Screenshots |
+| --- | --- | --- | --- | --- |
+| GitHub | `/owner/repo/pull/N` | `GITHUB_TOKEN` or `GH_TOKEN` | Mermaid | uploaded and embedded |
+| Bitbucket Cloud | `/workspace/repo/pull-requests/N` | `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD` | ASCII (Bitbucket does not render Mermaid) | stay local; verdicts and diagrams post |
+| GitLab | `/group/.../repo/-/merge_requests/N` | `GITLAB_TOKEN` (or `CI_JOB_TOKEN`) | Mermaid | stay local; verdicts and diagrams post |
+
+Backend reviews upload nothing anywhere. Nested GitLab groups are handled. Bitbucket returns
+abbreviated commit hashes, so the CLI fetches the PR's branches with the clone's own credentials
+and resolves the hashes locally. Bitbucket Server (Data Center) is detected and refused with a
+message; Azure DevOps is not implemented.
+
+## Two review modes
+
+| | Backend (`--backend`) | Web (default) |
+| --- | --- | --- |
+| Needs | Git, Node 20+ | plus `visual-review.json`, Chromium |
+| Boots the app | No | Yes, both revisions on separate local ports |
+| Produces | change summary, change map (Mermaid and ASCII), `architecture.svg` | before/after/side-by-side/diff PNGs per scenario and viewport, console and request errors, ARIA snapshot |
+| Diagrams | Mermaid, or ASCII where the forge does not render Mermaid or with `--ascii` | sequence diagram from `--diagram`, same rule |
+| Uploads | Nothing, on any provider | GitHub only: side-by-side PNGs to `visual-review-assets`, at publish time |
+| Config | None | `--init` writes a starter |
+
+Both modes write `report.md`, `summary.json`, `manifest.json`, `changes.patch`,
+`changes-stat.txt`, and with `--pr` the `pr-comment.md` draft plus `pr.json` that `--publish`
+reads. Web manifests carry SHA-256 hashes of every artifact, the browser build, and redacted
+commands, so a reviewer can check the directory matches the commits.
+
+![Pipeline sequence](docs/visual-pr-review-sequence.svg)
 
 ## Capabilities
 
 | | |
 | --- | --- |
 | **Two live revisions** | Both revisions are checked out into detached worktrees and started on separate local ports. Nothing is stored as a baseline. |
-| **Pull request URL** | `--pr <url>` takes a GitHub PR, Bitbucket Cloud PR, or GitLab MR (self-hosted too, detected from the path shape), resolves base and head SHAs, runs the same capture, and (with `--post-comment`) uploads the images and posts the review as a PR comment. |
-| **Backend / non-web** | `--backend` analyzes the diff and emits a change summary plus a change map of changed files and their in-repo imports, no browser or config required. Written as Mermaid (`change-map.mmd`) and ASCII (`change-map.txt`); the PR text gets Mermaid where the forge renders it (GitHub, GitLab) and ASCII where it does not (Bitbucket Cloud). Nothing is uploaded. |
-| **Sequence diagram** | `--diagram <file.mmd>` inserts an agent-authored Mermaid `sequenceDiagram` of the changed behavior as a `### Sequence` section in the report and PR text. |
+| **Pull request URL** | `--pr <url>` takes a GitHub PR, Bitbucket Cloud PR, or GitLab MR (self-hosted too, detected from the path shape), resolves base and head SHAs, and writes a draft that `--publish` posts. |
+| **Notes first** | `--notes <file.md>` places the agent's bullets and pseudocode directly under the title, above everything generated. |
+| **Backend / non-web** | `--backend` analyzes the diff and emits a one-line change summary plus a change map of changed files and their in-repo imports, no browser or config required. Written as Mermaid (`change-map.mmd`) and ASCII (`change-map.txt`). Nothing is uploaded. |
+| **Sequence diagram** | `--diagram <file.mmd>` inserts an agent-authored Mermaid `sequenceDiagram` of the changed behavior, redrawn as text where Mermaid is not rendered. |
 | **Scenario replay** | A validated action list (`goto`, `click`, `fill`, `press`, `select`, `waitForSelector`, `assertVisible`, `assertText`) is replayed identically on base and head. |
 | **Capture matrix** | Scenario x viewport, with deterministic artifact names. |
 | **Deterministic capture** | Reduced motion, animations disabled, caret hidden, plus configurable `hideSelectors` and `maskSelectors`. |
@@ -86,107 +310,64 @@ provenance.
 | **Thresholded verdicts** | `unchanged`, `changed-within-threshold`, `review-required`, `capture-failed`. None of them approves a pull request. |
 | **Web provenance** | Public-config digest, SHA-256 for every listed artifact except the manifest itself, browser build, redacted commands, env key names only. |
 
-## Sequence
+## How the agent runs it
 
-![Visual PR Review sequence](docs/visual-pr-review-sequence.svg)
+Type `/visualize-pr <pr-url>` in Claude Code. The skill is user-invoked: the agent never fires it on
+its own, because it runs the install and start commands of both revisions. The workflow it follows:
 
-## How to use
+1. Check for dependencies; run `--setup` if `node_modules` is missing.
+2. Resolve base and head to exact SHAs, read the diff, decide backend or web.
+3. If web and no `visual-review.json`, run `--init`, fix the start command against the repo's own
+   scripts, add scenarios for the paths the diff touches.
+4. Run the CLI with no publish flag. Read `changes.patch`. Write the notes (bullets and pseudocode)
+   and a Mermaid `sequenceDiagram` of the changed call flow, the diagram skipped and said so when
+   the diff has no behavior change.
+5. Re-run with `--notes` and `--diagram` and a fresh output directory. Inspect `report.md` and the
+   images.
+6. Show the draft and ask, as in [Review, then approve](#review-then-approve). On approval run
+   `--publish`. This is the only point at which publication is authorized.
 
-![Visualize a PR usage flow](docs/visualize-pr-usage.svg)
+The full contract, including exit codes, evidence accounting, and cleanup checks, is in
+[SKILL.md](SKILL.md).
 
-Editable source: [docs/visualize-pr-usage.excalidraw](docs/visualize-pr-usage.excalidraw) (open at excalidraw.com).
+## Live examples
 
-## What the PR comment looks like
+- [PR #1](https://github.com/aryswisnu/skills/pull/1): web review, [posted comment](https://github.com/aryswisnu/skills/pull/1#issuecomment-5657518950) with three embedded side-by-side images.
+- [PR #2](https://github.com/aryswisnu/skills/pull/2): backend review. The description carries the Mermaid change map written by `--update-description`; the [earlier comment](https://github.com/aryswisnu/skills/pull/2#issuecomment-5657923277) shows the v0.6 PNG form for comparison.
 
-`--pr` writes a local `pr-comment.md`: the agent's notes from `--notes` first, then a one-line
-change summary, then the diagrams and, for web, the verdict table. The block is delimited by
-CommonMark link reference definitions, which render as nothing on GitHub, GitLab, and Bitbucket
-Cloud, so a re-run replaces it in place with no visible markers. Read it,
-then `--publish <output-dir> --post-comment` or `--publish <output-dir> --update-description` posts
-that file in under a second, with no second review run. For a web review on GitHub the
-side-by-side screenshots are uploaded at that moment and embedded; the text you read is unchanged.
-Passing the publish flags on the review run itself still works and skips the checkpoint. For web
-reviews, `--post-comment` first uploads the side-by-side images, rebuilds `pr-comment.md` with an
-Evidence section, and posts that image-bearing version. Backend reviews carry their change map as a
-Mermaid block, so `--post-comment` uploads nothing. `--update-description`
-writes the same markdown into the PR description instead, inside `<!-- visualize-pr:start -->` and
-`<!-- visualize-pr:end -->` markers, so a repeat run replaces the block rather than appending a second
-copy. The two flags can be combined.
+Both are kept open on purpose.
 
-![Real side-by-side evidence generated by the CLI](docs/example-pr-comment-side-by-side.png)
+## Setup and quick start
 
-Backend reviews embed a Mermaid change map (rendered by GitHub) and, with `--diagram`, a sequence
-diagram:
-
-```mermaid
-flowchart LR
-  subgraph dir_api ["api"]
-    n_api_orders["api/orders.js"]
-  end
-  subgraph dir_lib ["lib"]
-    n_lib_billing["lib/billing.js"]
-    n_lib_legacy["lib/legacy.js (deleted)"]
-    n_lib_log["lib/log.js"]
-  end
-  n_api_orders --> n_lib_billing
-  n_api_orders --> n_lib_log
-  n_lib_billing --> n_lib_log
-  classDef added fill:#dcfce7,stroke:#16a34a,color:#14532d
-  classDef modified fill:#fef3c7,stroke:#d97706,color:#78350f
-  classDef deleted fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
-  classDef unchanged fill:#f3f4f6,stroke:#9ca3af,color:#374151
-  class n_lib_billing added
-  class n_api_orders modified
-  class n_lib_legacy deleted
-  class n_lib_log unchanged
-```
-
-The earlier PNG-based change map is kept for reference:
-
-![Backend change map generated by the CLI](docs/example-pr-comment-architecture.png)
-
-See [the complete web and backend comment examples](docs/pr-comment-examples.md), including
-the verdict table, attention list, evidence placement, backend change summary, and exact publication
-boundary.
-
-## Live example
-
-This repository keeps two real, open demonstrations:
-
-Web:
-
-- [PR #1: docs/live-visual-review-demo](https://github.com/aryswisnu/skills/pull/1) is a genuine web pull request produced by this CLI,
-- [its generated review comment](https://github.com/aryswisnu/skills/pull/1#issuecomment-5657518950) shows the posted, image-bearing form with three embedded side-by-side artifacts.
-
-Backend:
-
-- [PR #2: docs/live-backend-review-demo](https://github.com/aryswisnu/skills/pull/2) is a genuine non-web pull request produced by this CLI,
-- [its generated review comment](https://github.com/aryswisnu/skills/pull/2#issuecomment-5657923277) shows the posted form with an embedded change-map image.
-
-Each comment was posted with `--post-comment`; the PR descriptions were not modified.
-
-## Quick start
+Plugin installers copy files but do not run npm, so the skill installs its own dependencies on
+request:
 
 ```bash
-node <visualize-pr-directory>/scripts/visualize-pr.mjs --setup
+node <skill>/scripts/visualize-pr.mjs --setup
 ```
 
-That installs the npm dependencies and Chromium into the skill's own folder. Add `--backend` to
-install the dependencies only and skip the browser download. To reuse a browser you already have:
+That pulls the npm dependencies and Chromium into the skill's own folder. Add `--backend` to
+install the dependencies only and skip the 100MB browser download; backend reviews need nothing
+else. The agent runs this for you before the first review, and any `Missing dependency` error
+names the same flag. Running on Node 18 exits at once with the minimum version and how to switch.
+To reuse a browser you already have:
 
 ```bash
 export VISUAL_REVIEW_BROWSER_PATH=/path/to/chrome-headless-shell
 ```
 
-In the application repository, generate a starter config:
+The installed folder is `~/.claude/plugins/marketplaces/aryswisnu/skills/engineering/visualize-pr`
+for the plugin route, or wherever skills.sh put it.
+
+For a web review, generate a starter config in the application repository:
 
 ```bash
-node /path/to/visualize-pr/scripts/visualize-pr.mjs --init
+node <skill>/scripts/visualize-pr.mjs --init
 ```
 
 It detects the framework, writes `visual-review.json`, and prints notes about what to check.
-Read those notes, confirm `startCommand` against the repo's own scripts, and add the scenarios that
-matter. This is what a finished config looks like, so edit to taste:
+Confirm `startCommand` against the repo's own scripts and add the scenarios that matter. A finished
+config looks like this:
 
 ```json
 {
@@ -220,17 +401,12 @@ matter. This is what a finished config looks like, so edit to taste:
 Then run:
 
 ```bash
-node /path/to/visualize-pr/scripts/visualize-pr.mjs \
-  --base origin/main \
-  --head HEAD \
-  --config visual-review.json \
-  --output visual-review-output
+node <skill>/scripts/visualize-pr.mjs --base origin/main --head HEAD --config visual-review.json --output visual-review-output
 ```
 
-Open `visual-review-output/report.md`.
-
-Full annotated configurations: [`examples/configs/minimal.json`](examples/configs/minimal.json) and
-[`examples/configs/full.json`](examples/configs/full.json). Reference for every current key:
+Open `visual-review-output/report.md`. Full annotated configurations:
+[`examples/configs/minimal.json`](examples/configs/minimal.json) and
+[`examples/configs/full.json`](examples/configs/full.json). Reference for every key:
 [docs/configuration.md](docs/configuration.md).
 
 ## Usage examples
@@ -238,46 +414,46 @@ Full annotated configurations: [`examples/configs/minimal.json`](examples/config
 See [docs/usage-examples.md](docs/usage-examples.md) for:
 
 - Installation and local branch comparison
-- A GitHub pull request URL (`--pr`), with a local draft and opt-in posting with embedded side-by-side images
-- Backend / non-web changes (`--backend`), with a change summary and architecture diagram
+- GitHub, Bitbucket Cloud, and GitLab pull request URLs, with the token each one needs
+- Review the draft, then publish it; lead with notes; add a sequence diagram; force ASCII
+- Backend / non-web changes
 - Static HTML, Node, Python, and Go previews
 - Desktop and mobile viewports
 - Interactive scenarios, masks, impact rules, and focused runs
 - Manual GitHub Actions usage
-- Bitbucket Cloud and GitLab pull request URLs, with the token each one needs
 - Clearly marked, not-yet-implemented designs for Azure DevOps, Bitbucket Server, backend API,
   CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
 
-Only examples under **Available now, v0.10.0** describe executable behavior in this release.
-
-## CLI
+## CLI reference
 
 ```text
---base <ref>       Base git revision, required unless --pr is used
---head <ref>       Head git revision, default: HEAD
---pr <url>         GitHub, Bitbucket Cloud, or GitLab pull/merge request URL; resolves base and head SHAs
---backend          Analyze the diff and emit a change summary + architecture diagram (no browser)
---post-comment     Upload evidence, embed images, and post as a PR comment (requires --pr)
---notes <path>     Agent-written markdown (bullets, pseudocode) placed at the top of the PR text
---diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
-                   (linted for comment and label mistakes that render wrong; warnings only)
---ascii            Render the change map and sequence diagram as ASCII instead of Mermaid
-                   (automatic for Bitbucket Cloud, which does not render Mermaid)
---update-description  Insert or refresh the review section in the PR description (requires --pr)
---publish <dir>    Post the reviewed draft in <dir>/pr-comment.md; uploads GitHub web screenshots then
---config <path>    Config path, default: visual-review.json
---init             Write a starter visual-review.json for this repo, then exit
---setup            Install this skill's npm dependencies and Chromium, then exit
---output <path>    Artifact directory, default: visual-review-output
---scenario <id>    Capture only this scenario, repeatable, overrides impact rules
---all              Capture every configured scenario, ignoring impact rules
---keep-worktrees   Preserve temporary worktrees for debugging
+Review
+  --pr <url>            GitHub, Bitbucket Cloud, or GitLab pull/merge request URL
+  --base <ref>          Base git revision, required unless --pr is used
+  --head <ref>          Head git revision, default: HEAD
+  --backend             Diff summary + change map, no browser or config
+  --notes <path>        Agent-written markdown (bullets, pseudocode) placed at the top of the PR text
+  --diagram <path>      Mermaid file (for example a sequenceDiagram) to include; linted, warnings only
+  --ascii               Draw the change map and sequence diagram as ASCII (automatic on Bitbucket Cloud)
+  --config <path>       Config path, default: visual-review.json
+  --output <path>       Artifact directory, default: visual-review-output (must not exist)
+  --scenario <id>       Capture only this scenario, repeatable, overrides impact rules
+  --all                 Capture every configured scenario, ignoring impact rules
+  --keep-worktrees      Preserve temporary worktrees for debugging
+
+Publish
+  --publish <dir>       Post the reviewed draft in <dir>/pr-comment.md; nothing is recomputed
+  --post-comment        Post the review as a PR comment (with --pr or --publish)
+  --update-description  Insert or refresh the review block in the PR description (with --pr or --publish)
+
+Setup
+  --setup               Install this skill's npm dependencies and Chromium, then exit (--backend skips Chromium)
+  --init                Write a starter visual-review.json for this repo, then exit
 ```
 
-Exit codes: `0` every selected scenario produced comparable evidence, `1` at least one scenario
-could not be captured and the report is partial, `2` usage, configuration, or infrastructure
-failure, `130` interrupted by SIGINT, and `143` interrupted by SIGTERM. Infrastructure failures
-and interruptions write `failure.json` when the output directory has been created.
+Exit codes: `0` comparable evidence for every selected cell, `1` at least one scenario failed to
+capture (partial report), `2` usage, configuration, or infrastructure failure (`failure.json`
+written when possible), `130` SIGINT, `143` SIGTERM.
 
 ## CI
 
@@ -288,19 +464,25 @@ carries a prominent disclosure that enabling upload authorizes newly generated e
 the runner without a post-capture inspection checkpoint. Use synthetic data and keep upload off
 when the generated files must be inspected first. It never posts comments, reviews, or statuses.
 
-## Platforms
+## Requirements
 
-Linux and macOS. Windows is not claimed: process-group cleanup and shell semantics are only
-tested on POSIX.
+Node.js 20 or newer (checked at startup), Git, Linux or macOS. Windows is not claimed:
+process-group cleanup and shell semantics are only tested on POSIX. Web reviews need Playwright
+Chromium, which `--setup` installs, or a compatible executable via `VISUAL_REVIEW_BROWSER_PATH`.
 
 ## Safety boundary
 
-The tool runs the install and start commands of **both** git revisions, which is arbitrary code
-execution by design. Use trusted revisions or a sandbox. Navigation is pinned to the local
-preview origin for main-frame documents, but application processes and every outbound browser
-request are not isolated. Environment values are redacted from structured artifacts, and recorded
-commands are redacted. Screenshots are evidence, not approval, and are masked only at configured
-selectors.
+- Web mode runs the install and start commands of **both** revisions. That is arbitrary code
+  execution by design. Use trusted revisions or a sandbox.
+- Browser navigation is pinned to the local preview origin for main-frame documents. Application
+  processes and outbound requests are not isolated.
+- Environment values and command credentials are redacted from structured artifacts. Screenshots
+  are masked only at configured selectors; look at the images before sharing.
+- Nothing leaves your machine without `--post-comment` or `--update-description`, and the normal
+  path puts those behind `--publish`, after you have read the draft. The description update
+  touches only the block between the invisible markers.
+- Non-GitHub providers get no injected git credential; the clone's own credentials fetch the
+  branches.
 
 ## Development
 
@@ -314,7 +496,7 @@ npm pack --dry-run
 ```
 
 Users install dependencies with `node scripts/visualize-pr.mjs --setup`; the commands above are the
-maintainer equivalents.
+maintainer equivalents. CI runs the suite on Ubuntu and macOS for every push and PR.
 
 For an end-to-end browser check, create a scratch Git repository with two commits containing the
 bundled `examples/demo/` application, then invoke this skill's CLI from the scratch repository.
