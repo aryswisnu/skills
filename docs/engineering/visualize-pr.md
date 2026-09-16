@@ -2,7 +2,7 @@
 
 `visualize-pr` checks out the exact base and head commits of a change into two temporary worktrees, boots both, and writes one evidence directory a reviewer can act on. Web changes get before/after screenshots per scenario and viewport, a pixel diff, and the console, request, and assertion errors each revision produced. Backend changes get a diff summary and an editorial change map. It never approves anything: every verdict (`unchanged`, `changed-within-threshold`, `review-required`, `capture-failed`) is a label on the evidence, and the human supplies judgment.
 
-Nothing leaves your machine unless you say so. With a GitHub PR URL it writes a comment draft locally; only `--post-comment` (a comment) or `--update-description` (a marked section in the PR body, replaced in place on re-run) publishes it. Backend change maps are Mermaid, which GitHub renders natively, so they need no image upload. With `--diagram` the agent's own `sequenceDiagram` of the changed behavior goes in too.
+Nothing leaves your machine unless you say so. With a pull request URL on GitHub, Bitbucket Cloud, or GitLab it writes a draft locally; only `--post-comment` (a comment) or `--update-description` (a marked section in the PR body, replaced in place on re-run) publishes it. The draft leads with the agent's own notes, a few bullets and a short pseudocode block passed in with `--notes`, then one line of numbers, then the diagrams: the change map the CLI derives from the diff and the `sequenceDiagram` the agent writes and passes with `--diagram`. Diagrams are Mermaid where the forge renders it and text where it does not.
 
 ## When to reach for it
 
@@ -19,7 +19,31 @@ You invoke this by typing `/visualize-pr`, and the agent won't reach for it on i
 
 ## Prerequisites
 
-Git, Node.js 20+, and both revisions available locally (or a GitHub PR URL resolvable from your clone). Web mode needs a `visual-review.json` in the application repo describing how to start each revision on `{port}` and which scenarios to replay. Run `--init` once to generate a starter that detects the framework (Next, Vite, Django, Rails, and others) and seeds a home scenario; then adjust it. It also needs Playwright Chromium or a compatible browser via `VISUAL_REVIEW_BROWSER_PATH`. Backend mode needs neither config nor browser. Posting a comment needs `GITHUB_TOKEN` or `GH_TOKEN` with write access.
+Git, Node.js 20+, and both revisions available locally (or a GitHub, Bitbucket Cloud, or GitLab pull request URL resolvable from your clone). Web mode needs a `visual-review.json` in the application repo describing how to start each revision on `{port}` and which scenarios to replay. Run `--init` once to generate a starter that detects the framework (Next, Vite, Django, Rails, and others) and seeds a home scenario; then adjust it. It also needs Playwright Chromium or a compatible browser via `VISUAL_REVIEW_BROWSER_PATH`. Backend mode needs neither config nor browser. Publishing needs a token with write access: `GITHUB_TOKEN` or `GH_TOKEN`, `BITBUCKET_TOKEN` (or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD`), or `GITLAB_TOKEN`.
+
+## What the reviewer reads
+
+The block is ordered the way a reviewer needs it, and for a small change the generated part is one line plus the diagrams. A real one, trimmed, from a Bitbucket PR that changed how an endpoint parses its filters:
+
+```markdown
+- `property_type`, `listing_type`, `status` accept an array or a comma list.
+- A plain object or a non-string item is a 400, so `?uid[$ne]=0` never reaches `$match`.
+- Each value expands to every stored spelling of the same concept; exact matching had
+  undercounted (206 of 363 in one district) because `room` is not a case variant of `room rental`.
+- A value in no group passes through and is listed in `meta.unrecognized`.
+
+    for v in values:
+        group = VALUE_GROUPS[filter].find(g => g.includes(v))
+        expanded += group ? group : [v]
+    match[filter] = { $in: expanded }
+
+1 file changed (+110 -20): `src/controllers/agentStats.controller.js`
+
+    Change map  6934b9a -> 434fab5  (1 changed file)
+      [M] agentStats.controller.js  -> property.model.js
+```
+
+Everything above the numbers line is the agent's, from `--notes`. The module table appears only with two or more modules and the most-changed ranking only with more than three files, so a one-file change is not padded with tables that repeat the one line. The markers around the block are CommonMark link reference definitions, invisible on every forge.
 
 ## Evidence, not approval
 
@@ -60,6 +84,7 @@ Yes, since v0.11.0. Pass a Bitbucket Cloud pull request or GitLab merge request 
 - Screenshots show the intended loaded state, not a loading shell, consent overlay, or error page.
 - Temporary worktrees and preview processes are gone when the run ends (`git worktree list` is clean).
 - The PR comment, if posted, shows the same abbreviated SHAs the run was invoked with.
+- The PR text opens with your bullets and pseudocode, and for a small change the generated part beneath is one line plus the diagrams, not a stack of tables.
 
 ## Where it fits
 
