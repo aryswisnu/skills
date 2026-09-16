@@ -3,6 +3,10 @@
 `visual-review.json` lives in the **application** repository. Validation is strict: any unknown
 key is an error, so a typo fails the run instead of silently disabling a feature.
 
+Do not start from a blank file. Run `visualize-pr.mjs --init` in the application repository to
+detect the framework and write a valid starter `visual-review.json`, then use this reference to
+extend it with scenarios, masks, and impact rules.
+
 ## Top level
 
 | Key | Type | Default | Notes |

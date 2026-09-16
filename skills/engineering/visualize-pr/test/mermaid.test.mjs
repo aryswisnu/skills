@@ -205,3 +205,30 @@ test('renderMermaidFlowchart returns a complete fenced mermaid block', async () 
   assert.match(block, /classDef unchanged fill:#f3f4f6,stroke:#9ca3af,color:#374151/);
   assert.match(block, /^class .+ modified$/m);
 });
+
+test('buildModuleGraph folds more than five unchanged imports of one file into a single node', async () => {
+  const targets = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((name) => `src/${name}.js`);
+  const source = targets.map((target) => `import '${target.replace('src/', './')}';`).join('\n');
+  const repo = { 'src/main.js': source };
+  for (const target of targets) repo[target] = 'export {};';
+  const graph = await buildModuleGraph({
+    files: [{ path: 'src/main.js', status: 'M' }],
+    readFile: (path) => repo[path] ?? null,
+  });
+  assert.equal(graph.nodes.length, 2);
+  const fold = graph.nodes.find((node) => !node.changed);
+  assert.equal(fold.label, '+7 unchanged imports');
+  assert.deepEqual(graph.edges, [{ from: 'src/main.js', to: 'src/main.js#unchanged-imports' }]);
+  const rendered = renderMermaidFlowchart(graph);
+  assert.match(rendered, /\+7 unchanged imports/);
+  assert.equal((rendered.match(/-->/g) || []).length, 1);
+});
+
+test('buildModuleGraph keeps five or fewer unchanged imports expanded', async () => {
+  const targets = ['a', 'b', 'c', 'd', 'e'].map((name) => `src/${name}.js`);
+  const repo = { 'src/main.js': targets.map((t) => `import '${t.replace('src/', './')}';`).join('\n') };
+  for (const target of targets) repo[target] = 'export {};';
+  const graph = await buildModuleGraph({ files: [{ path: 'src/main.js', status: 'M' }], readFile: (p) => repo[p] ?? null });
+  assert.equal(graph.nodes.length, 6);
+  assert.equal(graph.edges.length, 5);
+});

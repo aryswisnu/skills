@@ -5,6 +5,7 @@
 import { commonPrefixLength, directorySegments } from './backend.mjs';
 
 const MAX_NODES = 40;
+const MAX_UNCHANGED_PER_FILE = 5;
 
 const SOURCE_EXTENSIONS = new Set([
   '.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.mts', '.cts',
@@ -263,8 +264,32 @@ export async function buildModuleGraph({ files = [], readFile = () => null } = {
     kept.push({ path, status: 'unchanged', changed: false });
   }
 
-  const keptPaths = new Set(kept.map((node) => node.path));
-  const edges = allEdges.filter((edge) => keptPaths.has(edge.from) && keptPaths.has(edge.to));
+  let keptPaths = new Set(kept.map((node) => node.path));
+  let edges = allEdges.filter((edge) => keptPaths.has(edge.from) && keptPaths.has(edge.to));
+
+  // Collapse fan-out: a changed file importing many unchanged modules would
+  // drown the diagram in grey boxes. Above MAX_UNCHANGED_PER_FILE, those edges
+  // fold into one "+N unchanged imports" node per changed file. Unchanged
+  // targets also imported by another kept file stay visible.
+  const foldedNodes = [];
+  const foldedEdges = [];
+  for (const node of kept.filter((entry) => entry.changed)) {
+    const out = edges.filter((edge) => edge.from === node.path && !changedPaths.has(edge.to));
+    if (out.length <= MAX_UNCHANGED_PER_FILE) continue;
+    const foldPath = `${node.path}#unchanged-imports`;
+    foldedNodes.push({ path: foldPath, status: 'unchanged', changed: false, label: `+${out.length} unchanged imports` });
+    foldedEdges.push({ from: node.path, to: foldPath });
+    const dropped = new Set(out.map((edge) => edge.to));
+    edges = edges.filter((edge) => !(edge.from === node.path && dropped.has(edge.to)));
+  }
+  if (foldedNodes.length > 0) {
+    const referenced = new Set(edges.flatMap((edge) => [edge.from, edge.to]));
+    const trimmed = kept.filter((node) => node.changed || referenced.has(node.path));
+    kept.length = 0;
+    kept.push(...trimmed, ...foldedNodes);
+    keptPaths = new Set(kept.map((node) => node.path));
+    edges = [...edges, ...foldedEdges].sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to));
+  }
 
   const ordered = [...kept].sort((a, b) => a.path.localeCompare(b.path));
   const labels = labelsFor(ordered.map((node) => node.path));
@@ -277,7 +302,7 @@ export async function buildModuleGraph({ files = [], readFile = () => null } = {
       id = `${id}_${suffix}`;
     }
     usedIds.add(id);
-    return { id, path: node.path, label: labels.get(node.path), status: node.status, changed: node.changed };
+    return { id, path: node.path, label: node.label ?? labels.get(node.path), status: node.status, changed: node.changed };
   });
 
   return { nodes, edges };

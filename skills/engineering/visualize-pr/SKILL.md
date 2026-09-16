@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.8.0
+  version: 0.9.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -38,7 +38,7 @@ For web evidence only:
 
 - A reproducible command that starts each revision on the supplied `{port}`.
 - Playwright Chromium, or a compatible executable selected with `VISUAL_REVIEW_BROWSER_PATH`.
-- A valid `visual-review.json` in the application repository.
+- A valid `visual-review.json` in the application repository. Generate one with `--init` when missing, then adjust `startCommand` and scenarios.
 
 Backend mode (`--backend`) does not require a preview command, browser, or `visual-review.json`.
 
@@ -114,7 +114,10 @@ The CLI cannot infer behavior, so the agent authors it:
 ## Workflow and Completion Contract
 
 1. Resolve the base and head refs to exact commit SHAs. Read the changed files and patch. Confirm
-   that the selected scenarios cover the visible risk, or state the uncovered areas.
+   that the selected scenarios cover the visible risk, or state the uncovered areas. If
+   `visual-review.json` is missing, run `--init`, read the printed notes, fix the start command
+   against the repo's own scripts, and add scenarios for the paths the diff touches before
+   capturing.
 2. Prepare dependencies and any required build in each revision through repository-owned,
    reproducible commands. Reuse a compatible installed browser; install one only when needed.
 3. Run the CLI. Complete authorized local preparation, capture, inspection, and safe retries without

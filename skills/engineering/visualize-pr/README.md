@@ -167,7 +167,15 @@ npx playwright install chromium
 # export VISUAL_REVIEW_BROWSER_PATH=/path/to/chrome-headless-shell
 ```
 
-In the application repository, create `visual-review.json`:
+In the application repository, generate a starter config:
+
+```bash
+node /path/to/visualize-pr/scripts/visualize-pr.mjs --init
+```
+
+It detects the framework, writes `visual-review.json`, and prints notes about what to check.
+Read those notes, confirm `startCommand` against the repo's own scripts, and add the scenarios that
+matter. This is what a finished config looks like, so edit to taste:
 
 ```json
 {
@@ -228,7 +236,7 @@ See [docs/usage-examples.md](docs/usage-examples.md) for:
 - Clearly marked, not-yet-implemented designs for Bitbucket, GitLab, Azure DevOps,
   GitHub description-update, backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
 
-Only examples under **Available now, v0.8.0** describe executable behavior in this release.
+Only examples under **Available now, v0.9.0** describe executable behavior in this release.
 
 ## CLI
 
@@ -241,6 +249,7 @@ Only examples under **Available now, v0.8.0** describe executable behavior in th
 --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
 --update-description  Insert or refresh the review section in the PR description (requires --pr)
 --config <path>    Config path, default: visual-review.json
+--init             Write a starter visual-review.json for this repo, then exit
 --output <path>    Artifact directory, default: visual-review-output
 --scenario <id>    Capture only this scenario, repeatable, overrides impact rules
 --all              Capture every configured scenario, ignoring impact rules
