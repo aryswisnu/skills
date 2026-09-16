@@ -1,5 +1,14 @@
-import pixelmatch from 'pixelmatch';
-import { PNG } from 'pngjs';
+// pixelmatch and pngjs are loaded lazily so backend mode, which never diffs
+// screenshots, runs without the image dependencies installed.
+let imageDeps = null;
+
+async function loadImageDeps() {
+  if (!imageDeps) {
+    const [pixelmatchModule, pngModule] = await Promise.all([import('pixelmatch'), import('pngjs')]);
+    imageDeps = { pixelmatch: pixelmatchModule.default, PNG: pngModule.PNG };
+  }
+  return imageDeps;
+}
 
 export function buildStartCommand(template, port) {
   return template.replaceAll('{port}', String(port));
@@ -40,7 +49,8 @@ export function browserLaunchOptions(env = process.env) {
     : { headless: true };
 }
 
-export function createPixelDiff(beforeBuffer, afterBuffer, threshold = 0.1) {
+export async function createPixelDiff(beforeBuffer, afterBuffer, threshold = 0.1) {
+  const { pixelmatch, PNG } = await loadImageDeps();
   const before = PNG.sync.read(beforeBuffer);
   const after = PNG.sync.read(afterBuffer);
   if (before.width !== after.width || before.height !== after.height) {

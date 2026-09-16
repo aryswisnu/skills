@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.7.0
+  version: 0.8.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -32,6 +32,7 @@ For every mode:
 - Git and Node.js 20 or newer.
 - Both revisions available locally, or a GitHub PR URL resolvable from the repository clone.
 - A trusted or sandboxed repository. Its install, build, start, and application code may run.
+- After installing the plugin or skill, run `npm install` inside the skill folder once (`npx playwright install chromium` too for web reviews). The plugin installer does not install npm dependencies.
 
 For web evidence only:
 
@@ -76,8 +77,11 @@ This resolves the PR's base and head SHAs, fetches them, captures evidence, and 
 comment to `pr-comment.md`. Add `--post-comment` to upload the evidence to a
 `visual-review-assets` branch, embed it in the comment, and publish it (requires `GITHUB_TOKEN`
 or `GH_TOKEN` with write access to the repository). For web reviews the embedded evidence is the
-side-by-side images; for backend reviews it is a rasterized PNG of the change map. Without
-`--post-comment`, only the local draft is written. Other providers are not yet implemented.
+side-by-side images. Backend reviews upload nothing: the change map is a Mermaid block that
+GitHub renders natively. Without `--post-comment`, only the local draft is written. Add `--update-description` to write the same
+markdown into the PR description between `<!-- visualize-pr:start -->` and `<!-- visualize-pr:end -->`
+markers, which a repeat run replaces in place; it can be combined with `--post-comment`. Other
+providers are not yet implemented.
 
 For a backend or non-web change, add `--backend` (no config or browser required):
 
@@ -86,9 +90,26 @@ node <visualize-pr-directory>/scripts/visualize-pr.mjs \
   --base origin/main --head HEAD --backend --output visual-review-output
 ```
 
-This writes `report.md` (a change summary), `architecture.svg` (an editorial change map), and
-`summary.json` from the diff. With `--pr` and `--post-comment`, it rasterizes the change map to a
-PNG (browser-free, via a Rust SVG renderer) and embeds that PNG in the posted comment.
+This writes `report.md` (a change summary with a Mermaid change map), `change-map.mmd` (the
+Mermaid source), `architecture.svg` (a churn chart), and `summary.json` from the diff. The change
+map is a `flowchart LR` of every changed source file and its in-repo imports, colored by status.
+With `--pr`, the same Mermaid block goes into `pr-comment.md`, so the posted comment or PR
+description renders the diagram with no image upload.
+
+## Sequence Diagram
+
+Colleagues understand a behavior change faster from a sequence diagram than from a file graph.
+The CLI cannot infer behavior, so the agent authors it:
+
+1. Run the CLI once (backend or web) to get `changes.patch` and `report.md`.
+2. Read the patch. Write a Mermaid `sequenceDiagram` of the changed call flow into a file outside
+   the output directory, for example `visual-review-sequence.mmd`. Participants are the real
+   modules, services, or actors touched by the diff. Mark new or changed messages with a `Note`
+   or `%% changed` comment. Keep it under roughly 15 messages; split into two diagrams if larger.
+   Skip this step, and say so, when the diff has no behavior change (docs, config, renames).
+3. Re-run the CLI with `--diagram visual-review-sequence.mmd` and a fresh `--output`. The block is
+   inserted as a `### Sequence` section in `report.md` and `pr-comment.md`. Add
+   `--update-description` (or `--post-comment`) only after the human has read the draft.
 
 ## Workflow and Completion Contract
 

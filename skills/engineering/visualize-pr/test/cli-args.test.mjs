@@ -63,3 +63,27 @@ test('parseArgs allows --help without --base', () => {
   assert.equal(parseArgs(['--help']).help, true);
   assert.match(usage(), /--scenario/);
 });
+
+test('parseArgs requires --pr for --update-description', () => {
+  assert.throws(() => parseArgs(['--base', 'main', '--update-description']), /--update-description requires --pr/);
+  const options = parseArgs(['--pr', 'https://github.com/a/b/pull/1', '--update-description']);
+  assert.equal(options.updateDescription, true);
+  assert.equal(options.postComment, false);
+  assert.match(usage(), /--update-description/);
+});
+
+test('parseArgs allows --post-comment and --update-description together', () => {
+  const options = parseArgs(['--pr', 'https://github.com/a/b/pull/1', '--post-comment', '--update-description']);
+  assert.equal(options.postComment, true);
+  assert.equal(options.updateDescription, true);
+});
+
+test('parseArgs defaults updateDescription to false', () => {
+  assert.equal(parseArgs(['--base', 'main']).updateDescription, false);
+});
+
+test('parseArgs accepts --diagram <path>', () => {
+  const options = parseArgs(['--base', 'main', '--diagram', 'seq.mmd']);
+  assert.equal(options.diagram, 'seq.mmd');
+  assert.throws(() => parseArgs(['--base', 'main', '--diagram']), /--diagram requires a value/);
+});

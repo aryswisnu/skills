@@ -9,7 +9,9 @@ const VERDICT_LABEL = {
   'capture-failed': 'capture failed',
 };
 
-export function buildPrComment(report, pr, images = null) {
+import { diagramSection } from './backend.mjs';
+
+export function buildPrComment(report, pr, images = null, diagram = null) {
   const baseShort = report.base.sha.slice(0, 7);
   const headShort = report.head.sha.slice(0, 7);
   const lines = [];
@@ -39,6 +41,12 @@ export function buildPrComment(report, pr, images = null) {
 
   if (report.skippedScenarios && report.skippedScenarios.length > 0) {
     lines.push(`Skipped: ${report.skippedScenarios.map((scenario) => scenario.name).join(', ')}.`);
+    lines.push('');
+  }
+
+  const sequence = diagramSection(diagram);
+  if (sequence) {
+    lines.push(sequence);
     lines.push('');
   }
 

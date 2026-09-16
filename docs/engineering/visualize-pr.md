@@ -2,7 +2,7 @@
 
 `visualize-pr` checks out the exact base and head commits of a change into two temporary worktrees, boots both, and writes one evidence directory a reviewer can act on. Web changes get before/after screenshots per scenario and viewport, a pixel diff, and the console, request, and assertion errors each revision produced. Backend changes get a diff summary and an editorial change map. It never approves anything: every verdict (`unchanged`, `changed-within-threshold`, `review-required`, `capture-failed`) is a label on the evidence, and the human supplies judgment.
 
-Nothing leaves your machine unless you say so. With a GitHub PR URL it writes a comment draft locally; only `--post-comment` uploads images and publishes it.
+Nothing leaves your machine unless you say so. With a GitHub PR URL it writes a comment draft locally; only `--post-comment` (a comment) or `--update-description` (a marked section in the PR body, replaced in place on re-run) publishes it. Backend change maps are Mermaid, which GitHub renders natively, so they need no image upload. With `--diagram` the agent's own `sequenceDiagram` of the changed behavior goes in too.
 
 ## When to reach for it
 
@@ -12,6 +12,7 @@ You invoke this by typing `/visualize-pr`, and the agent won't reach for it on i
 | --- | --- |
 | A web PR needs reproducible before/after evidence | `visualize-pr` |
 | A backend PR needs a concise change map instead of a wall of files | `visualize-pr --backend` |
+| Colleagues should see the diagram at the top of the PR | `visualize-pr --pr <url> --update-description` |
 | A reviewer should get the evidence without rebuilding both revisions | `visualize-pr --pr <url> --post-comment` |
 | You want bugs hunted in the diff itself | Your harness's built-in code review, not this |
 | You need a stored baseline and an approval workflow | A hosted visual-regression service, not this |
@@ -33,7 +34,13 @@ Every attempt gets a fresh output path. The CLI will not overwrite or merge into
 `1` means at least one scenario could not be captured and the report is partial. `2` means usage, configuration, or infrastructure failure; look in `failure.json` for the phase. `0` means comparable evidence exists for every selected cell, which is still not an approval.
 
 **Does it edit the PR description?**
-No. It posts one comment, and only with `--post-comment`.
+Only with `--update-description`. It inserts one block between `<!-- visualize-pr:start -->` and `<!-- visualize-pr:end -->` markers and replaces that block on every re-run, so the rest of the description is untouched. `--post-comment` posts a comment instead. Both can be combined.
+
+**Where is the sequence diagram?**
+The CLI draws the file-level change map on its own. A sequence diagram needs to understand behavior, so the agent writes it from `changes.patch` and passes it back with `--diagram`. If you ran the CLI by hand and see no sequence section, that step was skipped.
+
+**It says "Missing dependency playwright".**
+Run `npm install` in the skill folder (and `npx playwright install chromium` for web reviews). Plugin installers copy the skill but do not install its npm dependencies.
 
 **Can it review GitLab or Bitbucket?**
 Not yet. Only GitHub URLs resolve. Local `--base`/`--head` works against any repository.

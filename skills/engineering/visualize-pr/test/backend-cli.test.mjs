@@ -55,3 +55,18 @@ test('--backend emits a change summary and architecture diagram without a browse
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('the CLI has no top-level browser dependency imports so backend mode runs without playwright', async () => {
+  const source = await readFile(cli, 'utf8');
+  const topLevelImports = source
+    .split('\n')
+    .filter((line) => /^import\b/.test(line));
+  const browserDeps = topLevelImports.filter((line) => /from '(playwright|pngjs|pixelmatch)'/.test(line));
+  assert.deepEqual(browserDeps, [], `top-level browser imports found:\n${browserDeps.join('\n')}`);
+
+  const visualSource = await readFile(path.join(packageRoot, 'src', 'visual.mjs'), 'utf8');
+  const visualBrowserDeps = visualSource
+    .split('\n')
+    .filter((line) => /^import\b/.test(line) && /from '(playwright|pngjs|pixelmatch)'/.test(line));
+  assert.deepEqual(visualBrowserDeps, [], `top-level browser imports found:\n${visualBrowserDeps.join('\n')}`);
+});

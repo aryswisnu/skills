@@ -1,5 +1,22 @@
 # aryswisnu-skills
 
+## 0.8.0 (2026-09-16)
+
+Diagrams in the PR itself.
+
+- `--update-description`: insert or refresh the review as a marked block in the PR description
+  (`<!-- visualize-pr:start -->` / `<!-- visualize-pr:end -->`), idempotent on re-run. Can be
+  combined with `--post-comment`.
+- Backend change map is now a Mermaid `flowchart LR` of changed source files and their in-repo
+  imports (JS/TS, Python, Go, Ruby, PHP, Java/Kotlin, Rust, C#), colored by status, capped at 40
+  nodes. GitHub renders it natively, so backend reviews no longer upload a PNG or create the
+  `visual-review-assets` branch. `@resvg/resvg-js` dependency removed. New `change-map.mmd` output.
+- `--diagram <file.mmd>`: include an agent-authored Mermaid `sequenceDiagram` as a `### Sequence`
+  section. SKILL.md now tells the agent to write one from `changes.patch`.
+- `playwright`, `pngjs`, and `pixelmatch` are lazy-loaded, so `--backend` works before
+  `npx playwright install`, and a missing module now says to run `npm install` in the skill folder.
+- `npm test`: 174 tests.
+
 ## 0.7.0 (2026-09-16)
 
 Restructure the repository as a skills collection.

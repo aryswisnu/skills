@@ -71,10 +71,10 @@ test('resolveLocalRoute rejects external and protocol-relative URLs', () => {
   );
 });
 
-test('createPixelDiff reports changed pixels', () => {
+test('createPixelDiff reports changed pixels', async () => {
   const before = pngWithPixels([[255, 255, 255, 255], [0, 0, 0, 255]]);
   const after = pngWithPixels([[255, 255, 255, 255], [255, 0, 0, 255]]);
-  const result = createPixelDiff(before, after, 0.1);
+  const result = await createPixelDiff(before, after, 0.1);
 
   assert.equal(result.changedPixels, 1);
   assert.equal(result.totalPixels, 2);
@@ -84,10 +84,10 @@ test('createPixelDiff reports changed pixels', () => {
   assert.equal(diff.height, 1);
 });
 
-test('createPixelDiff rejects mismatched screenshot dimensions', () => {
+test('createPixelDiff rejects mismatched screenshot dimensions', async () => {
   const onePixel = pngWithPixels([[255, 255, 255, 255]]);
   const twoPixels = pngWithPixels([[255, 255, 255, 255], [0, 0, 0, 255]]);
-  assert.throws(() => createPixelDiff(onePixel, twoPixels, 0.1), /dimensions differ/);
+  await assert.rejects(() => createPixelDiff(onePixel, twoPixels, 0.1), /dimensions differ/);
 });
 
 test('startCommandForPlatform keeps inline environment assignments executable', () => {
