@@ -43,7 +43,7 @@ The CLI draws the file-level change map on its own. A sequence diagram needs to 
 Run the CLI once with `--setup`. It installs the npm dependencies and Chromium into the skill's own folder, because plugin installers copy the files but do not run npm. `--setup --backend` skips the browser download.
 
 **Can it review GitLab or Bitbucket?**
-Not yet. Only GitHub URLs resolve. Local `--base`/`--head` works against any repository.
+Yes, since v0.11.0. Pass a Bitbucket Cloud pull request or GitLab merge request URL to `--pr`, self-hosted included; the provider is read from the path shape. Set `BITBUCKET_TOKEN` (or `BITBUCKET_USERNAME` plus `BITBUCKET_APP_PASSWORD`) or `GITLAB_TOKEN` to publish. Backend reviews work identically everywhere. Web reviews on those two post the verdicts and diagrams but keep the screenshots local, since only GitHub has an upload path today. Bitbucket Server (Data Center) and Azure DevOps are not implemented.
 
 ## It's working if
 

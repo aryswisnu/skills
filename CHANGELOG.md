@@ -1,5 +1,28 @@
 # aryswisnu-skills
 
+## 0.11.0 (2026-09-16)
+
+Bitbucket Cloud and GitLab.
+
+- `--pr` accepts GitHub pull requests, Bitbucket Cloud pull requests, and GitLab merge requests.
+  The provider is read from the URL path shape, not the host, so self-hosted GitLab, GitHub
+  Enterprise, and custom Bitbucket domains work. GitLab nested groups are encoded as one API
+  segment. Bitbucket Server (Data Center) is detected and refused with a message; Azure DevOps is
+  not implemented.
+- `--post-comment` and `--update-description` work on all three. Tokens: `GITHUB_TOKEN` or
+  `GH_TOKEN`; `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD`;
+  `GITLAB_TOKEN` (or `CI_JOB_TOKEN` in CI).
+- Non-GitHub providers fetch the base and head branches from `origin` with the clone's own
+  credentials and resolve the API's commit hashes locally. Bitbucket returns 12-character hashes,
+  and git cannot fetch an abbreviated hash by name, so this is the path that works. Falls back to
+  fetching by hash, then names the fork-fetch command.
+- Web evidence upload stays GitHub-only for now. On Bitbucket and GitLab a web review still posts
+  the verdicts and diagrams; the screenshots stay in the output directory and the CLI says so.
+- New `src/pr-url.mjs` (three-provider parser), `src/providers.mjs` (one facade per forge),
+  `src/provider-bitbucket.mjs`, `src/provider-gitlab.mjs`. End-to-end tests run the real CLI
+  against mock Bitbucket and GitLab APIs, including a re-run that replaces the description block.
+- `npm test`: 263 tests, 44 new.
+
 ## 0.10.2 (2026-09-16)
 
 Stop the skill from advising broken Mermaid.

@@ -74,7 +74,7 @@ provenance.
 | | |
 | --- | --- |
 | **Two live revisions** | Both revisions are checked out into detached worktrees and started on separate local ports. Nothing is stored as a baseline. |
-| **Pull request URL** | `--pr <github-url>` resolves base and head SHAs, runs the same capture, and (with `--post-comment`) uploads the images and posts the review as a PR comment. |
+| **Pull request URL** | `--pr <url>` takes a GitHub PR, Bitbucket Cloud PR, or GitLab MR (self-hosted too, detected from the path shape), resolves base and head SHAs, runs the same capture, and (with `--post-comment`) uploads the images and posts the review as a PR comment. |
 | **Backend / non-web** | `--backend` analyzes the diff and emits a change summary plus a Mermaid change map (`change-map.mmd`, a flowchart of changed files and their in-repo imports, colored by status), no browser or config required. GitHub renders it natively, so nothing is uploaded. |
 | **Sequence diagram** | `--diagram <file.mmd>` inserts an agent-authored Mermaid `sequenceDiagram` of the changed behavior as a `### Sequence` section in the report and PR text. |
 | **Scenario replay** | A validated action list (`goto`, `click`, `fill`, `press`, `select`, `waitForSelector`, `assertVisible`, `assertText`) is replayed identically on base and head. |
@@ -237,8 +237,9 @@ See [docs/usage-examples.md](docs/usage-examples.md) for:
 - Desktop and mobile viewports
 - Interactive scenarios, masks, impact rules, and focused runs
 - Manual GitHub Actions usage
-- Clearly marked, not-yet-implemented designs for Bitbucket, GitLab, Azure DevOps,
-  GitHub description-update, backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
+- Bitbucket Cloud and GitLab pull request URLs, with the token each one needs
+- Clearly marked, not-yet-implemented designs for Azure DevOps, Bitbucket Server, backend API,
+  CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
 
 Only examples under **Available now, v0.10.0** describe executable behavior in this release.
 
@@ -247,7 +248,7 @@ Only examples under **Available now, v0.10.0** describe executable behavior in t
 ```text
 --base <ref>       Base git revision, required unless --pr is used
 --head <ref>       Head git revision, default: HEAD
---pr <url>         GitHub pull request URL; resolves base and head SHAs
+--pr <url>         GitHub, Bitbucket Cloud, or GitLab pull/merge request URL; resolves base and head SHAs
 --backend          Analyze the diff and emit a change summary + architecture diagram (no browser)
 --post-comment     Upload evidence, embed images, and post as a PR comment (requires --pr)
 --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text

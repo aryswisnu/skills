@@ -117,7 +117,7 @@ node <skill>/scripts/visualize-pr.mjs --pr https://github.com/<owner>/<repo>/pul
 
 That resolves the PR's exact base and head commits, analyzes the diff, and inserts a review block
 into the PR description with a Mermaid change map that GitHub renders natively. Re-run it and the
-block is replaced in place. Nothing is uploaded. `GITHUB_TOKEN` or `GH_TOKEN` with write access is
+block is replaced in place. Nothing is uploaded. Works the same on GitHub, Bitbucket Cloud, and GitLab (self-hosted too). `GITHUB_TOKEN` or `GH_TOKEN`, `BITBUCKET_TOKEN`, or `GITLAB_TOKEN` with write access is
 required only for the description update; drop the flag and you get a local `pr-comment.md` draft.
 
 For a web change, generate a config first, then run without `--backend`:
@@ -229,7 +229,7 @@ Both are kept open on purpose.
 ## CLI reference
 
 ```text
---pr <url>            GitHub pull request URL; resolves base and head SHAs
+--pr <url>            GitHub, Bitbucket Cloud, or GitLab pull/merge request URL; resolves base and head SHAs
 --base <ref>          Base git revision, required unless --pr is used
 --head <ref>          Head git revision, default: HEAD
 --backend             Diff summary + Mermaid change map, no browser or config

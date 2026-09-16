@@ -32,7 +32,8 @@ import {
 } from '../src/visual.mjs';
 
 import { parsePrUrl } from '../src/pr-url.mjs';
-import { ensureAssetsBranch, getPrBody, githubTokenFrom, postPrComment, resolvePr, updatePrBody, uploadFile } from '../src/provider-github.mjs';
+import { ensureAssetsBranch, uploadFile } from '../src/provider-github.mjs';
+import { providerFor } from '../src/providers.mjs';
 import { buildPrComment } from '../src/pr-comment.mjs';
 import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, parseNameStatus, parseNumstat, summarizeChange } from '../src/backend.mjs';
 import { buildModuleGraph, renderMermaidFlowchart } from '../src/mermaid.mjs';
@@ -105,13 +106,35 @@ function runInstall(command, cwd, processes) {
   });
 }
 
-function fetchPrCommits(repoRoot, baseSha, headSha, token) {
-  const args = ['fetch', '--quiet', 'origin', baseSha, headSha];
-  if (token) {
-    const auth = Buffer.from(`x-access-token:${token}`).toString('base64');
-    args.unshift('-c', `http.extraheader=AUTHORIZATION: basic ${auth}`);
+function fetchPrCommits(repoRoot, pr, provider, token) {
+  if (provider.name === 'GitHub') {
+    // GitHub serves any reachable commit by full SHA, and accepts the token
+    // as an x-access-token basic credential for private repos.
+    const args = ['fetch', '--quiet', 'origin', pr.baseSha, pr.headSha];
+    if (token) {
+      const auth = Buffer.from(`x-access-token:${token}`).toString('base64');
+      args.unshift('-c', `http.extraheader=AUTHORIZATION: basic ${auth}`);
+    }
+    git(args, repoRoot);
+    return;
   }
-  git(args, repoRoot);
+  // Bitbucket abbreviates commit hashes to 12 characters, and git cannot fetch
+  // an abbreviated SHA by name, so fetch the branches instead. The SHAs then
+  // resolve locally through rev-parse. No credential header is injected: the
+  // clone already has whatever credentials fetched it in the first place.
+  try {
+    git(['fetch', '--quiet', 'origin', pr.baseRef, pr.headRef], repoRoot);
+  } catch (branchError) {
+    try {
+      git(['fetch', '--quiet', 'origin', pr.baseSha, pr.headSha], repoRoot);
+    } catch {
+      throw new Error(
+        `could not fetch ${provider.reference} from origin by branch (${pr.baseRef}, ${pr.headRef}) ` +
+        `or by commit. If the head branch lives on a fork, fetch it first: git fetch <fork-url> ${pr.headRef}. ` +
+        `git said: ${branchError.message.trim()}`,
+      );
+    }
+  }
 }
 
 async function uploadCellImages(token, pr, outputDir, cells) {
@@ -129,10 +152,10 @@ async function uploadCellImages(token, pr, outputDir, cells) {
   return images;
 }
 
-function requirePublishToken(token, options) {
+function requirePublishToken(token, options, provider) {
   if (token) return;
   const flag = options.postComment ? '--post-comment' : '--update-description';
-  throw new Error(`${flag} requires GITHUB_TOKEN or GH_TOKEN in the environment`);
+  throw new Error(`${flag} requires ${provider.tokenHint} in the environment`);
 }
 
 async function readDiagram(filePath) {
@@ -147,9 +170,10 @@ async function readDiagram(filePath) {
 }
 
 async function updatePrDescription(token, pr, section) {
-  const existing = await getPrBody(token, pr.owner, pr.repo, pr.number);
+  const provider = providerFor(pr);
+  const existing = await provider.getBody(token);
   const body = mergeDescription(existing, section);
-  return updatePrBody(token, pr.owner, pr.repo, pr.number, body);
+  return provider.updateBody(token, body);
 }
 
 async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, changedFiles, diffStat, codeDiff, pr }) {
@@ -194,15 +218,16 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
   console.log(`Backend review written to ${outputDir}`);
 
   if (pr) {
-    const token = githubTokenFrom(process.env);
-    if (options.postComment || options.updateDescription) requirePublishToken(token, options);
+    const provider = providerFor(pr);
+    const token = provider.tokenFrom(process.env);
+    if (options.postComment || options.updateDescription) requirePublishToken(token, options, provider);
     // Mermaid renders natively on GitHub, so backend reviews upload nothing.
     const comment = buildBackendComment(summary, baseSha, headSha, pr, null, mermaid, diagram);
     await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
     console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
     if (options.postComment) {
-      const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
-      console.log(`Posted comment: ${posted.htmlUrl}`);
+      const posted = await provider.postComment(token, comment);
+      console.log(`Posted comment: ${posted.htmlUrl ?? pr.htmlUrl}`);
     }
     if (options.updateDescription) {
       const updated = await updatePrDescription(token, pr, comment);
@@ -428,10 +453,11 @@ if (options.init) {
   let pr = null;
   if (options.pr) {
     pr = parsePrUrl(options.pr);
-    const token = githubTokenFrom(process.env);
-    const resolved = await resolvePr(token, pr.owner, pr.repo, pr.number);
+    const provider = providerFor(pr);
+    const token = provider.tokenFrom(process.env);
+    const resolved = await provider.resolvePr(token);
     pr = { ...pr, ...resolved };
-    fetchPrCommits(repoRoot, resolved.baseSha, resolved.headSha, token);
+    fetchPrCommits(repoRoot, pr, provider, token);
     options.base = resolved.baseSha;
     options.head = resolved.headSha;
   }
@@ -797,21 +823,29 @@ if (options.init) {
     process.exitCode = code;
 
     if (pr) {
-      const token = githubTokenFrom(process.env);
+      const provider = providerFor(pr);
+      const token = provider.tokenFrom(process.env);
       const diagram = webDiagram;
       let comment = buildPrComment(report, pr, null, diagram);
       if (options.postComment || options.updateDescription) {
-        requirePublishToken(token, options);
-        phase = 'pr-asset-upload';
-        const images = await uploadCellImages(token, pr, outputDir, report.cells);
-        comment = buildPrComment(report, pr, images, diagram);
+        requirePublishToken(token, options, provider);
+        if (provider.supportsEvidenceUpload) {
+          phase = 'pr-asset-upload';
+          const images = await uploadCellImages(token, pr, outputDir, report.cells);
+          comment = buildPrComment(report, pr, images, diagram);
+        } else {
+          // Only GitHub has a host for the screenshots today. Elsewhere the
+          // verdicts and diagrams still post; the images stay in the output
+          // directory and the comment says so.
+          console.error(`${provider.name} evidence upload is not implemented. The screenshots stay in ${outputDir}; the comment carries verdicts and diagrams only.`);
+        }
       }
       await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
       console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
       if (options.postComment) {
         phase = 'pr-comment-post';
-        const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
-        console.log(`Posted comment: ${posted.htmlUrl}`);
+        const posted = await provider.postComment(token, comment);
+        console.log(`Posted comment: ${posted.htmlUrl ?? pr.htmlUrl}`);
       }
       if (options.updateDescription) {
         phase = 'pr-description-update';

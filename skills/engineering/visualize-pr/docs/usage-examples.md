@@ -1,12 +1,12 @@
 # Usage Examples
 
-> **Implementation status:** The local Git and browser workflow, GitHub pull request URL entry point,
-> and backend diff-summary path in [Available now](#available-now-v060) are implemented and tested
-> in v0.10.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
-> [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
-> features in the current release.
+> **Implementation status:** The local Git and browser workflow, the GitHub, Bitbucket Cloud, and
+> GitLab pull request URL entry points, and the backend diff-summary path in
+> [Available now](#available-now-v0110) are implemented and tested in v0.11.0. Azure DevOps and the
+> richer non-web adapters in [Planned interfaces](#planned-interfaces-not-yet-implemented) are
+> design examples, not executable features in the current release.
 
-## Available now, v0.10.0
+## Available now, v0.11.0
 
 ### Install the skill collection
 
@@ -98,6 +98,43 @@ evidence and requires the same token as `--post-comment`, and the two flags can 
 
 See [What the PR comment looks like](pr-comment-examples.md) for complete rendered web and backend
 examples.
+
+### Review a Bitbucket Cloud pull request
+
+Same flags, different URL and token. Backend reviews post a Mermaid change map that Bitbucket
+renders; web reviews post verdicts and diagrams, and the screenshots stay in the output directory.
+
+```bash
+export BITBUCKET_TOKEN=<repository-or-workspace-access-token>
+# or: export BITBUCKET_USERNAME=<user> BITBUCKET_APP_PASSWORD=<app-password>
+node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
+  --pr https://bitbucket.org/acme/orders/pull-requests/123 \
+  --backend \
+  --update-description \
+  --output visual-review-output
+```
+
+Bitbucket Server (Data Center) URLs, the `/projects/KEY/repos/...` shape, are refused with a
+message: its API differs from Cloud and is not implemented.
+
+### Review a GitLab merge request
+
+Nested groups and self-hosted instances work; the project path is taken from the URL and encoded
+as one segment for the API.
+
+```bash
+export GITLAB_TOKEN=<personal-or-project-access-token>
+node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
+  --pr https://gitlab.example.com/group/subgroup/orders/-/merge_requests/123 \
+  --backend \
+  --post-comment \
+  --output visual-review-output
+```
+
+Both providers fetch the PR's base and head **branches** from `origin` using the clone's own
+credentials, then resolve the API's commit hashes locally. Bitbucket returns 12-character hashes,
+which is why fetching by branch is the path that works. A head branch on a fork must be fetched
+first: `git fetch <fork-url> <branch>`.
 
 ### Backend or non-web change
 
@@ -319,10 +356,9 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended lightweight, provider-neutral direction. The v0.10.0
-CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v060));
-the `/visualize-pr` shorthand below, remote description updates, and non-GitHub providers remain
-planned.
+The following examples describe the intended direction. The v0.11.0 CLI already resolves GitHub,
+Bitbucket Cloud, and GitLab URLs via `--pr` and updates descriptions on all three (see
+[Available now](#available-now-v0110)); Azure DevOps and the non-web adapters remain planned.
 
 ### Slash-command shorthand
 
@@ -333,18 +369,6 @@ planned.
 This is the future shorthand for the implemented `--pr` flow. It will additionally manage a
 Markdown description section, show the draft, and require explicit approval before updating the
 remote description.
-
-### Bitbucket Cloud pull request
-
-```text
-/visualize-pr https://bitbucket.org/acme/orders/pull-requests/123
-```
-
-### GitLab merge request
-
-```text
-/visualize-pr https://gitlab.com/acme/orders/-/merge_requests/123
-```
 
 ### Azure DevOps pull request
 
