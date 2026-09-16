@@ -9,21 +9,21 @@ permissions:
   contents: read
 
 jobs:
-  visual-pr-review:
+  visualize-pr:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: skills/engineering/visual-pr-review
+        working-directory: skills/engineering/visualize-pr
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: skills/engineering/visual-pr-review/package-lock.json
+          cache-dependency-path: skills/engineering/visualize-pr/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test

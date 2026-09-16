@@ -1,0 +1,146 @@
+# aryswisnu-skills
+
+## 0.7.0 (2026-09-16)
+
+Restructure the repository as a skills collection.
+
+- Rename `visual-pr-review` to `visualize-pr`, so `/visualize-pr` is the real invocation. The CLI
+  file is now `scripts/visualize-pr.mjs`. Runtime contracts (`visual-review.json`,
+  `visual-review-output`, the `visual-review-assets` branch) are unchanged.
+- Mark the skill user-invoked (`disable-model-invocation: true`, `agents/openai.yaml`).
+- Add `.claude-plugin/plugin.json` and `marketplace.json`: installable with
+  `claude plugins install aryswisnu-skills@aryswisnu`.
+- Add `CLAUDE.md` (bucket rules), `docs/engineering/visualize-pr.md` (human-facing page),
+  `scripts/link-skills.sh`, `scripts/list-skills.sh`, and this changelog (history moved out of
+  `docs/verification.md`).
+- Rewrite the root `README.md` as a collection index.
+
+## 0.6.1 (2026-09-16)
+
+macOS worktree cleanup.
+
+- Fixed: on macOS `os.tmpdir()` is a symlink (`/var` -> `/private/var`) while `git worktree list`
+  reports real paths, so `worktreePathsUnder` matched nothing and temporary worktrees leaked after
+  every run. `tempRoot` is now resolved with `realpath` before use.
+- Six `test/cli-failure.test.mjs` cases failed on macOS before the fix and pass after it.
+- Moved non-spec SKILL.md frontmatter keys (`version`, `author`, `platforms`) under `metadata`.
+- Added `.github/workflows/test.yml`: `npm ci`, Chromium install, `npm test`, `npm audit` on
+  Ubuntu and macOS.
+- Removed two unreferenced PNG exports from `docs/`.
+- `npm test`: 141 tests, 141 passed, 0 failed, 0 skipped (macOS 15, Node 22).
+
+## 0.6.0 (2026-09-14)
+
+Backend change-map embedding.
+
+- Backend `--post-comment` now rasterizes `architecture.svg` to a PNG (browser-free, via
+  `@resvg/resvg-js`) and embeds it in the posted comment, mirroring the web evidence flow. GitHub
+  refuses inline SVG in comments, so a PNG is the only way to show the change map directly.
+- Backend change-summary grouping now strips a common directory prefix, so a monorepo change groups
+  by its real modules (e.g. `src`, `scripts`, `test`) instead of collapsing into one umbrella
+  directory.
+- New module `src/svg-to-png.mjs` (lazy-loaded Rust SVG rasterizer). New tests
+  `test/svg-to-png.test.mjs` (valid PNG + rendered glyphs) and `test/backend-post-cli.test.mjs`
+  (full browser-free `--backend --post-comment` flow against a mock GitHub API).
+- `npm test`: 140 tests, 140 passed, 0 failed, 0 skipped.
+
+### Reviewer-facing documentation, 2026-09-14
+
+- Added complete rendered web and backend PR comment examples plus a real CLI-generated side-by-side
+  artifact.
+- Expanded the root and skill READMEs around the reviewer problem, outcomes, supported modes,
+  publication boundary, and direct installation path.
+
+## 0.5.0 (2026-09-13)
+
+Backend support.
+
+- Added `--backend`: removes the frontend-only gate. For a non-web change, the CLI emits a change
+  summary (`report.md`), an editorial architecture "change map" (`architecture.svg`, styled after
+  the diagram-design system: paper/ink/one accent, density 4/10), and `summary.json`, with no
+  config or browser required.
+- New module `src/backend.mjs` (numstat/name-status parsing, change summarization, markdown +
+  SVG generation). New tests `test/backend.test.mjs` and `test/backend-cli.test.mjs`.
+- `npm test`: 135 tests, 135 passed, 0 failed, 0 skipped.
+
+## 0.4.1 (2026-09-13)
+
+Image embedding.
+
+- `--post-comment` now uploads the side-by-side PNGs to a `visual-review-assets` branch (created via
+  the git refs API, files added via the contents API) and embeds them in the comment via
+  `raw.githubusercontent.com` URLs. The draft (`--pr` without `--post-comment`) still writes no
+  remote state.
+- Verified live: created the branch, uploaded a test PNG, fetched the raw URL (HTTP 200,
+  `image/png`), then deleted the branch. GitHub's contents API does not auto-create branches, so
+  `ensureAssetsBranch` creates it first via `POST /git/refs`.
+- `npm test`: 127 tests, 127 passed, 0 failed, 0 skipped.
+
+## 0.4.0 (2026-09-13)
+
+GitHub PR support.
+
+- Added `--pr <github-url>` and `--post-comment`. `--pr` parses the URL, resolves base and head SHAs
+  through the GitHub REST API (`GITHUB_TOKEN`/`GH_TOKEN`, or unauthenticated for public repos),
+  fetches both commits, runs the normal capture pipeline, and writes a `pr-comment.md` draft.
+  `--post-comment` publishes the draft as a PR comment and requires a token.
+- New modules: `src/pr-url.mjs`, `src/provider-github.mjs`, `src/pr-comment.mjs`. New tests:
+  `test/pr-url.test.mjs`, `test/provider-github.test.mjs`, `test/pr-comment.test.mjs`,
+  `test/pr-cli.test.mjs` (a full `--pr` flow against a local bare remote and a mock GitHub API,
+  exercised with real Chromium).
+- Verified against live GitHub: `resolvePr` resolved `nodejs/node#66015` to full 40-char base and
+  head SHAs, refs, and title without a token.
+- `npm test`: 122 tests, 122 passed, 0 failed, 0 skipped.
+- `git fetch origin <baseSha> <headSha>` confirmed to materialize both commits against a local bare
+  remote before worktree creation.
+
+## 0.3.1 (2026-09-13)
+
+Astra remediation.
+
+The Astra audit findings were addressed with a leaner `SKILL.md`, corrected safety and selection
+contracts, and structured infrastructure-failure evidence.
+
+Observed on Linux with an existing compatible Chromium executable:
+
+- `npm test`: 105 tests, 105 passed, 0 failed, 0 skipped.
+- `npm audit --audit-level=high`: zero vulnerabilities.
+- `node --check scripts/visualize-pr.mjs`: exit 0.
+- Relative Markdown links: 10 checked, none missing.
+- Version alignment: `SKILL.md`, `package.json`, and both package-lock locations are `0.3.1`.
+- Skill description: 56 characters; root document: 118 lines.
+- `npm pack --dry-run`: 53 files, including `test/cli-failure.test.mjs`, with no ZIP or
+  `node_modules` payload.
+- `git diff --check`: exit 0.
+- Fresh two-commit browser run: 3 selected cells, 3 `review-required`, 0 capture failures,
+  16 artifact hashes, 18 output files, and exit 0.
+- Visual inspection: desktop, mobile, and replayed-open-panel side-by-side images had readable
+  labels, loaded intended states, visible before/after changes, and no clipping, loading shell,
+  consent overlay, or error page.
+- Forced install failure: exit 2, `failure.json` status `infrastructure-failed`, phase
+  `install-base`, cleanup complete, zero cleanup failures, no normal report, and zero registered
+  temporary worktrees.
+- Unavailable temporary directory after output creation: exit 2 with `failure.json` phase
+  `temporary-directory` and cleanup complete.
+- Preview readiness failure: exit 2 with `failure.json` phase `readiness`, cleanup complete, and no
+  registered temporary worktrees.
+- Invalid browser executable: exit 2 with `failure.json` phase `browser-launch`, cleanup complete,
+  and no registered temporary worktrees.
+- SIGTERM during a live run: exit 143 with `failure.json` status `interrupted`, phase
+  `signal-sigterm`, cleanup complete, and no registered temporary worktrees.
+- Invalid Git revision: exit 2 with a concise error and no unhandled Node stack trace.
+- Secret-bearing install failure test: the configured secret was absent from `failure.json`.
+- Partial worktree registration: a shim registered the head worktree then reported exit 128, and
+  cleanup removed both worktrees by discovering them from `git worktree list --porcelain` rather
+  than a manually tracked array.
+- Cleanup discovery helper: `worktreePathsUnder` keeps only paths beneath the temporary root and
+  excludes sibling directories that share its name as a prefix.
+- GitHub Actions example: the capture step records the CLI exit code and surfaces exit 1 (scenario
+  capture failure) and exit 2 (usage, configuration, or infrastructure failure) as distinct
+  failure steps instead of flattening both into a generic "scenarios missing" message.
+- Install phase is interruptible: `config.installCommand` runs via an asynchronous, process-group
+  tracked spawn instead of a synchronous `execSync`, so SIGTERM during a long install (such as
+  `npm ci`) exits 143 with `failure.json` phase `signal-sigterm` and cleans worktrees instead of
+  hanging until the install finishes.
+
+The remainder of this document preserves the earlier v0.3.0 verification record.

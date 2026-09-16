@@ -1,0 +1,17 @@
+{
+  "name": "aryswisnu",
+  "owner": {
+    "name": "Arys",
+    "url": "https://github.com/aryswisnu"
+  },
+  "description": "Arys's agent skills, as an installable Claude Code plugin.",
+  "plugins": [
+    {
+      "name": "aryswisnu-skills",
+      "source": "./",
+      "description": "Arys's agent skills for real engineering (visualize-pr and more to come).",
+      "category": "engineering",
+      "keywords": ["engineering", "skills", "code-review", "visual-testing"]
+    }
+  ]
+}
