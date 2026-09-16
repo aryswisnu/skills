@@ -36,7 +36,7 @@ import { ensureAssetsBranch, getPrBody, githubTokenFrom, postPrComment, resolveP
 import { buildPrComment } from '../src/pr-comment.mjs';
 import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, parseNameStatus, parseNumstat, summarizeChange } from '../src/backend.mjs';
 import { buildModuleGraph, renderMermaidFlowchart } from '../src/mermaid.mjs';
-import { setupPlan, setupSummary } from '../src/setup.mjs';
+import { setupPlan, setupSummary, unsupportedNodeVersion } from '../src/setup.mjs';
 import { mergeDescription } from '../src/pr-description.mjs';
 
 // Browser dependencies are loaded on first use in the web path only, so backend
@@ -165,7 +165,7 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
   await createOwnedOutputDirectory(outputDir);
   await safeWriteArtifact(outputDir, 'changes.patch', codeDiff);
   await safeWriteArtifact(outputDir, 'changes-stat.txt', diffStat ? `${diffStat}\n` : '');
-  await safeWriteArtifact(outputDir, 'report.md', `${buildChangeSummary(summary, baseSha, headSha, mermaid)}\n`);
+  await safeWriteArtifact(outputDir, 'report.md', `${buildChangeSummary(summary, baseSha, headSha, mermaid, diagram)}\n`);
   await safeWriteArtifact(outputDir, 'change-map.mmd', `${mermaid}\n`);
   await safeWriteArtifact(outputDir, 'architecture.svg', buildArchitectureDiagram(summary, baseSha, headSha));
 
@@ -371,7 +371,13 @@ async function main() {
     console.log(usage());
     return;
   }
-  if (options.setup) {
+  const versionError = unsupportedNodeVersion(process.versions.node);
+if (versionError) {
+  console.error(versionError);
+  process.exit(2);
+}
+
+if (options.setup) {
   try {
     await runSetup(options);
   } catch (error) {
@@ -397,6 +403,18 @@ if (options.init) {
       config = normalizeConfig(JSON.parse(await readFile(configPath, 'utf8')));
     } catch (error) {
       fail(`${options.config}: ${error.message}`);
+      return;
+    }
+  }
+
+  // Read the diagram before any worktree or browser work, so a bad path fails
+  // in front of the user instead of after a full capture.
+  let webDiagram = null;
+  if (!options.backend) {
+    try {
+      webDiagram = await readDiagram(options.diagram);
+    } catch (error) {
+      fail(error.message);
       return;
     }
   }
@@ -743,7 +761,7 @@ if (options.init) {
       provenance,
     };
 
-    await safeWriteArtifact(outputDir, 'report.md', renderReport(report));
+    await safeWriteArtifact(outputDir, 'report.md', renderReport(report, webDiagram));
     await safeWriteArtifact(
       outputDir,
       'summary.json',
@@ -775,7 +793,7 @@ if (options.init) {
 
     if (pr) {
       const token = githubTokenFrom(process.env);
-      const diagram = await readDiagram(options.diagram);
+      const diagram = webDiagram;
       let comment = buildPrComment(report, pr, null, diagram);
       if (options.postComment || options.updateDescription) {
         requirePublishToken(token, options);

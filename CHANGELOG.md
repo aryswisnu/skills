@@ -1,5 +1,22 @@
 # aryswisnu-skills
 
+## 0.10.1 (2026-09-16)
+
+Fix `--diagram` being silently discarded.
+
+- `--diagram` reached `pr-comment.md` only, and that file is written only when `--pr` is set. A
+  `--backend` run without `--pr` read the file, validated it was not empty, then threw it away and
+  exited 0, so `report.md` never carried the `Sequence` section SKILL.md promised. The diagram is
+  now passed into `buildChangeSummary` (backend) and `renderReport` (web), so it always reaches
+  `report.md`. Reported from a remote session against v0.10.0.
+- Web mode read the diagram file inside the `--pr` branch, so a missing or empty path was ignored
+  without `--pr` and only failed after a full capture with it. The read is hoisted above worktree
+  creation: a bad path now exits 2 before either revision is checked out.
+- New Node version guard. The CLI is run as `node scripts/visualize-pr.mjs`, which ignores
+  package.json `engines`, so Node 18 failed deep in a stack trace. It now exits 2 with the minimum
+  version and how to switch.
+- `npm test`: 213 tests, 7 new.
+
 ## 0.10.0 (2026-09-16)
 
 The skill installs itself.

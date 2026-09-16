@@ -1,3 +1,5 @@
+import { diagramSection } from './backend.mjs';
+
 export const VERDICT_ORDER = ['capture-failed', 'review-required', 'changed-within-threshold', 'unchanged'];
 
 const VERDICT_LABEL = {
@@ -65,7 +67,7 @@ function runtimeLines(label, runtime) {
   return lines;
 }
 
-export function renderReport(report) {
+export function renderReport(report, diagram = null) {
   const cells = sortCells(report.cells);
   const tally = counts(cells);
   const lines = [
@@ -191,6 +193,9 @@ export function renderReport(report) {
     'Full provenance, including self-consistency SHA-256 hashes for every artifact and redacted commands, is in `manifest.json`. These hashes are not signatures or external attestations.',
     '',
   );
+
+  const sequence = diagramSection(diagram, '## Sequence');
+  if (sequence) lines.push(sequence, '');
 
   return lines.join('\n');
 }

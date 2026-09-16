@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.10.0
+  version: 0.10.1
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -108,7 +108,7 @@ The CLI cannot infer behavior, so the agent authors it:
    or `%% changed` comment. Keep it under roughly 15 messages; split into two diagrams if larger.
    Skip this step, and say so, when the diff has no behavior change (docs, config, renames).
 3. Re-run the CLI with `--diagram visual-review-sequence.mmd` and a fresh `--output`. The block is
-   inserted as a `### Sequence` section in `report.md` and `pr-comment.md`. Add
+   inserted as a `Sequence` section in `report.md`, and in `pr-comment.md` when `--pr` is set. Add
    `--update-description` (or `--post-comment`) only after the human has read the draft.
 
 ## Workflow and Completion Contract
