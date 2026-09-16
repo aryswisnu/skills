@@ -214,6 +214,7 @@ export function buildSummary(report) {
     skippedScenarios: report.skippedScenarios,
     cells: sortCells(report.cells).map((cell) => ({
       scenarioId: cell.scenarioId,
+      scenarioName: cell.scenarioName,
       viewport: cell.viewport,
       path: cell.path,
       verdict: cell.verdict,

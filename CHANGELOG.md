@@ -1,5 +1,22 @@
 # aryswisnu-skills
 
+## 0.12.1 (2026-09-16)
+
+`--publish` now uploads GitHub web screenshots.
+
+- A tokenless web draft on GitHub used to publish without images, because uploads happened only
+  on a review run that carried a publish flag. `--publish` now uploads the side-by-side PNGs to
+  the `visual-review-assets` branch and rebuilds the comment from the saved `summary.json`: every
+  line the reviewer read is kept, an Evidence section is added, and the footer stops saying the
+  images are local. Backend, Bitbucket, and GitLab drafts are still posted byte for byte.
+- `pr.json` now records `adapter` (`web` or `backend`) and the `--diagram` text, and
+  `summary.json` cells carry `scenarioName`, which is what makes the rebuild possible without a
+  second review run.
+- End-to-end with real Chromium against a mock GitHub API: the draft uploads nothing;
+  `--publish --post-comment` uploads exactly one image per captured cell, does not resolve the PR
+  again, and every non-footer line of the draft appears in the posted comment.
+- `npm test`: 267 tests, 2 new.
+
 ## 0.12.0 (2026-09-16)
 
 Review the draft, then approve it in one step.

@@ -2,11 +2,11 @@
 
 > **Implementation status:** The local Git and browser workflow, the GitHub, Bitbucket Cloud, and
 > GitLab pull request URL entry points, and the backend diff-summary path in
-> [Available now](#available-now-v0110) are implemented and tested in v0.12.0. Azure DevOps and the
+> [Available now](#available-now-v0110) are implemented and tested in v0.12.1. Azure DevOps and the
 > richer non-web adapters in [Planned interfaces](#planned-interfaces-not-yet-implemented) are
 > design examples, not executable features in the current release.
 
-## Available now, v0.12.0
+## Available now, v0.12.1
 
 ### Install the skill collection
 
@@ -102,7 +102,8 @@ examples.
 ### Review the draft, then publish it
 
 The review run writes `pr-comment.md` and `pr.json` and posts nothing. Read the draft, then
-publish it as written. Nothing is recomputed, so what you read is what lands:
+publish it. Nothing is recomputed, so what you read is what lands. For a GitHub web review the
+screenshots are uploaded at this step and an Evidence section is appended below the text you read:
 
 ```bash
 node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
@@ -371,7 +372,7 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended direction. The v0.12.0 CLI already resolves GitHub,
+The following examples describe the intended direction. The v0.12.1 CLI already resolves GitHub,
 Bitbucket Cloud, and GitLab URLs via `--pr` and updates descriptions on all three (see
 [Available now](#available-now-v0110)); Azure DevOps and the non-web adapters remain planned.
 
