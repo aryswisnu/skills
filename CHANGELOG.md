@@ -1,5 +1,24 @@
 # aryswisnu-skills
 
+## 0.16.0 (2026-09-16)
+
+Terse by construction.
+
+- A real PR came out at twice the length a colleague would write: five prose paragraphs where
+  bullets were asked for, a 14-line pseudocode block, a 6-participant 14-message sequence diagram
+  that rendered as a 140-column grid, and a change map that restated the file line.
+- SKILL.md now prescribes an exact shape and shows a real example to match: one headline under 15
+  words, three to five bullets under 30 words each, one optional `Heads up:` line, one fenced
+  pseudocode block under 8 lines, a sequence diagram with at most 4 participants and 6 messages
+  and labels under 4 words. If the PR description already explains the change, the notes carry
+  only what it lacks.
+- The notes lint enforces that shape with line numbers: prose lines, long bullets, more than five
+  bullets, a long headline or block, a repeated or long `Heads up:`. The diagram lint counts
+  participants and messages and flags long labels and notes. Warnings only.
+- The change map is omitted for a diff that touches one file with at most one import; the
+  artifacts are still written.
+- `npm test`: 317 tests, 12 new.
+
 ## 0.15.0 (2026-09-16)
 
 Sequence diagram directly under the notes.

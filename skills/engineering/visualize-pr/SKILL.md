@@ -4,7 +4,7 @@ description: Turn a pull request on GitHub, Bitbucket Cloud, or GitLab, or any t
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.15.0
+  version: 0.16.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -112,36 +112,81 @@ description renders the diagram with no image upload.
 
 ## Notes and Sequence Diagram
 
-The PR text a colleague reads should lead with what changed and why, in their words, not with
-statistics. The CLI cannot write that, so the agent authors two files and passes them in:
+A colleague reads the PR text on a phone, in a few seconds, next to the description the author
+already wrote. Write like a message to that colleague, not a report. The CLI cannot write it, so
+the agent authors two files and passes them in:
 
-1. Run the CLI once (backend or web) to get `changes.patch` and `report.md`.
-2. Read the patch. Write `visual-review-notes.md`: three to six bullets in plain language on what
-   changed and why, then one short pseudocode block (under about 15 lines) showing the core rule.
-   Write it as a fenced block, three backticks on their own lines, never by indenting: after a
-   bullet list CommonMark treats an indented block as a paragraph of the last bullet, so Bitbucket,
-   GitHub, and GitLab all render it as wrapped plain text. The block is required whenever the diff
-   changes behavior, which is the same condition under
-   which you write the sequence diagram; a change with no logic (docs, config, renames) gets the
-   bullet `No pseudocode: no logic changed.` instead, so its absence is a decision a reader can
-   see. No restating file counts or SHAs; the CLI adds those. No prose paragraphs. The CLI warns,
-   with line numbers, when the block is missing or a paragraph slips in. Pass it with `--notes`;
-   it goes directly under the title, above everything generated.
-3. Also write a Mermaid `sequenceDiagram` of the changed call flow into a file outside
-   the output directory, for example `visual-review-sequence.mmd`. Participants are the real
-   modules, services, or actors touched by the diff. Mark new or changed messages with a
-   `Note over A,B: changed` line. Keep it under roughly 15 messages; split into two diagrams if
-   larger. Two Mermaid rules the CLI warns about but cannot fix: `%%` starts a comment only at the
-   beginning of a line, so a trailing `%% changed` renders inside the message label as visible
-   text, and angle brackets in a label can render as markup, so write `(name)` rather than
-   `<name>`.
-   Skip the diagram, and say so, when the diff has no behavior change (docs, config, renames);
-   the notes are always worth writing.
+1. Run the CLI once (backend or web) to get `changes.patch` and `report.md`. Read the PR's
+   existing description as well.
+2. Write `visual-review-notes.md` in exactly this shape and nothing else:
+   - one headline sentence, under 15 words, saying what changed;
+   - three to five bullets, each under 30 words, one idea each, at most one number each, starting
+     with the thing that changed. No paragraphs anywhere, not even short ones;
+   - one `Heads up:` line, only when behavior changes for existing callers;
+   - one fenced pseudocode block, three backticks on their own lines, under 8 lines: the single
+     rule a reviewer could get wrong. Fenced, never indented, because after a bullet list
+     CommonMark renders an indented block as a paragraph of the last bullet. When the diff changes
+     no logic (docs, config, renames), write the bullet `No pseudocode: no logic changed.`
+     instead, so the absence is a decision a reader can see.
+   If the PR description already explains the change, the notes carry only what it lacks: a
+   number, a risk, a fix the description does not mention. Never restate the description. No
+   file counts, no SHAs; the CLI adds those. The CLI warns, with line numbers, on prose lines,
+   long bullets, more than five bullets, a long block, or a missing one. Pass the file with
+   `--notes`; it goes directly under the title, above everything generated.
+3. Write `visual-review-sequence.mmd`, a Mermaid `sequenceDiagram` of the one flow that changed
+   most: at most 4 participants, at most 6 messages, labels under 4 words, notes under 3 words.
+   Pick the riskiest flow, not every branch; a second flow is a second file, rarely needed.
+   Participants are real modules, services, or actors touched by the diff. Mark a changed message
+   with a `Note over A,B: changed` line. `%%` starts a comment only at the beginning of a line, so
+   a trailing `%% changed` renders inside the label; write `(name)` rather than `<name>`, since
+   angle brackets can render as markup. The CLI warns on participant, message, and label counts.
+   Skip the diagram, and say so, when the diff has no behavior change; the notes are always worth
+   writing.
 4. Re-run the CLI with `--notes visual-review-notes.md --diagram visual-review-sequence.mmd` and a
-   fresh `--output`. The sequence block is inserted as a `Sequence` section directly under the
-   notes, above the file summary and the change map, in `report.md` and in `pr-comment.md` when
-   `--pr` is set. Add
+   fresh `--output`. The sequence block is inserted directly under the notes, above the file
+   summary, in `report.md` and in `pr-comment.md` when `--pr` is set. The change map is omitted
+   for a one-file change with at most one import, since it would only repeat the file line. Add
    `--update-description` (or `--post-comment`) only after the human has read the draft.
+
+The whole block for a real one-file PR, as it lands under the title line. Match this length:
+
+~~~markdown
+Filters accept arrays and match every spelling of a value.
+
+- `property_type`, `listing_type`, `status`: array, repeated param, or `A,B`. Objects still 400, so `uid[$ne]` never reaches `$match`.
+- Each value expands to all stored spellings. District 1024, `for rent` + `room rental`: 206 of 363 before, 363 now.
+- Unknown values pass through and are listed in `meta.unrecognized`: a typo is visible, not a silent 0.
+- Also fixed: `limit=0` returned 500, paging repeated rows, `uid` past 2^53 rounded silently, empty `?status=` dropped the filter.
+
+Heads up: `for sale` now also matches `For Sale` and `SALE`, about 900 more listings nationally. Intended.
+
+```
+for v in values:
+    expanded += VALUE_GROUPS[field][lower(v)] or [v]   # unknown: pass through, report
+match[field] = { $in: expanded }
+```
+
+### Sequence
+
+```text
+       Caller        listingCount()    expandValues()      MongoDB
+         |                 |                 |                 |
+         |  GET listing_count                |                 |
+         |---------------->|                 |                 |
+         |                 |  expand values  |                 |
+         |                 |---------------->|                 |
+         |                 |  all spellings  |                 |
+         |                 <- - - - - - - - -|                 |
+         |                 |  $in expanded   |                 |
+         |                 |---------------------------------->|
+         |  200 data, meta |                 |                 |
+         <-----------------|                 |                 |
+```
+
+1 file changed (+110 -20): `src/controllers/agentStats.controller.js`
+
+> Generated by `visualize-pr`. Evidence for a reviewer, not an approval.
+~~~
 
 ## Workflow and Completion Contract
 

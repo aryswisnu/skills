@@ -204,7 +204,13 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
   const mermaid = renderMermaidFlowchart(graph, { base: baseSha, head: headSha });
   const diagram = await readDiagram(options.diagram);
   const ascii = useAsciiFor(options, pr);
-  const changeMap = changeMapBlock(graph, mermaid, baseSha, headSha, ascii);
+  // A map of one changed file and at most one arrow repeats the file list and
+  // costs a reviewer a scroll, so the section is dropped from report.md and
+  // pr-comment.md. The change-map.mmd and change-map.txt artifacts are still
+  // written: they cost nothing to keep and a reader can open them.
+  const changedNodes = (graph.nodes ?? []).filter((node) => node.changed).length;
+  const tellsNothing = changedNodes <= 1 && (graph.edges ?? []).length <= 1;
+  const changeMap = tellsNothing ? null : changeMapBlock(graph, mermaid, baseSha, headSha, ascii);
   const sequence = sequenceBlock(diagram, ascii);
   const notes = await readNotes(options.notes);
 
