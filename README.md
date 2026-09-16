@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="skills/engineering/visualize-pr/docs/visualize-pr-logo.svg" alt="Visualize PR" width="600">
-</p>
-
 # Skills
 
 [![test](https://github.com/aryswisnu/skills/actions/workflows/test.yml/badge.svg)](https://github.com/aryswisnu/skills/actions/workflows/test.yml)
