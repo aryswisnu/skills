@@ -1,4 +1,4 @@
-const VALUE_FLAGS = ['--base', '--head', '--config', '--output', '--pr'];
+const VALUE_FLAGS = ['--base', '--head', '--config', '--output', '--pr', '--diagram'];
 
 export function usage() {
   return `Usage: visualize-pr --base <ref> [--head <ref>] [options]
@@ -8,12 +8,14 @@ Options:
   --base <ref>       Base git revision, required unless --pr is used
   --head <ref>       Head git revision, default: HEAD
   --pr <url>         GitHub pull request URL; resolves base and head SHAs
-  --backend          Analyze the diff and emit a change summary + architecture diagram (no browser)
+  --backend          Analyze the diff and emit a change summary + Mermaid change map (no browser)
+  --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
   --config <path>    Config path, default: visual-review.json
   --output <path>    Artifact directory, default: visual-review-output
   --scenario <id>    Capture only this scenario, repeatable, overrides impact rules
   --all              Capture every configured scenario, ignoring impact rules
   --post-comment     Post the generated review as a PR comment (requires --pr)
+  --update-description  Insert or refresh the review section in the PR description (requires --pr)
   --keep-worktrees   Preserve temporary worktrees for debugging
   --help             Show this help
 
@@ -36,6 +38,8 @@ export function parseArgs(argv) {
     all: false,
     pr: null,
     postComment: false,
+    diagram: null,
+    updateDescription: false,
     backend: false,
     help: false,
   };
@@ -46,6 +50,7 @@ export function parseArgs(argv) {
     else if (arg === '--keep-worktrees') options.keepWorktrees = true;
     else if (arg === '--all') options.all = true;
     else if (arg === '--post-comment') options.postComment = true;
+    else if (arg === '--update-description') options.updateDescription = true;
     else if (arg === '--backend') options.backend = true;
     else if (arg === '--scenario' || VALUE_FLAGS.includes(arg)) {
       const value = argv[index + 1];
@@ -68,6 +73,9 @@ export function parseArgs(argv) {
   }
   if (options.postComment && !options.pr) {
     throw new Error('--post-comment requires --pr');
+  }
+  if (options.updateDescription && !options.pr) {
+    throw new Error('--update-description requires --pr');
   }
   if (!options.pr && !options.base) {
     throw new Error('--base or --pr is required');

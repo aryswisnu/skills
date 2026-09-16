@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ensureAssetsBranch, githubTokenFrom, postPrComment, resolvePr, uploadFile } from '../src/provider-github.mjs';
+import { ensureAssetsBranch, getPrBody, githubTokenFrom, postPrComment, resolvePr, updatePrBody, uploadFile } from '../src/provider-github.mjs';
 
 function jsonResponse(body, status = 200) {
   return {
@@ -125,5 +125,55 @@ test('uploadFile surfaces the API message on failure', async () => {
   await assert.rejects(
     () => uploadFile('tok', 'acme', 'orders', 'visual-review-assets', 'run/x.png', Buffer.from([1]), fetchImpl),
     /GitHub asset upload failed.*HTTP 404: Branch not found/,
+  );
+});
+
+test('getPrBody reads the pull request body', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    return jsonResponse({ number: 7, body: 'existing body' });
+  };
+  const body = await getPrBody('tok', 'acme', 'orders', 7, fetchImpl);
+
+  assert.equal(body, 'existing body');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://api.github.com/repos/acme/orders/pulls/7');
+  assert.equal(calls[0].init.headers.Authorization, 'Bearer tok');
+});
+
+test('getPrBody returns an empty string when the body is null', async () => {
+  const body = await getPrBody('tok', 'acme', 'orders', 7, async () => jsonResponse({ number: 7, body: null }));
+  assert.equal(body, '');
+});
+
+test('getPrBody reports a failed lookup', async () => {
+  await assert.rejects(
+    () => getPrBody('tok', 'acme', 'orders', 7, async () => jsonResponse({ message: 'Not Found' }, 404)),
+    /GitHub PR body lookup failed \(acme\/orders#7\): HTTP 404: Not Found/,
+  );
+});
+
+test('updatePrBody PATCHes the pull request with the new body', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    return jsonResponse({ number: 7, html_url: 'https://github.com/acme/orders/pull/7' });
+  };
+  const result = await updatePrBody('tok', 'acme', 'orders', 7, 'new body', fetchImpl);
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://api.github.com/repos/acme/orders/pulls/7');
+  assert.equal(calls[0].init.method, 'PATCH');
+  assert.equal(calls[0].init.headers['Content-Type'], 'application/json');
+  assert.equal(calls[0].init.headers.Authorization, 'Bearer tok');
+  assert.deepEqual(JSON.parse(calls[0].init.body), { body: 'new body' });
+  assert.deepEqual(result, { htmlUrl: 'https://github.com/acme/orders/pull/7' });
+});
+
+test('updatePrBody reports a failed update', async () => {
+  await assert.rejects(
+    () => updatePrBody('tok', 'acme', 'orders', 7, 'x', async () => jsonResponse({ message: 'Forbidden' }, 403)),
+    /GitHub PR description update failed \(acme\/orders#7\): HTTP 403: Forbidden/,
   );
 });

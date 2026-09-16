@@ -2,11 +2,11 @@
 
 > **Implementation status:** The local Git and browser workflow, GitHub pull request URL entry point,
 > and backend diff-summary path in [Available now](#available-now-v060) are implemented and tested
-> in v0.7.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
+> in v0.8.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
-## Available now, v0.7.0
+## Available now, v0.8.0
 
 ### Install the skill collection
 
@@ -56,11 +56,26 @@ The CLI resolves the PR's base and head SHAs, fetches them, captures evidence, a
 `pr-comment.md` draft next to the report. Add `--post-comment` to upload the evidence to a
 `visual-review-assets` branch, embed it in the comment, and publish it; posting requires
 `GITHUB_TOKEN` (or `GH_TOKEN`) with write access to the repository. For web reviews the evidence is
-the side-by-side images; for backend reviews it is a rasterized change-map PNG. The default only
+the side-by-side images; backend reviews carry a Mermaid change map and upload nothing. The default only
 writes the local draft.
 
+Add `--update-description` to write the same markdown into the pull request description instead of,
+or alongside, a comment:
+
+```bash
+node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
+  --pr https://github.com/acme/orders/pull/123 \
+  --config visual-review.json \
+  --output visual-review-output \
+  --update-description
+```
+
+The section is delimited by `<!-- visualize-pr:start -->` and `<!-- visualize-pr:end -->`, so
+rerunning replaces the block in place and leaves the rest of the description untouched. It uploads
+evidence and requires the same token as `--post-comment`, and the two flags can be combined.
+
 See [What the PR comment looks like](pr-comment-examples.md) for complete rendered web and backend
-examples. The current release posts a comment; it does not modify the pull request description.
+examples.
 
 ### Backend or non-web change
 
@@ -74,9 +89,24 @@ node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
   --output visual-review-output
 ```
 
-This writes `report.md` (a change summary), `architecture.svg` (an editorial change map), and
-`summary.json` from the diff. With `--pr` and `--post-comment`, it rasterizes the change map to a
-PNG (browser-free, via a Rust SVG renderer) and embeds that PNG in the posted comment.
+This writes `report.md` (a change summary with a Mermaid change map), `change-map.mmd`,
+`architecture.svg`, and `summary.json` from the diff. With `--pr`, the Mermaid block is embedded in
+the posted comment or the updated PR description, and GitHub renders it; nothing is uploaded.
+
+### Add a sequence diagram
+
+Write a Mermaid `sequenceDiagram` of the changed behavior (the agent does this from
+`changes.patch`), then pass it with `--diagram`. It becomes a `### Sequence` section in
+`report.md` and `pr-comment.md`:
+
+```bash
+node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
+  --pr https://github.com/acme/orders/pull/9 \
+  --backend \
+  --diagram visual-review-sequence.mmd \
+  --update-description \
+  --output visual-review-output-2
+```
 
 ### Minimal web application
 
@@ -267,7 +297,7 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended lightweight, provider-neutral direction. The v0.7.0
+The following examples describe the intended lightweight, provider-neutral direction. The v0.8.0
 CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v060));
 the `/visualize-pr` shorthand below, remote description updates, and non-GitHub providers remain
 planned.

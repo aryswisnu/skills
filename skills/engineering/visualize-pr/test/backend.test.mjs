@@ -123,3 +123,59 @@ test('buildBackendComment embeds the rasterized change map when an image URL is 
   assert.doesNotMatch(md, /open in a browser/);
   assert.match(md, /editable `architecture\.svg` remains/);
 });
+
+const mermaidBlock = ['```mermaid', 'flowchart LR', '  n_a["a.mjs"]', '```'].join('\n');
+
+test('buildChangeSummary is byte-identical when no mermaid block is supplied', () => {
+  const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
+  assert.equal(
+    buildChangeSummary(summary, 'a'.repeat(40), 'b'.repeat(40), null),
+    buildChangeSummary(summary, 'a'.repeat(40), 'b'.repeat(40)),
+  );
+});
+
+test('buildChangeSummary inserts a change map section when a mermaid block is supplied', () => {
+  const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
+  const md = buildChangeSummary(summary, 'a'.repeat(40), 'b'.repeat(40), mermaidBlock);
+  assert.match(md, /### Change map/);
+  assert.equal(md.includes(mermaidBlock), true);
+  assert.equal(md.indexOf('### Change map') < md.indexOf('### By module'), true);
+});
+
+test('buildBackendComment is byte-identical when no mermaid block is supplied', () => {
+  const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
+  const pr = { title: 'Refactor billing', baseRef: 'main', headRef: 'feature/billing' };
+  const url = 'https://example.test/architecture.png';
+  assert.equal(
+    buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), pr, null, null),
+    buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), pr),
+  );
+  assert.equal(
+    buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), pr, url, null),
+    buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), pr, url),
+  );
+});
+
+test('buildBackendComment puts the change map before the evidence section', () => {
+  const summary = summarizeChange(parseNameStatus(nameStatus), parseNumstat(numstat));
+  const pr = { title: 'Refactor billing', baseRef: 'main', headRef: 'feature/billing' };
+  const url = 'https://example.test/architecture.png';
+  const md = buildBackendComment(summary, 'a'.repeat(40), 'b'.repeat(40), pr, url, mermaidBlock);
+  assert.match(md, /### Change map/);
+  assert.equal(md.includes(mermaidBlock), true);
+  assert.equal(md.indexOf('### Change map') < md.indexOf('## Evidence'), true);
+  // and only once: the nested summary must not repeat it
+  assert.equal(md.split('### Change map').length, 2);
+});
+
+test('buildBackendComment includes a --diagram file as a Sequence section, fencing bare Mermaid', () => {
+  const summary = summarizeChange(parseNameStatus('M\tsrc/a.js\n'), parseNumstat('1\t1\tsrc/a.js\n'));
+  const pr = { title: 'T', baseRef: 'main', headRef: 'feat', number: 1 };
+  const base = 'a'.repeat(40);
+  const head = 'b'.repeat(40);
+  const bare = buildBackendComment(summary, base, head, pr, null, null, 'sequenceDiagram\n  A->>B: hi');
+  assert.match(bare, /### Sequence\n\n```mermaid\nsequenceDiagram\n  A->>B: hi\n```/);
+  const fenced = buildBackendComment(summary, base, head, pr, null, null, '```mermaid\nsequenceDiagram\n```');
+  assert.equal((fenced.match(/```mermaid/g) || []).length, 1);
+  assert.equal(buildBackendComment(summary, base, head, pr, null, null, '   '), buildBackendComment(summary, base, head, pr));
+});

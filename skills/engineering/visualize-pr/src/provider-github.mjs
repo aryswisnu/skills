@@ -67,6 +67,30 @@ export async function postPrComment(token, owner, repo, number, body, fetchImpl 
   return { id: comment.id, htmlUrl: comment.html_url };
 }
 
+export async function getPrBody(token, owner, repo, number, fetchImpl = globalThis.fetch) {
+  const response = await fetchImpl(`${apiBase()}/repos/${owner}/${repo}/pulls/${number}`, {
+    headers: { ...HEADERS, ...authHeaders(token) },
+  });
+  if (!response.ok) {
+    throw new Error(`GitHub PR body lookup failed (${owner}/${repo}#${number}): ${await readError(response)}`);
+  }
+  const pr = await response.json();
+  return typeof pr.body === 'string' ? pr.body : '';
+}
+
+export async function updatePrBody(token, owner, repo, number, body, fetchImpl = globalThis.fetch) {
+  const response = await fetchImpl(`${apiBase()}/repos/${owner}/${repo}/pulls/${number}`, {
+    method: 'PATCH',
+    headers: { ...HEADERS, ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body }),
+  });
+  if (!response.ok) {
+    throw new Error(`GitHub PR description update failed (${owner}/${repo}#${number}): ${await readError(response)}`);
+  }
+  const pr = await response.json();
+  return { htmlUrl: pr.html_url };
+}
+
 export async function ensureAssetsBranch(token, owner, repo, branch, fetchImpl = globalThis.fetch) {
   const refResponse = await fetchImpl(`${apiBase()}/repos/${owner}/${repo}/git/ref/heads/${branch}`, {
     headers: { ...HEADERS, ...authHeaders(token) },

@@ -5,8 +5,6 @@ import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { chromium } from 'playwright';
-import { PNG } from 'pngjs';
 
 import { parseArgs, usage } from '../src/cli-args.mjs';
 import { publicConfigDigest, normalizeConfig } from '../src/config.mjs';
@@ -31,10 +29,24 @@ import {
 } from '../src/visual.mjs';
 
 import { parsePrUrl } from '../src/pr-url.mjs';
-import { ensureAssetsBranch, githubTokenFrom, postPrComment, resolvePr, uploadFile } from '../src/provider-github.mjs';
+import { ensureAssetsBranch, getPrBody, githubTokenFrom, postPrComment, resolvePr, updatePrBody, uploadFile } from '../src/provider-github.mjs';
 import { buildPrComment } from '../src/pr-comment.mjs';
 import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, parseNameStatus, parseNumstat, summarizeChange } from '../src/backend.mjs';
-import { rasterizeSvgToPng } from '../src/svg-to-png.mjs';
+import { buildModuleGraph, renderMermaidFlowchart } from '../src/mermaid.mjs';
+import { mergeDescription } from '../src/pr-description.mjs';
+
+// Browser dependencies are loaded on first use in the web path only, so backend
+// mode runs in a checkout where playwright and pngjs were never installed.
+async function loadBrowserDep(name) {
+  try {
+    return await import(name);
+  } catch (error) {
+    if (error && error.code === 'ERR_MODULE_NOT_FOUND') {
+      throw new Error(`Missing dependency "${name}". Run "npm install" in the visualize-pr skill folder (and "npx playwright install chromium" for web reviews).`);
+    }
+    throw error;
+  }
+}
 
 function git(args, cwd, { trim = true } = {}) {
   const output = execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 100 * 1024 * 1024 });
@@ -112,15 +124,42 @@ async function uploadCellImages(token, pr, outputDir, cells) {
   return images;
 }
 
+function requirePublishToken(token, options) {
+  if (token) return;
+  const flag = options.postComment ? '--post-comment' : '--update-description';
+  throw new Error(`${flag} requires GITHUB_TOKEN or GH_TOKEN in the environment`);
+}
+
+async function readDiagram(filePath) {
+  if (!filePath) return null;
+  const text = await readFile(filePath, 'utf8');
+  if (!text.trim()) throw new Error(`--diagram file is empty: ${filePath}`);
+  return text;
+}
+
+async function updatePrDescription(token, pr, section) {
+  const existing = await getPrBody(token, pr.owner, pr.repo, pr.number);
+  const body = mergeDescription(existing, section);
+  return updatePrBody(token, pr.owner, pr.repo, pr.number, body);
+}
+
 async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, changedFiles, diffStat, codeDiff, pr }) {
   const nameStatus = parseNameStatus(git(['diff', '--name-status', `${baseSha}...${headSha}`], repoRoot));
   const numstat = parseNumstat(git(['diff', '--numstat', `${baseSha}...${headSha}`], repoRoot));
   const summary = summarizeChange(nameStatus, numstat);
+  const readHeadFile = (filePath) => {
+    try { return git(['show', `${headSha}:${filePath}`], repoRoot, { trim: false }); }
+    catch { return null; }
+  };
+  const graph = await buildModuleGraph({ files: summary.files, readFile: readHeadFile });
+  const mermaid = renderMermaidFlowchart(graph, { base: baseSha, head: headSha });
+  const diagram = await readDiagram(options.diagram);
 
   await createOwnedOutputDirectory(outputDir);
   await safeWriteArtifact(outputDir, 'changes.patch', codeDiff);
   await safeWriteArtifact(outputDir, 'changes-stat.txt', diffStat ? `${diffStat}\n` : '');
-  await safeWriteArtifact(outputDir, 'report.md', `${buildChangeSummary(summary, baseSha, headSha)}\n`);
+  await safeWriteArtifact(outputDir, 'report.md', `${buildChangeSummary(summary, baseSha, headSha, mermaid)}\n`);
+  await safeWriteArtifact(outputDir, 'change-map.mmd', `${mermaid}\n`);
   await safeWriteArtifact(outputDir, 'architecture.svg', buildArchitectureDiagram(summary, baseSha, headSha));
 
   const payload = {
@@ -144,22 +183,18 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
 
   if (pr) {
     const token = githubTokenFrom(process.env);
-    let imageUrl = null;
-    if (options.postComment) {
-      if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
-      const png = await rasterizeSvgToPng(buildArchitectureDiagram(summary, baseSha, headSha));
-      await safeWriteArtifact(outputDir, 'architecture.png', png);
-      const branch = 'visual-review-assets';
-      await ensureAssetsBranch(token, pr.owner, pr.repo, branch);
-      const runId = `pr-${pr.number}-${Date.now()}`;
-      imageUrl = await uploadFile(token, pr.owner, pr.repo, branch, `${runId}/architecture.png`, png);
-    }
-    const comment = buildBackendComment(summary, baseSha, headSha, pr, imageUrl);
+    if (options.postComment || options.updateDescription) requirePublishToken(token, options);
+    // Mermaid renders natively on GitHub, so backend reviews upload nothing.
+    const comment = buildBackendComment(summary, baseSha, headSha, pr, null, mermaid, diagram);
     await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
     console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
     if (options.postComment) {
       const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
       console.log(`Posted comment: ${posted.htmlUrl}`);
+    }
+    if (options.updateDescription) {
+      const updated = await updatePrDescription(token, pr, comment);
+      console.log(`PR description updated: ${updated.htmlUrl}`);
     }
   }
 }
@@ -227,6 +262,7 @@ function escapeHtml(value) {
 }
 
 async function createSideBySide(browser, beforeBuffer, afterBuffer, outputDir, artifactName, labels) {
+  const { PNG } = await loadBrowserDep('pngjs');
   const before = PNG.sync.read(beforeBuffer);
   const after = PNG.sync.read(afterBuffer);
   const width = before.width + after.width + 48;
@@ -506,6 +542,7 @@ async function main() {
     }
 
     phase = 'browser-launch';
+    const { chromium } = await loadBrowserDep('playwright');
     browser = await chromium.launch(browserLaunchOptions());
     const browserVersion = browser.version();
 
@@ -544,7 +581,7 @@ async function main() {
           const beforeBuffer = await readFile(beforePath);
           const afterBuffer = await readFile(afterPath);
           try {
-            const diff = createPixelDiff(beforeBuffer, afterBuffer, config.thresholds.pixelmatch);
+            const diff = await createPixelDiff(beforeBuffer, afterBuffer, config.thresholds.pixelmatch);
             await safeWriteArtifact(outputDir, names.diff, diff.buffer);
             artifacts.diff = names.diff;
             pixel = {
@@ -659,12 +696,13 @@ async function main() {
 
     if (pr) {
       const token = githubTokenFrom(process.env);
-      let comment = buildPrComment(report, pr);
-      if (options.postComment) {
-        if (!token) throw new Error('--post-comment requires GITHUB_TOKEN or GH_TOKEN in the environment');
+      const diagram = await readDiagram(options.diagram);
+      let comment = buildPrComment(report, pr, null, diagram);
+      if (options.postComment || options.updateDescription) {
+        requirePublishToken(token, options);
         phase = 'pr-asset-upload';
         const images = await uploadCellImages(token, pr, outputDir, report.cells);
-        comment = buildPrComment(report, pr, images);
+        comment = buildPrComment(report, pr, images, diagram);
       }
       await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
       console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
@@ -672,6 +710,11 @@ async function main() {
         phase = 'pr-comment-post';
         const posted = await postPrComment(token, pr.owner, pr.repo, pr.number, comment);
         console.log(`Posted comment: ${posted.htmlUrl}`);
+      }
+      if (options.updateDescription) {
+        phase = 'pr-description-update';
+        const updated = await updatePrDescription(token, pr, comment);
+        console.log(`PR description updated: ${updated.htmlUrl}`);
       }
     }
   } catch (error) {
