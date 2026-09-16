@@ -223,8 +223,12 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
     if (options.postComment || options.updateDescription) requirePublishToken(token, options, provider);
     // Mermaid renders natively on GitHub, so backend reviews upload nothing.
     const comment = buildBackendComment(summary, baseSha, headSha, pr, null, mermaid, diagram);
+    await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify(pr, null, 2)}\n`);
     await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
     console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
+    if (!options.postComment && !options.updateDescription) {
+      console.log(`Review it, then publish as-is: --publish ${outputDir} --post-comment (or --update-description)`);
+    }
     if (options.postComment) {
       const posted = await provider.postComment(token, comment);
       console.log(`Posted comment: ${posted.htmlUrl ?? pr.htmlUrl}`);
@@ -372,6 +376,31 @@ async function runSetup(options) {
     : 'Setup complete. Backend reviews are ready; re-run --setup without --backend for web reviews.');
 }
 
+async function runPublish(options) {
+  const dir = path.resolve(options.publish);
+  const prPath = path.join(dir, 'pr.json');
+  const draftPath = path.join(dir, 'pr-comment.md');
+  if (!existsSync(prPath) || !existsSync(draftPath)) {
+    throw new Error(`${dir} has no pr.json and pr-comment.md. Run a --pr review first; it writes the draft that --publish posts.`);
+  }
+  const pr = JSON.parse(await readFile(prPath, 'utf8'));
+  // Verbatim: the text the human reviewed is the text that ships. Only the
+  // trailing newline the artifact writer added is dropped.
+  const comment = (await readFile(draftPath, 'utf8')).replace(/\n$/, '');
+  const provider = providerFor(pr);
+  const token = provider.tokenFrom(process.env);
+  requirePublishToken(token, options, provider);
+  console.log(`Publishing ${draftPath} to ${provider.name} ${provider.reference}`);
+  if (options.postComment) {
+    const posted = await provider.postComment(token, comment);
+    console.log(`Posted comment: ${posted.htmlUrl ?? pr.htmlUrl}`);
+  }
+  if (options.updateDescription) {
+    const updated = await updatePrDescription(token, pr, comment);
+    console.log(`PR description updated: ${updated.htmlUrl}`);
+  }
+}
+
 async function runInit(options) {
   const invocationDir = process.cwd();
   const configPath = path.resolve(invocationDir, options.config);
@@ -410,6 +439,16 @@ if (versionError) {
 if (options.setup) {
   try {
     await runSetup(options);
+  } catch (error) {
+    console.error(error.message);
+    process.exit(2);
+  }
+  process.exit(0);
+}
+
+if (options.publish) {
+  try {
+    await runPublish(options);
   } catch (error) {
     console.error(error.message);
     process.exit(2);
@@ -840,6 +879,7 @@ if (options.init) {
           console.error(`${provider.name} evidence upload is not implemented. The screenshots stay in ${outputDir}; the comment carries verdicts and diagrams only.`);
         }
       }
+      await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify(pr, null, 2)}\n`);
       await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
       console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
       if (options.postComment) {

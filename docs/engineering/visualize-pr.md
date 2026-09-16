@@ -33,6 +33,9 @@ Every attempt gets a fresh output path. The CLI will not overwrite or merge into
 **Exit code 1 vs 2?**
 `1` means at least one scenario could not be captured and the report is partial. `2` means usage, configuration, or infrastructure failure; look in `failure.json` for the phase. `0` means comparable evidence exists for every selected cell, which is still not an approval.
 
+**How do I approve the draft?**
+The review run posts nothing; it writes `pr-comment.md` and stops. The agent shows you the draft and asks. In Claude Code the choices (comment, description, both, not now) render as buttons. In Codex and other harnesses the agent proposes the one publish command and the harness's own approval prompt is the button. Either way, approval runs `--publish <dir>` with the flag you picked, which posts the file verbatim in under a second. You can also run that command yourself later.
+
 **Does it edit the PR description?**
 Only with `--update-description`. It inserts one block between `<!-- visualize-pr:start -->` and `<!-- visualize-pr:end -->` markers and replaces that block on every re-run, so the rest of the description is untouched. `--post-comment` posts a comment instead. Both can be combined.
 

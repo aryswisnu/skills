@@ -1,5 +1,23 @@
 # aryswisnu-skills
 
+## 0.12.0 (2026-09-16)
+
+Review the draft, then approve it in one step.
+
+- `--publish <dir>` posts the draft in `<dir>/pr-comment.md` exactly as written, with
+  `--post-comment` and/or `--update-description`. No re-diff, no fetch, no browser: under a
+  second. What the human read is what lands. The review run now writes `pr.json` next to the
+  draft so publish knows the provider and PR without any other argument.
+- The review run prints the publish command when it posted nothing, and SKILL.md makes the
+  approval step explicit: show the draft, offer comment / description / both / not now, use the
+  harness's question tool where it has one (Claude Code renders the options as buttons) and the
+  harness's command-approval prompt where it does not (Codex and others), then run `--publish`.
+  That step is now named as the safety boundary's only authorization point.
+- End-to-end test: a tokenless draft run writes nothing remotely; `--publish` later lands the
+  draft byte for byte; publish without a token exits 2 and writes nothing; a directory with no
+  draft is refused.
+- `npm test`: 265 tests, 2 new.
+
 ## 0.11.0 (2026-09-16)
 
 Bitbucket Cloud and GitLab.

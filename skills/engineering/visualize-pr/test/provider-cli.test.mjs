@@ -172,3 +172,73 @@ test('--backend --post-comment against GitLab, including a nested group path', a
     await rm(work, { recursive: true, force: true });
   }
 });
+
+test('a tokenless draft can be published later, verbatim, with --publish', async () => {
+  const work = await mkdtemp(path.join(os.tmpdir(), 'vpr-publish-'));
+  let mock;
+  try {
+    const { clone, baseSha, headSha } = await buildRepo(work);
+    const state = { description: 'Original body.', puts: 0, gets: 0 };
+    mock = await startMock((request, response, raw) => {
+      const { method, url } = request;
+      if (method === 'GET' && /\/pullrequests\/42$/.test(url)) {
+        state.gets += 1;
+        response.end(JSON.stringify({
+          id: 42, title: 'Agent stats', state: 'OPEN', description: state.description,
+          source: { branch: { name: 'feature' }, commit: { hash: headSha.slice(0, 12) } },
+          destination: { branch: { name: 'main' }, commit: { hash: baseSha.slice(0, 12) } },
+          links: { html: { href: 'https://bitbucket.org/acme/orders/pull-requests/42' } },
+        }));
+        return;
+      }
+      if (method === 'PUT' && /\/pullrequests\/42$/.test(url)) {
+        state.puts += 1;
+        state.description = JSON.parse(raw).description;
+        response.end(JSON.stringify({ links: { html: { href: 'https://bitbucket.org/acme/orders/pull-requests/42' } } }));
+        return;
+      }
+      response.statusCode = 404;
+      response.end(JSON.stringify({ error: { message: `no mock for ${method} ${url}` } }));
+    });
+
+    // Step 1: draft only. No token in the environment, nothing may be written remotely.
+    const draft = await runCli(
+      ['--pr', 'https://bitbucket.org/acme/orders/pull-requests/42', '--backend', '--output', 'out'],
+      clone,
+      { VISUAL_REVIEW_BITBUCKET_API: mock.origin, BITBUCKET_TOKEN: '' },
+    );
+    assert.equal(draft.code, 0, `${draft.stdout}\n${draft.stderr}`);
+    assert.equal(state.puts, 0, 'a draft never writes to the PR');
+    const prJson = JSON.parse(await readFile(path.join(clone, 'out', 'pr.json'), 'utf8'));
+    assert.equal(prJson.provider, 'bitbucket');
+    assert.equal(prJson.number, 42);
+    const draftText = await readFile(path.join(clone, 'out', 'pr-comment.md'), 'utf8');
+
+    // Step 2: the human read the draft. Publish it without recomputing anything.
+    const getsBefore = state.gets;
+    const publish = await runCli(
+      ['--publish', 'out', '--update-description'],
+      clone,
+      { VISUAL_REVIEW_BITBUCKET_API: mock.origin, BITBUCKET_TOKEN: 'test-token' },
+    );
+    assert.equal(publish.code, 0, `${publish.stdout}\n${publish.stderr}`);
+    assert.match(publish.stdout, /PR description updated/);
+    assert.equal(state.puts, 1);
+    assert.ok(state.description.includes(draftText.trim()), 'the published block is the draft, byte for byte');
+    assert.ok(state.gets - getsBefore <= 2, 'publish reads the PR at most twice (body, then title for the PUT), never re-resolves or re-diffs');
+
+    // Step 3: publishing without a token fails clearly and writes nothing.
+    const noToken = await runCli(['--publish', 'out', '--post-comment'], clone, { VISUAL_REVIEW_BITBUCKET_API: mock.origin, BITBUCKET_TOKEN: '' });
+    assert.equal(noToken.code, 2);
+    assert.match(noToken.stderr, /BITBUCKET_TOKEN/);
+    assert.equal(state.puts, 1);
+
+    // Step 4: a directory with no draft is refused.
+    const empty = await runCli(['--publish', 'nowhere', '--post-comment'], clone, { BITBUCKET_TOKEN: 'x' });
+    assert.equal(empty.code, 2);
+    assert.match(empty.stderr, /pr\.json/);
+  } finally {
+    mock?.server.close();
+    await rm(work, { recursive: true, force: true });
+  }
+});

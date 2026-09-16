@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.11.0
+  version: 0.12.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -80,7 +80,11 @@ This resolves the base and head SHAs, fetches them, captures evidence, and write
 to `pr-comment.md`. Add `--post-comment` to publish it, or `--update-description` to write the
 same markdown into the PR description between `<!-- visualize-pr:start -->` and
 `<!-- visualize-pr:end -->` markers, which a repeat run replaces in place. The two can be
-combined. Publishing needs a token with write access in the environment: `GITHUB_TOKEN` or
+combined. Publishing is also a separate, instant step: after the human has read the draft,
+`--publish <output-dir> --post-comment` or `--publish <output-dir> --update-description` posts
+`pr-comment.md` exactly as written, with no re-diff, no browser, and no second review run. That
+is the normal path; pass the publish flags on the review run itself only when the human asked for
+that up front. Publishing needs a token with write access in the environment: `GITHUB_TOKEN` or
 `GH_TOKEN`; `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD`;
 `GITLAB_TOKEN`. Backend reviews upload nothing on any provider: the change map is a Mermaid block
 that all three render natively. Web reviews embed the side-by-side screenshots only on GitHub,
@@ -134,22 +138,33 @@ The CLI cannot infer behavior, so the agent authors it:
    capturing.
 3. Prepare dependencies and any required build in each revision through repository-owned,
    reproducible commands. Reuse a compatible installed browser; install one only when needed.
-4. Run the CLI. Complete authorized local preparation, capture, inspection, and safe retries without
-   repeated confirmation. Never weaken scenarios or alter revisions merely to obtain a clean exit.
-5. Read `summary.json` first when it exists. Account for every selected cell, verdict, skipped
+4. Run the CLI without `--post-comment` or `--update-description`. Complete authorized local
+   preparation, capture, inspection, and safe retries without repeated confirmation. Never weaken
+   scenarios or alter revisions merely to obtain a clean exit.
+5. Show the draft before anything leaves the machine, then ask. Print `pr-comment.md` in full when
+   it is under about 80 lines; otherwise print the verdict table, the attention list, and the change
+   map, plus the file path. Then offer exactly these choices: post as a comment, update the
+   description, both, or not now. In Claude Code, call the AskUserQuestion tool with those four
+   options; they render as buttons the human can click. In a harness with no question tool, state
+   the single publish command and let the harness's own command-approval prompt be the button.
+   On approval, run `--publish <output-dir>` with the chosen flag; it posts the draft verbatim in
+   under a second. "Not now" ends the task with the draft path and the publish command written out
+   so the human can run it later. Treat this step as the safety boundary's checkpoint: it is the
+   only place publication is authorized.
+6. Read `summary.json` first when it exists. Account for every selected cell, verdict, skipped
    scenario, and omission. Exit `0` means comparable evidence exists for every selected cell. Exit
    `1` means scenario-level capture failures produced a partial report. Exit `2` means usage,
    configuration, or infrastructure failure; after output creation, inspect `failure.json` for its
    phase, error, and cleanup outcome. SIGINT exits `130`; SIGTERM exits `143`. After output
    creation, both write interruption and cleanup evidence to `failure.json` when possible.
-6. Establish capture validity before interpreting the diff. Changed comparisons require visual
+7. Establish capture validity before interpreting the diff. Changed comparisons require visual
    inspection. Unchanged captures require meaningful state assertions or image inspection showing
    the intended loaded state, not a loading shell, consent overlay, or error page. If image viewing
    is unavailable, disclose that the visual evidence was not inspected.
-7. Finish when selected cells are accounted for, available images show the intended states, summary
+8. Finish when selected cells are accounted for, available images show the intended states, summary
    counts and omissions are explained, manifest SHAs and public-config digest match the invocation,
    and every hash listed by the manifest has been checked. `manifest.json` does not hash itself.
-8. Confirm preview processes and temporary worktrees were cleaned up. Report retained worktrees,
+9. Confirm preview processes and temporary worktrees were cleaned up. Report retained worktrees,
    cleanup failures, missing reports, uninspected images, and persistent infrastructure failures.
 
 A dimension mismatch legitimately omits the pixel diff while retaining available before, after,
