@@ -121,3 +121,12 @@ test('parseArgs rejects --init combined with revision or reporting flags', () =>
 test('usage documents --init', () => {
   assert.match(usage(), /--init\s+Write a starter visual-review\.json for this repo, then exit/);
 });
+
+test('parseArgs accepts --setup and refuses to mix it with review flags', () => {
+  assert.equal(parseArgs(['--setup']).setup, true);
+  assert.equal(parseArgs(['--setup', '--backend']).backend, true);
+  assert.equal(parseArgs(['--base', 'main']).setup, false);
+  assert.throws(() => parseArgs(['--setup', '--init']), /--setup cannot be combined with --init/);
+  assert.throws(() => parseArgs(['--setup', '--pr', 'https://github.com/a/b/pull/1']), /--setup cannot be combined with --pr/);
+  assert.match(usage(), /--setup/);
+});

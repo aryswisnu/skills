@@ -2,11 +2,11 @@
 
 > **Implementation status:** The local Git and browser workflow, GitHub pull request URL entry point,
 > and backend diff-summary path in [Available now](#available-now-v060) are implemented and tested
-> in v0.9.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
+> in v0.10.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
-## Available now, v0.9.0
+## Available now, v0.10.0
 
 ### Install the skill collection
 
@@ -22,8 +22,14 @@ the skill's Node dependencies:
 ```bash
 git clone https://github.com/aryswisnu/skills.git
 cd skills/skills/engineering/visualize-pr
-npm install
-npx playwright install chromium
+node scripts/visualize-pr.mjs --setup
+```
+
+`--setup` installs the npm dependencies and Chromium into this folder. Add `--backend` to install
+the dependencies only:
+
+```bash
+node scripts/visualize-pr.mjs --setup --backend
 ```
 
 ### Generate a starter config
@@ -313,7 +319,7 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended lightweight, provider-neutral direction. The v0.9.0
+The following examples describe the intended lightweight, provider-neutral direction. The v0.10.0
 CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v060));
 the `/visualize-pr` shorthand below, remote description updates, and non-GitHub providers remain
 planned.

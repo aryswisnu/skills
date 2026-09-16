@@ -9,7 +9,7 @@ Agent skills for real engineering work. Each one is small, composable, and built
 evidence rather than a verdict. Install once, type a slash command, get something a colleague can
 act on.
 
-Current release: **v0.9.0**. One skill shipped, more on the way.
+Current release: **v0.10.0**. One skill shipped, more on the way.
 
 ---
 
@@ -87,19 +87,23 @@ own.
 
 </details>
 
-### One extra step for web reviews
+### Then let it install itself
 
-Plugin installers copy files but do not run npm. Backend reviews (diff summary, change map,
-description update) work with nothing else installed. Web reviews need a browser, so once, inside
-the installed skill folder:
+Plugin installers copy files but do not run npm, so the skill installs its own dependencies on
+request:
 
 ```bash
-npm install && npx playwright install chromium
+node <skill>/scripts/visualize-pr.mjs --setup
 ```
 
-The installed folder is `~/.claude/plugins/marketplaces/aryswisnu/skills/engineering/visualize-pr`
-for the plugin route, or wherever skills.sh put it. If you skip this, the CLI tells you exactly
-this command the first time it needs a browser.
+That pulls the npm dependencies and Chromium into the skill's own folder. Add `--backend` to
+install the dependencies only and skip the 100MB browser download; backend reviews (diff summary,
+change map, description update) need nothing else.
+
+You do not have to remember this. The agent checks for dependencies and runs `--setup` before the
+first review, and any `Missing dependency` error names the same flag. The installed folder is
+`~/.claude/plugins/marketplaces/aryswisnu/skills/engineering/visualize-pr` for the plugin route, or
+wherever skills.sh put it.
 
 ---
 
@@ -230,6 +234,7 @@ Both are kept open on purpose.
 --head <ref>          Head git revision, default: HEAD
 --backend             Diff summary + Mermaid change map, no browser or config
 --init                Write a starter visual-review.json for this repo, then exit
+--setup               Install this skill's npm dependencies and Chromium, then exit
 --diagram <path>      Mermaid file (for example a sequenceDiagram) to include in the report and PR text
 --update-description  Insert or refresh the review block in the PR description (requires --pr)
 --post-comment        Post the review as a PR comment (requires --pr)
