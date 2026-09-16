@@ -25,6 +25,11 @@ export function buildPrComment(report, pr, images = null, diagram = null, notes 
     lines.push(noteText);
     lines.push('');
   }
+  const sequence = diagramSection(diagram);
+  if (sequence) {
+    lines.push(sequence);
+    lines.push('');
+  }
   lines.push('| Scenario | Viewport | Verdict |');
   lines.push('| --- | --- | --- |');
   for (const cell of report.cells) {
@@ -46,12 +51,6 @@ export function buildPrComment(report, pr, images = null, diagram = null, notes 
 
   if (report.skippedScenarios && report.skippedScenarios.length > 0) {
     lines.push(`Skipped: ${report.skippedScenarios.map((scenario) => scenario.name).join(', ')}.`);
-    lines.push('');
-  }
-
-  const sequence = diagramSection(diagram);
-  if (sequence) {
-    lines.push(sequence);
     lines.push('');
   }
 

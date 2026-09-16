@@ -2,7 +2,7 @@
 
 `visualize-pr` checks out the exact base and head commits of a change into two temporary worktrees, boots both, and writes one evidence directory a reviewer can act on. Web changes get before/after screenshots per scenario and viewport, a pixel diff, and the console, request, and assertion errors each revision produced. Backend changes get a change map of the changed files and their in-repo imports, plus the sequence diagram the agent writes. Either way the PR text leads with the agent's notes: a few bullets and a short pseudocode block. It never approves anything: every verdict (`unchanged`, `changed-within-threshold`, `review-required`, `capture-failed`) is a label on the evidence, and the human supplies judgment.
 
-Nothing leaves your machine unless you say so. With a pull request URL on GitHub, Bitbucket Cloud, or GitLab it writes a draft locally; only `--post-comment` (a comment) or `--update-description` (a marked section in the PR body, replaced in place on re-run) publishes it. The draft leads with the agent's own notes, a few bullets and a short pseudocode block passed in with `--notes`, then one line of numbers, then the diagrams: the change map the CLI derives from the diff and the `sequenceDiagram` the agent writes and passes with `--diagram`. Diagrams are Mermaid where the forge renders it and text where it does not.
+Nothing leaves your machine unless you say so. With a pull request URL on GitHub, Bitbucket Cloud, or GitLab it writes a draft locally; only `--post-comment` (a comment) or `--update-description` (a marked section in the PR body, replaced in place on re-run) publishes it. The draft leads with the agent's own notes, a few bullets and a short pseudocode block passed in with `--notes`, then the `sequenceDiagram` the agent writes and passes with `--diagram`, then one line of numbers, then the change map the CLI derives from the diff. Diagrams are Mermaid where the forge renders it and text where it does not.
 
 ## When to reach for it
 
@@ -23,7 +23,7 @@ Git, Node.js 20+, and both revisions available locally (or a GitHub, Bitbucket C
 
 ## What the reviewer reads
 
-The block is ordered the way a reviewer needs it, and for a small change the generated part is one line plus the diagrams. A real one, trimmed, from a Bitbucket PR that changed how an endpoint parses its filters:
+The block is ordered the way a reviewer needs it: bullets, pseudocode, the sequence diagram, one line of numbers, the change map. For a small change the generated part is that line plus the two diagrams. A real one, trimmed, from a Bitbucket PR that changed how an endpoint parses its filters:
 
 ~~~markdown
 - `property_type`, `listing_type`, `status` accept an array or a comma list.

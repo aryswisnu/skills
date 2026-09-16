@@ -4,7 +4,7 @@ description: Turn a pull request on GitHub, Bitbucket Cloud, or GitLab, or any t
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.14.4
+  version: 0.15.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -138,8 +138,9 @@ statistics. The CLI cannot write that, so the agent authors two files and passes
    Skip the diagram, and say so, when the diff has no behavior change (docs, config, renames);
    the notes are always worth writing.
 4. Re-run the CLI with `--notes visual-review-notes.md --diagram visual-review-sequence.mmd` and a
-   fresh `--output`. The sequence block is
-   inserted as a `Sequence` section in `report.md`, and in `pr-comment.md` when `--pr` is set. Add
+   fresh `--output`. The sequence block is inserted as a `Sequence` section directly under the
+   notes, above the file summary and the change map, in `report.md` and in `pr-comment.md` when
+   `--pr` is set. Add
    `--update-description` (or `--post-comment`) only after the human has read the draft.
 
 ## Workflow and Completion Contract
