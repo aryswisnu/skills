@@ -1,5 +1,19 @@
 # aryswisnu-skills
 
+## 0.10.2 (2026-09-16)
+
+Stop the skill from advising broken Mermaid.
+
+- SKILL.md told the agent to mark changed messages with a trailing `%% changed` comment. Mermaid
+  treats `%%` as a comment only at the start of a line, so that text rendered inside the message
+  label where a reviewer reads it. Verified in Mermaid 11: the diagram parses without error and the
+  label comes out as `renders page %% changed: new call`. The guidance now says to use
+  `Note over A,B: changed` and to avoid angle brackets in labels.
+- New `--diagram` lint. It warns on a `%%` that is not at the start of a line and on angle brackets
+  inside a label, naming the line number. Warnings only: both mistakes parse fine, so the run
+  continues and the author still gets the diagram.
+- `npm test`: 219 tests, 6 new.
+
 ## 0.10.1 (2026-09-16)
 
 Fix `--diagram` being silently discarded.

@@ -251,6 +251,7 @@ Only examples under **Available now, v0.10.0** describe executable behavior in t
 --backend          Analyze the diff and emit a change summary + architecture diagram (no browser)
 --post-comment     Upload evidence, embed images, and post as a PR comment (requires --pr)
 --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
+                   (linted for comment and label mistakes that render wrong; warnings only)
 --update-description  Insert or refresh the review section in the PR description (requires --pr)
 --config <path>    Config path, default: visual-review.json
 --init             Write a starter visual-review.json for this repo, then exit

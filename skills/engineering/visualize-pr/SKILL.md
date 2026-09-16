@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.10.1
+  version: 0.10.2
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -104,8 +104,12 @@ The CLI cannot infer behavior, so the agent authors it:
 1. Run the CLI once (backend or web) to get `changes.patch` and `report.md`.
 2. Read the patch. Write a Mermaid `sequenceDiagram` of the changed call flow into a file outside
    the output directory, for example `visual-review-sequence.mmd`. Participants are the real
-   modules, services, or actors touched by the diff. Mark new or changed messages with a `Note`
-   or `%% changed` comment. Keep it under roughly 15 messages; split into two diagrams if larger.
+   modules, services, or actors touched by the diff. Mark new or changed messages with a
+   `Note over A,B: changed` line. Keep it under roughly 15 messages; split into two diagrams if
+   larger. Two Mermaid rules the CLI warns about but cannot fix: `%%` starts a comment only at the
+   beginning of a line, so a trailing `%% changed` renders inside the message label as visible
+   text, and angle brackets in a label can render as markup, so write `(name)` rather than
+   `<name>`.
    Skip this step, and say so, when the diff has no behavior change (docs, config, renames).
 3. Re-run the CLI with `--diagram visual-review-sequence.mmd` and a fresh `--output`. The block is
    inserted as a `Sequence` section in `report.md`, and in `pr-comment.md` when `--pr` is set. Add
