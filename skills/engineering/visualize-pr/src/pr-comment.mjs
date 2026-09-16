@@ -11,7 +11,7 @@ const VERDICT_LABEL = {
 
 import { diagramSection } from './backend.mjs';
 
-export function buildPrComment(report, pr, images = null, diagram = null) {
+export function buildPrComment(report, pr, images = null, diagram = null, notes = null) {
   const baseShort = report.base.sha.slice(0, 7);
   const headShort = report.head.sha.slice(0, 7);
   const lines = [];
@@ -20,6 +20,11 @@ export function buildPrComment(report, pr, images = null, diagram = null) {
   lines.push('');
   lines.push(`**${pr.title}** \`${pr.baseRef}\` (\`${baseShort}\`) -> \`${pr.headRef}\` (\`${headShort}\`)`);
   lines.push('');
+  const noteText = notes ? String(notes).trim() : '';
+  if (noteText) {
+    lines.push(noteText);
+    lines.push('');
+  }
   lines.push('| Scenario | Viewport | Verdict |');
   lines.push('| --- | --- | --- |');
   for (const cell of report.cells) {

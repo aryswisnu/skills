@@ -37,7 +37,10 @@ Every attempt gets a fresh output path. The CLI will not overwrite or merge into
 The review run posts nothing; it writes `pr-comment.md` and stops. The agent shows you the draft and asks. In Claude Code the choices (comment, description, both, not now) render as buttons. In Codex and other harnesses the agent proposes the one publish command and the harness's own approval prompt is the button. Either way, approval runs `--publish <dir>` with the flag you picked, which posts the file in under a second. A GitHub web review uploads and embeds its screenshots at that moment; the text you read is unchanged. You can also run that command yourself later.
 
 **Does it edit the PR description?**
-Only with `--update-description`. It inserts one block between `<!-- visualize-pr:start -->` and `<!-- visualize-pr:end -->` markers and replaces that block on every re-run, so the rest of the description is untouched. `--post-comment` posts a comment instead. Both can be combined.
+Only with `--update-description`. It inserts one block delimited by invisible CommonMark markers (`[//]: # (visualize-pr:start)` and the matching end) and replaces that block on every re-run, so the rest of the description is untouched. Older blocks that used HTML-comment markers, which Bitbucket showed as text, are recognized and rewritten. `--post-comment` posts a comment instead. Both can be combined.
+
+**The generated text is long. Where does my own summary go?**
+Write a few bullets and a short pseudocode block, pass the file with `--notes`, and it lands directly under the title, above everything generated. The generated part is one line for a small change: the module table and the most-changed ranking only appear when there is more than one module or more than three files.
 
 **Where is the sequence diagram?**
 The CLI draws the file-level change map on its own. A sequence diagram needs to understand behavior, so the agent writes it from `changes.patch` and passes it back with `--diagram`. If you ran the CLI by hand and see no sequence section, that step was skipped.

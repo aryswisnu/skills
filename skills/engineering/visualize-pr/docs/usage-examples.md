@@ -186,6 +186,20 @@ This writes `report.md` (a change summary with a Mermaid change map), `change-ma
 `architecture.svg`, and `summary.json` from the diff. With `--pr`, the Mermaid block is embedded in
 the posted comment or the updated PR description, and GitHub renders it; nothing is uploaded.
 
+### Lead with notes
+
+Write three to six bullets and a short pseudocode block, and pass the file with `--notes`. It goes
+directly under the title, above the generated summary and diagrams:
+
+```bash
+node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
+  --pr https://github.com/acme/orders/pull/9 \
+  --backend \
+  --notes visual-review-notes.md \
+  --diagram visual-review-sequence.mmd \
+  --output visual-review-output-2
+```
+
 ### Add a sequence diagram
 
 Write a Mermaid `sequenceDiagram` of the changed behavior (the agent does this from

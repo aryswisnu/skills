@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.13.2
+  version: 0.14.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -110,13 +110,17 @@ map is a `flowchart LR` of every changed source file and its in-repo imports, co
 With `--pr`, the same Mermaid block goes into `pr-comment.md`, so the posted comment or PR
 description renders the diagram with no image upload.
 
-## Sequence Diagram
+## Notes and Sequence Diagram
 
-Colleagues understand a behavior change faster from a sequence diagram than from a file graph.
-The CLI cannot infer behavior, so the agent authors it:
+The PR text a colleague reads should lead with what changed and why, in their words, not with
+statistics. The CLI cannot write that, so the agent authors two files and passes them in:
 
 1. Run the CLI once (backend or web) to get `changes.patch` and `report.md`.
-2. Read the patch. Write a Mermaid `sequenceDiagram` of the changed call flow into a file outside
+2. Read the patch. Write `visual-review-notes.md`: three to six bullets in plain language on what
+   changed and why, then one short pseudocode block (under about 15 lines) showing the core rule
+   when there is one. No restating file counts or SHAs; the CLI adds those. No prose paragraphs.
+   Pass it with `--notes`; it goes directly under the title, above everything generated.
+3. Also write a Mermaid `sequenceDiagram` of the changed call flow into a file outside
    the output directory, for example `visual-review-sequence.mmd`. Participants are the real
    modules, services, or actors touched by the diff. Mark new or changed messages with a
    `Note over A,B: changed` line. Keep it under roughly 15 messages; split into two diagrams if
@@ -124,8 +128,10 @@ The CLI cannot infer behavior, so the agent authors it:
    beginning of a line, so a trailing `%% changed` renders inside the message label as visible
    text, and angle brackets in a label can render as markup, so write `(name)` rather than
    `<name>`.
-   Skip this step, and say so, when the diff has no behavior change (docs, config, renames).
-3. Re-run the CLI with `--diagram visual-review-sequence.mmd` and a fresh `--output`. The block is
+   Skip the diagram, and say so, when the diff has no behavior change (docs, config, renames);
+   the notes are always worth writing.
+4. Re-run the CLI with `--notes visual-review-notes.md --diagram visual-review-sequence.mmd` and a
+   fresh `--output`. The sequence block is
    inserted as a `Sequence` section in `report.md`, and in `pr-comment.md` when `--pr` is set. Add
    `--update-description` (or `--post-comment`) only after the human has read the draft.
 

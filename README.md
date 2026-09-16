@@ -9,7 +9,7 @@ Agent skills for real engineering work. Each one is small, composable, and built
 evidence rather than a verdict. Install once, type a slash command, review what it drafted,
 approve with one click.
 
-Current release: **v0.13.2**. One skill shipped, more on the way.
+Current release: **v0.14.0**. One skill shipped, more on the way.
 
 ---
 
@@ -164,6 +164,12 @@ and skips the checkpoint; the agent only does that when you asked for it up fron
 ---
 
 ## What lands in the PR
+
+The PR text leads with the agent's notes from `--notes`: a few bullets on what changed and why,
+and a short pseudocode block for the core rule. Under that, one line with the file count and the
+files, then the diagrams. A one-file change gets no module table and no ranking, because they
+would only repeat that line. The block is delimited by CommonMark link reference definitions,
+which render as nothing on every forge, so re-runs replace it in place with no visible markers.
 
 A backend review puts this in the description (this exact block came from
 [PR #2](https://github.com/aryswisnu/skills/pull/2), trimmed):
@@ -329,9 +335,11 @@ its own, because it runs the install and start commands of both revisions. The w
 2. Resolve base and head to exact SHAs, read the diff, decide backend or web.
 3. If web and no `visual-review.json`, run `--init`, fix the start command against the repo's own
    scripts, add scenarios for the paths the diff touches.
-4. Run the CLI with no publish flag. Read `changes.patch`. Write a Mermaid `sequenceDiagram` of the
-   changed call flow, skipped and said so when the diff has no behavior change.
-5. Re-run with `--diagram` and a fresh output directory. Inspect `report.md` and the images.
+4. Run the CLI with no publish flag. Read `changes.patch`. Write the notes (bullets and pseudocode)
+   and a Mermaid `sequenceDiagram` of the changed call flow, the diagram skipped and said so when
+   the diff has no behavior change.
+5. Re-run with `--notes` and `--diagram` and a fresh output directory. Inspect `report.md` and the
+   images.
 6. Show the draft and ask, as in [Review, then approve](#review-then-approve). On approval run
    `--publish`. This is the only point at which publication is authorized.
 
@@ -357,6 +365,7 @@ Review
   --base <ref>          Base git revision, required unless --pr is used
   --head <ref>          Head git revision, default: HEAD
   --backend             Diff summary + Mermaid change map, no browser or config
+  --notes <path>        Agent-written markdown (bullets, pseudocode) placed at the top of the PR text
   --diagram <path>      Mermaid file (for example a sequenceDiagram) to include; linted, warnings only
   --ascii               Draw the change map and sequence diagram as ASCII (automatic on Bitbucket Cloud)
   --config <path>       Config path, default: visual-review.json

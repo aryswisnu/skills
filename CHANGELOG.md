@@ -1,5 +1,23 @@
 # aryswisnu-skills
 
+## 0.14.0 (2026-09-16)
+
+Leaner PR text, invisible markers, and a place for the agent's own summary.
+
+- `--notes <file>`: agent-written markdown placed directly under the title, above everything
+  generated. SKILL.md now asks for three to six plain-language bullets and a short pseudocode
+  block, no prose paragraphs and no restated statistics.
+- The generated block is compact. One line carries the file count, the line counts, and the files
+  themselves when there are three or fewer. The module table appears only with two or more
+  modules, the most-changed ranking only with more than three files, and the summary heading and
+  repeated SHA line are gone. The footer is one sentence.
+- Description markers are CommonMark link reference definitions, `[//]: # (visualize-pr:start)`,
+  which render as nothing on GitHub, GitLab, and Bitbucket Cloud. The previous HTML comments
+  showed as literal text on Bitbucket. A block delimited by the old markers is recognized and
+  rewritten with the new ones on the next run.
+- `pr.json` records the notes so `--publish` keeps them in a rebuilt web comment.
+- `npm test`: 295 tests, 8 new.
+
 ## 0.13.2 (2026-09-16)
 
 README section for the ASCII fallback, and two renderer nits.
