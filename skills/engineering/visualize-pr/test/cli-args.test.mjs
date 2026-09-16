@@ -87,3 +87,37 @@ test('parseArgs accepts --diagram <path>', () => {
   assert.equal(options.diagram, 'seq.mmd');
   assert.throws(() => parseArgs(['--base', 'main', '--diagram']), /--diagram requires a value/);
 });
+
+test('parseArgs accepts --init without --base or --pr', () => {
+  const options = parseArgs(['--init']);
+  assert.equal(options.init, true);
+  assert.equal(options.config, 'visual-review.json');
+  assert.equal(options.base, undefined);
+  assert.equal(parseArgs(['--init', '--config', 'other.json']).config, 'other.json');
+});
+
+test('parseArgs defaults init to false', () => {
+  assert.equal(parseArgs(['--base', 'main']).init, false);
+});
+
+test('parseArgs rejects --init combined with revision or reporting flags', () => {
+  const conflicts = [
+    ['--pr', 'https://github.com/a/b/pull/1'],
+    ['--base', 'main'],
+    ['--backend'],
+    ['--post-comment'],
+    ['--update-description'],
+    ['--diagram', 'seq.mmd'],
+  ];
+  for (const conflict of conflicts) {
+    assert.throws(
+      () => parseArgs(['--init', ...conflict]),
+      /--init cannot be combined with/,
+      conflict[0],
+    );
+  }
+});
+
+test('usage documents --init', () => {
+  assert.match(usage(), /--init\s+Write a starter visual-review\.json for this repo, then exit/);
+});

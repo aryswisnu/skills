@@ -2,11 +2,11 @@
 
 > **Implementation status:** The local Git and browser workflow, GitHub pull request URL entry point,
 > and backend diff-summary path in [Available now](#available-now-v060) are implemented and tested
-> in v0.8.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
+> in v0.9.0. The remaining provider URLs (Bitbucket, GitLab, Azure) and richer non-web adapters in
 > [Planned interfaces](#planned-interfaces-not-yet-implemented) are design examples, not executable
 > features in the current release.
 
-## Available now, v0.8.0
+## Available now, v0.9.0
 
 ### Install the skill collection
 
@@ -25,6 +25,22 @@ cd skills/skills/engineering/visualize-pr
 npm install
 npx playwright install chromium
 ```
+
+### Generate a starter config
+
+Run from the application repository:
+
+```bash
+node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs --init
+```
+
+It inspects the repository (package manifests, lockfiles, framework dependencies, or a root
+`index.html`), writes `visual-review.json` with one `home` scenario at `/` on a desktop and a mobile
+viewport, and prints the detected project kind plus any notes. It never overwrites an existing file:
+that exits `2`. Pass `--config <path>` to write somewhere else.
+
+The generated `startCommand` is a starting point. Check it against the repository's own scripts,
+then add scenarios for the pages the team changes most.
 
 ### Compare a local branch with its base
 
@@ -297,7 +313,7 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended lightweight, provider-neutral direction. The v0.8.0
+The following examples describe the intended lightweight, provider-neutral direction. The v0.9.0
 CLI already resolves a GitHub pull request URL via `--pr` (see [Available now](#available-now-v060));
 the `/visualize-pr` shorthand below, remote description updates, and non-GitHub providers remain
 planned.

@@ -19,7 +19,7 @@ You invoke this by typing `/visualize-pr`, and the agent won't reach for it on i
 
 ## Prerequisites
 
-Git, Node.js 20+, and both revisions available locally (or a GitHub PR URL resolvable from your clone). Web mode needs a `visual-review.json` in the application repo describing how to start each revision on `{port}` and which scenarios to replay, plus Playwright Chromium or a compatible browser via `VISUAL_REVIEW_BROWSER_PATH`. Backend mode needs neither config nor browser. Posting a comment needs `GITHUB_TOKEN` or `GH_TOKEN` with write access.
+Git, Node.js 20+, and both revisions available locally (or a GitHub PR URL resolvable from your clone). Web mode needs a `visual-review.json` in the application repo describing how to start each revision on `{port}` and which scenarios to replay. Run `--init` once to generate a starter that detects the framework (Next, Vite, Django, Rails, and others) and seeds a home scenario; then adjust it. It also needs Playwright Chromium or a compatible browser via `VISUAL_REVIEW_BROWSER_PATH`. Backend mode needs neither config nor browser. Posting a comment needs `GITHUB_TOKEN` or `GH_TOKEN` with write access.
 
 ## Evidence, not approval
 

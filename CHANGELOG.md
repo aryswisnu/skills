@@ -1,5 +1,21 @@
 # aryswisnu-skills
 
+## 0.9.0 (2026-09-16)
+
+Zero-config start.
+
+- `--init` writes a starter `visual-review.json` for the current repo: detects Next, Vite, Astro,
+  Nuxt, Angular, CRA, SvelteKit, Remix, Gatsby, Express-style Node servers, Django, FastAPI, Flask,
+  Go, Rails, Laravel, and static HTML, picks the install command from the lockfile, and seeds a
+  `home` scenario on desktop and mobile. Refuses to overwrite.
+- Change map folds more than five unchanged imports of one file into a single
+  "+N unchanged imports" node, so a small change no longer drags the whole import list in.
+- Backend mode no longer prints `fatal: path ... does not exist` for deleted files.
+- Verified live: `--update-description` on aryswisnu/skills#2 renders the Mermaid change map in the
+  PR description; a second run leaves the body byte-identical. Plugin install via
+  `claude plugins install aryswisnu-skills@aryswisnu` runs backend mode with no `npm install`.
+- `npm test`: 202 tests.
+
 ## 0.8.0 (2026-09-16)
 
 Diagrams in the PR itself.

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -12,6 +13,7 @@ import { assertPreviewOrigin, attachRuntimeCollectors, collectSemantic, installL
 import { stopProcessTree, worktreePathsUnder } from '../src/cleanup.mjs';
 import { commitRefArgs, parseNulPaths } from '../src/git.mjs';
 import { selectScenarios } from '../src/impact.mjs';
+import { detectProject, renderStarterConfig } from '../src/init.mjs';
 import { waitForReady } from '../src/network.mjs';
 import { createOwnedOutputDirectory, safeWriteArtifact } from '../src/output.mjs';
 import { cellArtifactNames, hashArtifacts, resolveArtifactPath } from '../src/provenance.mjs';
@@ -147,9 +149,12 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
   const nameStatus = parseNameStatus(git(['diff', '--name-status', `${baseSha}...${headSha}`], repoRoot));
   const numstat = parseNumstat(git(['diff', '--numstat', `${baseSha}...${headSha}`], repoRoot));
   const summary = summarizeChange(nameStatus, numstat);
+  const deletedPaths = new Set(summary.files.filter((file) => file.status === 'D').map((file) => file.path));
   const readHeadFile = (filePath) => {
-    try { return git(['show', `${headSha}:${filePath}`], repoRoot, { trim: false }); }
-    catch { return null; }
+    if (deletedPaths.has(filePath)) return null;
+    try {
+      return execFileSync('git', ['show', `${headSha}:${filePath}`], { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    } catch { return null; }
   };
   const graph = await buildModuleGraph({ files: summary.files, readFile: readHeadFile });
   const mermaid = renderMermaidFlowchart(graph, { base: baseSha, head: headSha });
@@ -292,6 +297,35 @@ function fail(message, code = 2) {
   process.exitCode = code;
 }
 
+// Filesystem adapter for detectProject: relative paths only, never throws.
+function projectFiles(root) {
+  return {
+    exists: (relPath) => existsSync(path.join(root, relPath)),
+    read: (relPath) => {
+      try {
+        return readFileSync(path.join(root, relPath), 'utf8');
+      } catch {
+        return null;
+      }
+    },
+  };
+}
+
+async function runInit(options) {
+  const invocationDir = process.cwd();
+  const configPath = path.resolve(invocationDir, options.config);
+  if (existsSync(configPath)) {
+    fail(`${options.config} already exists; delete it or pass --config <other path>`);
+    return;
+  }
+  const detection = detectProject(projectFiles(invocationDir));
+  await mkdir(path.dirname(configPath), { recursive: true });
+  await writeFile(configPath, renderStarterConfig(detection), 'utf8');
+  console.log(`Detected: ${detection.kind}`);
+  for (const note of detection.notes) console.log(`- ${note}`);
+  console.log(`Wrote ${configPath}. Edit startCommand and add scenarios, then run: node ${process.argv[1]} --base origin/main --head HEAD`);
+}
+
 async function main() {
   const startedAt = Date.now();
   let options;
@@ -304,6 +338,10 @@ async function main() {
   }
   if (options.help) {
     console.log(usage());
+    return;
+  }
+  if (options.init) {
+    await runInit(options);
     return;
   }
 
