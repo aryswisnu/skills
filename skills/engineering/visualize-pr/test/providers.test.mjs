@@ -48,3 +48,10 @@ test('providers say whether the forge renders Mermaid, so the CLI can fall back 
   assert.equal(providerFor(parsePrUrl('https://gitlab.com/a/b/-/merge_requests/1')).rendersMermaid, true);
   assert.equal(providerFor(parsePrUrl('https://bitbucket.org/a/b/pull-requests/1')).rendersMermaid, false, 'Bitbucket Cloud renders CommonMark only');
 });
+
+
+test('providers say whether the forge renders HTML, so the original description can be folded', () => {
+  assert.equal(providerFor(parsePrUrl('https://github.com/a/b/pull/1')).rendersHtml, true);
+  assert.equal(providerFor(parsePrUrl('https://gitlab.com/a/b/-/merge_requests/1')).rendersHtml, true);
+  assert.equal(providerFor(parsePrUrl('https://bitbucket.org/a/b/pull-requests/1')).rendersHtml, false, 'Bitbucket Cloud strips raw HTML');
+});
