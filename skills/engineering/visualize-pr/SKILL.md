@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.12.0
+  version: 0.12.1
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -82,13 +82,14 @@ same markdown into the PR description between `<!-- visualize-pr:start -->` and
 `<!-- visualize-pr:end -->` markers, which a repeat run replaces in place. The two can be
 combined. Publishing is also a separate, instant step: after the human has read the draft,
 `--publish <output-dir> --post-comment` or `--publish <output-dir> --update-description` posts
-`pr-comment.md` exactly as written, with no re-diff, no browser, and no second review run. That
-is the normal path; pass the publish flags on the review run itself only when the human asked for
+`pr-comment.md` as written, with no re-diff, no browser, and no second review run. For a GitHub
+web review the screenshots are uploaded at that moment and an Evidence section is appended; every
+line the human read stays, only the footer about local images changes. That is the normal path; pass the publish flags on the review run itself only when the human asked for
 that up front. Publishing needs a token with write access in the environment: `GITHUB_TOKEN` or
 `GH_TOKEN`; `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD`;
 `GITLAB_TOKEN`. Backend reviews upload nothing on any provider: the change map is a Mermaid block
 that all three render natively. Web reviews embed the side-by-side screenshots only on GitHub,
-where they are uploaded to a `visual-review-assets` branch; on Bitbucket and GitLab the verdicts
+where they are uploaded to a `visual-review-assets` branch, at publish time; on Bitbucket and GitLab the verdicts
 and diagrams still publish and the images stay in the output directory, which the CLI says at the
 time. Without either flag, only the local draft is written. Bitbucket Server (Data Center) and
 Azure DevOps are not implemented.
@@ -147,8 +148,8 @@ The CLI cannot infer behavior, so the agent authors it:
    description, both, or not now. In Claude Code, call the AskUserQuestion tool with those four
    options; they render as buttons the human can click. In a harness with no question tool, state
    the single publish command and let the harness's own command-approval prompt be the button.
-   On approval, run `--publish <output-dir>` with the chosen flag; it posts the draft verbatim in
-   under a second. "Not now" ends the task with the draft path and the publish command written out
+   On approval, run `--publish <output-dir>` with the chosen flag; it posts the draft in under a
+   second (a GitHub web review also uploads its screenshots then, so say so when offering). "Not now" ends the task with the draft path and the publish command written out
    so the human can run it later. Treat this step as the safety boundary's checkpoint: it is the
    only place publication is authorized.
 6. Read `summary.json` first when it exists. Account for every selected cell, verdict, skipped

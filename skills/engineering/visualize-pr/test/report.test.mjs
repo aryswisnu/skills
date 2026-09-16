@@ -147,3 +147,8 @@ test('renderReport puts a --diagram file into report.md as a Sequence section', 
   assert.match(withDiagram, /## Sequence\n\n```mermaid\nsequenceDiagram\n  A->>B: hi\n```/);
   assert.equal(renderReport(report(), null), plain);
 });
+
+test('buildSummary keeps scenarioName so a saved summary can rebuild the PR comment', () => {
+  const summary = buildSummary(report());
+  assert.equal(summary.cells[0].scenarioName, 'Home');
+});

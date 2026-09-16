@@ -223,7 +223,7 @@ async function runBackend({ options, repoRoot, outputDir, baseSha, headSha, chan
     if (options.postComment || options.updateDescription) requirePublishToken(token, options, provider);
     // Mermaid renders natively on GitHub, so backend reviews upload nothing.
     const comment = buildBackendComment(summary, baseSha, headSha, pr, null, mermaid, diagram);
-    await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify(pr, null, 2)}\n`);
+    await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'backend', diagram }, null, 2)}\n`);
     await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
     console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
     if (!options.postComment && !options.updateDescription) {
@@ -386,11 +386,29 @@ async function runPublish(options) {
   const pr = JSON.parse(await readFile(prPath, 'utf8'));
   // Verbatim: the text the human reviewed is the text that ships. Only the
   // trailing newline the artifact writer added is dropped.
-  const comment = (await readFile(draftPath, 'utf8')).replace(/\n$/, '');
+  let comment = (await readFile(draftPath, 'utf8')).replace(/\n$/, '');
   const provider = providerFor(pr);
   const token = provider.tokenFrom(process.env);
   requirePublishToken(token, options, provider);
   console.log(`Publishing ${draftPath} to ${provider.name} ${provider.reference}`);
+
+  // A web draft written without a token has no screenshots in it. Upload them
+  // now and rebuild the comment from the saved summary: every line the reviewer
+  // read is kept, the Evidence section is added, and the footer stops saying
+  // the images are local.
+  if (pr.adapter === 'web' && provider.supportsEvidenceUpload) {
+    const summaryPath = path.join(dir, 'summary.json');
+    if (existsSync(summaryPath)) {
+      const summary = JSON.parse(await readFile(summaryPath, 'utf8'));
+      const images = await uploadCellImages(token, pr, dir, summary.cells ?? []);
+      const count = Object.keys(images).length;
+      if (count > 0) {
+        comment = buildPrComment(summary, pr, images, pr.diagram ?? null);
+        console.log(`Uploaded ${count} screenshot${count === 1 ? '' : 's'} to the visual-review-assets branch and embedded ${count === 1 ? 'it' : 'them'}.`);
+      }
+    }
+  }
+
   if (options.postComment) {
     const posted = await provider.postComment(token, comment);
     console.log(`Posted comment: ${posted.htmlUrl ?? pr.htmlUrl}`);
@@ -879,9 +897,13 @@ if (options.init) {
           console.error(`${provider.name} evidence upload is not implemented. The screenshots stay in ${outputDir}; the comment carries verdicts and diagrams only.`);
         }
       }
-      await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify(pr, null, 2)}\n`);
+      await safeWriteArtifact(outputDir, 'pr.json', `${JSON.stringify({ ...pr, adapter: 'web', diagram }, null, 2)}\n`);
       await safeWriteArtifact(outputDir, 'pr-comment.md', `${comment}\n`);
       console.log(`PR comment draft written to ${path.join(outputDir, 'pr-comment.md')}`);
+      if (!options.postComment && !options.updateDescription) {
+        console.log(`Review it, then publish: --publish ${outputDir} --post-comment (or --update-description)`
+          + (provider.supportsEvidenceUpload ? '; the screenshots are uploaded and embedded at that point' : ''));
+      }
       if (options.postComment) {
         phase = 'pr-comment-post';
         const posted = await provider.postComment(token, comment);

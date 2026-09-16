@@ -196,8 +196,9 @@ its own, because it runs the install and start commands of both revisions. The w
 4. Re-run with `--diagram` and a fresh output directory. Inspect `report.md` and the images.
 5. Show the draft and ask. In Claude Code the four choices (comment, description, both, not now)
    render as buttons; in Codex and other harnesses the agent proposes one publish command and the
-   harness's own approval prompt is the button. On approval, `--publish <dir>` posts the draft
-   verbatim in under a second. Nothing is recomputed, so what you read is what lands.
+   harness's own approval prompt is the button. On approval, `--publish <dir>` posts the draft in
+   under a second. Nothing is recomputed, so what you read is what lands; a GitHub web review
+   uploads and embeds its screenshots at that moment.
 
 The contract the agent must satisfy before calling it done, including exit codes, evidence
 accounting, and cleanup checks, is in [SKILL.md](./skills/engineering/visualize-pr/SKILL.md).
@@ -240,7 +241,7 @@ Both are kept open on purpose.
 --setup               Install this skill's npm dependencies and Chromium, then exit
 --diagram <path>      Mermaid file (for example a sequenceDiagram) to include in the report and PR text
 --update-description  Insert or refresh the review block in the PR description (requires --pr)
---publish <dir>       Post the reviewed draft in <dir>/pr-comment.md as-is; nothing is recomputed
+--publish <dir>       Post the reviewed draft in <dir>/pr-comment.md; uploads GitHub web screenshots then
 --post-comment        Post the review as a PR comment (requires --pr)
 --config <path>       Config path, default: visual-review.json
 --output <path>       Artifact directory, default: visual-review-output (must not exist)
