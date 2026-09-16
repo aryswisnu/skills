@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.13.1
+  version: 0.13.2
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence

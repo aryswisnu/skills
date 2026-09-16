@@ -77,10 +77,15 @@ export function renderAsciiChangeMap(graph, { base = null, head = null } = {}) {
 
   const changedCount = nodes.filter((node) => node.changed).length;
   const range = base && head ? `  ${String(base).slice(0, 7)} -> ${String(head).slice(0, 7)}` : '';
-  const lines = [`Change map${range}  (${changedCount} changed files)`, ''];
+  const lines = [`Change map${range}  (${changedCount} changed file${changedCount === 1 ? '' : 's'})`, ''];
 
+  // A lone "." group means every changed file shared one directory that the
+  // labels already stripped; a "." header would only add noise, so the nodes
+  // sit directly under the title at the directory indent instead.
+  const loneRoot = dirs.length === 1 && dirs[0] === '.';
   for (const dir of dirs) {
-    lines.push(`  ${dir === '.' ? '.' : `${dir}/`}`);
+    if (!loneRoot) lines.push(`  ${dir === '.' ? '.' : `${dir}/`}`);
+    const indent = loneRoot ? '  ' : '    ';
     const group = [...byDir.get(dir)].sort((a, b) => a.label.localeCompare(b.label));
     for (const node of group) {
       const cell = basenameOf(node.label).padEnd(width, ' ');
@@ -98,7 +103,7 @@ export function renderAsciiChangeMap(graph, { base = null, head = null } = {}) {
           .map(displayTarget);
         if (targets.length > 0) tail = `-> ${targets.join(', ')}`;
       }
-      lines.push(`    ${MARKERS[statusOf(node)]} ${cell}  ${tail}`.trimEnd());
+      lines.push(`${indent}${MARKERS[statusOf(node)]} ${cell}  ${tail}`.trimEnd());
     }
   }
 
