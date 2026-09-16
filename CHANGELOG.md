@@ -1,5 +1,18 @@
 # aryswisnu-skills
 
+## 0.14.1 (2026-09-16)
+
+Root README is an index again.
+
+- The root README had grown every visualize-pr feature section (60 seconds, review-then-approve,
+  what lands in the PR, ASCII fallback, providers, review modes, CLI reference, safety boundary).
+  A collection root should list the skills, say how to install the collection, and show the
+  layout; it now does only that.
+- All of that content lives in the skill's own README, merged with what it already had
+  (capabilities, quick start config, CI workflow, development), and links are skill-relative.
+- The stale "How to use" flow diagram (drawn for the pre-publish flow) and its Excalidraw source
+  are removed; the pipeline sequence diagram stays.
+
 ## 0.14.0 (2026-09-16)
 
 Leaner PR text, invisible markers, and a place for the agent's own summary.
