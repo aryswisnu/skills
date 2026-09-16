@@ -37,6 +37,7 @@ import { buildPrComment } from '../src/pr-comment.mjs';
 import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, parseNameStatus, parseNumstat, summarizeChange } from '../src/backend.mjs';
 import { buildModuleGraph, renderMermaidFlowchart } from '../src/mermaid.mjs';
 import { setupPlan, setupSummary, unsupportedNodeVersion } from '../src/setup.mjs';
+import { formatDiagramWarnings, lintDiagram } from '../src/diagram-lint.mjs';
 import { mergeDescription } from '../src/pr-description.mjs';
 
 // Browser dependencies are loaded on first use in the web path only, so backend
@@ -138,6 +139,10 @@ async function readDiagram(filePath) {
   if (!filePath) return null;
   const text = await readFile(filePath, 'utf8');
   if (!text.trim()) throw new Error(`--diagram file is empty: ${filePath}`);
+  // Warn, never block: these render wrong rather than failing to parse, so the
+  // author still gets their diagram plus a pointer at what a reviewer will see.
+  const warnings = formatDiagramWarnings(lintDiagram(text), filePath);
+  if (warnings) console.error(warnings);
   return text;
 }
 
