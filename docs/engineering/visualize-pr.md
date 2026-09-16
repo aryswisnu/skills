@@ -40,7 +40,7 @@ Only with `--update-description`. It inserts one block between `<!-- visualize-p
 The CLI draws the file-level change map on its own. A sequence diagram needs to understand behavior, so the agent writes it from `changes.patch` and passes it back with `--diagram`. If you ran the CLI by hand and see no sequence section, that step was skipped.
 
 **It says "Missing dependency playwright".**
-Run `npm install` in the skill folder (and `npx playwright install chromium` for web reviews). Plugin installers copy the skill but do not install its npm dependencies.
+Run the CLI once with `--setup`. It installs the npm dependencies and Chromium into the skill's own folder, because plugin installers copy the files but do not run npm. `--setup --backend` skips the browser download.
 
 **Can it review GitLab or Bitbucket?**
 Not yet. Only GitHub URLs resolve. Local `--base`/`--head` works against any repository.

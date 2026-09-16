@@ -12,6 +12,8 @@ Options:
   --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
   --config <path>    Config path, default: visual-review.json
   --init             Write a starter visual-review.json for this repo, then exit
+  --setup            Install this skill's npm dependencies and Chromium, then exit
+                     (add --backend to skip the browser download)
   --output <path>    Artifact directory, default: visual-review-output
   --scenario <id>    Capture only this scenario, repeatable, overrides impact rules
   --all              Capture every configured scenario, ignoring impact rules
@@ -43,6 +45,7 @@ export function parseArgs(argv) {
     updateDescription: false,
     backend: false,
     init: false,
+    setup: false,
     help: false,
   };
   let headExplicit = false;
@@ -55,6 +58,7 @@ export function parseArgs(argv) {
     else if (arg === '--update-description') options.updateDescription = true;
     else if (arg === '--backend') options.backend = true;
     else if (arg === '--init') options.init = true;
+    else if (arg === '--setup') options.setup = true;
     else if (arg === '--scenario' || VALUE_FLAGS.includes(arg)) {
       const value = argv[index + 1];
       if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value`);
@@ -67,6 +71,19 @@ export function parseArgs(argv) {
   if (options.help) return options;
   if (options.all && options.scenarios.length > 0) {
     throw new Error('--all cannot be combined with --scenario');
+  }
+  if (options.setup) {
+    const conflicts = [
+      ['--pr', Boolean(options.pr)],
+      ['--base', Boolean(options.base)],
+      ['--init', options.init],
+      ['--post-comment', options.postComment],
+      ['--update-description', options.updateDescription],
+      ['--diagram', Boolean(options.diagram)],
+    ];
+    const conflict = conflicts.find(([, present]) => present);
+    if (conflict) throw new Error(`--setup cannot be combined with ${conflict[0]}`);
+    return options;
   }
   if (options.init) {
     const conflicts = [

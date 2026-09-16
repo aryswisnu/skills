@@ -1,5 +1,19 @@
 # aryswisnu-skills
 
+## 0.10.0 (2026-09-16)
+
+The skill installs itself.
+
+- `--setup` installs the skill's npm dependencies and Chromium into its own folder, so a plugin
+  install is enough to get started. `--setup --backend` installs the dependencies only and skips
+  the browser download. A no-op run says what was already present.
+- SKILL.md makes dependency setup workflow step 1: the agent checks for `node_modules` and runs
+  `--setup` before the first review, so nobody types an npm command by hand.
+- The `Missing dependency` error now names `--setup` instead of two npm commands.
+- Verified on a fresh copy with no `node_modules`: `--setup --backend` installed 4 packages, and a
+  backend review from that copy produced a change map.
+- `npm test`: 208 tests.
+
 ## 0.9.0 (2026-09-16)
 
 Zero-config start.

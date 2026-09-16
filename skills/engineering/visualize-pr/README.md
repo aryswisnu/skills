@@ -161,10 +161,14 @@ Each comment was posted with `--post-comment`; the PR descriptions were not modi
 ## Quick start
 
 ```bash
-npm install
-npx playwright install chromium
-# Or reuse a compatible browser:
-# export VISUAL_REVIEW_BROWSER_PATH=/path/to/chrome-headless-shell
+node <visualize-pr-directory>/scripts/visualize-pr.mjs --setup
+```
+
+That installs the npm dependencies and Chromium into the skill's own folder. Add `--backend` to
+install the dependencies only and skip the browser download. To reuse a browser you already have:
+
+```bash
+export VISUAL_REVIEW_BROWSER_PATH=/path/to/chrome-headless-shell
 ```
 
 In the application repository, generate a starter config:
@@ -236,7 +240,7 @@ See [docs/usage-examples.md](docs/usage-examples.md) for:
 - Clearly marked, not-yet-implemented designs for Bitbucket, GitLab, Azure DevOps,
   GitHub description-update, backend API, CLI, schema, image-pair, mixed-PR, and direct-CDP workflows
 
-Only examples under **Available now, v0.9.0** describe executable behavior in this release.
+Only examples under **Available now, v0.10.0** describe executable behavior in this release.
 
 ## CLI
 
@@ -250,6 +254,7 @@ Only examples under **Available now, v0.9.0** describe executable behavior in th
 --update-description  Insert or refresh the review section in the PR description (requires --pr)
 --config <path>    Config path, default: visual-review.json
 --init             Write a starter visual-review.json for this repo, then exit
+--setup            Install this skill's npm dependencies and Chromium, then exit
 --output <path>    Artifact directory, default: visual-review-output
 --scenario <id>    Capture only this scenario, repeatable, overrides impact rules
 --all              Capture every configured scenario, ignoring impact rules
@@ -294,6 +299,9 @@ npm test
 npm audit --audit-level=high
 npm pack --dry-run
 ```
+
+Users install dependencies with `node scripts/visualize-pr.mjs --setup`; the commands above are the
+maintainer equivalents.
 
 For an end-to-end browser check, create a scratch Git repository with two commits containing the
 bundled `examples/demo/` application, then invoke this skill's CLI from the scratch repository.

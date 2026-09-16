@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.9.0
+  version: 0.10.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -32,7 +32,7 @@ For every mode:
 - Git and Node.js 20 or newer.
 - Both revisions available locally, or a GitHub PR URL resolvable from the repository clone.
 - A trusted or sandboxed repository. Its install, build, start, and application code may run.
-- After installing the plugin or skill, run `npm install` inside the skill folder once (`npx playwright install chromium` too for web reviews). The plugin installer does not install npm dependencies.
+- Run this skill's CLI with `--setup` once after installing it. Plugin installers copy the files but do not run npm, so the first run has no dependencies and no browser. `--setup` installs both from the skill's own folder; `--setup --backend` installs the npm dependencies only and skips the browser download.
 
 For web evidence only:
 
@@ -113,29 +113,33 @@ The CLI cannot infer behavior, so the agent authors it:
 
 ## Workflow and Completion Contract
 
-1. Resolve the base and head refs to exact commit SHAs. Read the changed files and patch. Confirm
+1. Before the first review on a machine, check for `node_modules` in the skill folder. When it is
+   missing, run the CLI with `--setup` (add `--backend` when the change needs no browser) and wait
+   for it to finish. A `Missing dependency` error at any later point means the same thing: run
+   `--setup`, then retry.
+2. Resolve the base and head refs to exact commit SHAs. Read the changed files and patch. Confirm
    that the selected scenarios cover the visible risk, or state the uncovered areas. If
    `visual-review.json` is missing, run `--init`, read the printed notes, fix the start command
    against the repo's own scripts, and add scenarios for the paths the diff touches before
    capturing.
-2. Prepare dependencies and any required build in each revision through repository-owned,
+3. Prepare dependencies and any required build in each revision through repository-owned,
    reproducible commands. Reuse a compatible installed browser; install one only when needed.
-3. Run the CLI. Complete authorized local preparation, capture, inspection, and safe retries without
+4. Run the CLI. Complete authorized local preparation, capture, inspection, and safe retries without
    repeated confirmation. Never weaken scenarios or alter revisions merely to obtain a clean exit.
-4. Read `summary.json` first when it exists. Account for every selected cell, verdict, skipped
+5. Read `summary.json` first when it exists. Account for every selected cell, verdict, skipped
    scenario, and omission. Exit `0` means comparable evidence exists for every selected cell. Exit
    `1` means scenario-level capture failures produced a partial report. Exit `2` means usage,
    configuration, or infrastructure failure; after output creation, inspect `failure.json` for its
    phase, error, and cleanup outcome. SIGINT exits `130`; SIGTERM exits `143`. After output
    creation, both write interruption and cleanup evidence to `failure.json` when possible.
-5. Establish capture validity before interpreting the diff. Changed comparisons require visual
+6. Establish capture validity before interpreting the diff. Changed comparisons require visual
    inspection. Unchanged captures require meaningful state assertions or image inspection showing
    the intended loaded state, not a loading shell, consent overlay, or error page. If image viewing
    is unavailable, disclose that the visual evidence was not inspected.
-6. Finish when selected cells are accounted for, available images show the intended states, summary
+7. Finish when selected cells are accounted for, available images show the intended states, summary
    counts and omissions are explained, manifest SHAs and public-config digest match the invocation,
    and every hash listed by the manifest has been checked. `manifest.json` does not hash itself.
-7. Confirm preview processes and temporary worktrees were cleaned up. Report retained worktrees,
+8. Confirm preview processes and temporary worktrees were cleaned up. Report retained worktrees,
    cleanup failures, missing reports, uninspected images, and persistent infrastructure failures.
 
 A dimension mismatch legitimately omits the pixel diff while retaining available before, after,

@@ -6,6 +6,7 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promi
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import { parseArgs, usage } from '../src/cli-args.mjs';
 import { publicConfigDigest, normalizeConfig } from '../src/config.mjs';
@@ -35,6 +36,7 @@ import { ensureAssetsBranch, getPrBody, githubTokenFrom, postPrComment, resolveP
 import { buildPrComment } from '../src/pr-comment.mjs';
 import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, parseNameStatus, parseNumstat, summarizeChange } from '../src/backend.mjs';
 import { buildModuleGraph, renderMermaidFlowchart } from '../src/mermaid.mjs';
+import { setupPlan, setupSummary } from '../src/setup.mjs';
 import { mergeDescription } from '../src/pr-description.mjs';
 
 // Browser dependencies are loaded on first use in the web path only, so backend
@@ -44,7 +46,7 @@ async function loadBrowserDep(name) {
     return await import(name);
   } catch (error) {
     if (error && error.code === 'ERR_MODULE_NOT_FOUND') {
-      throw new Error(`Missing dependency "${name}". Run "npm install" in the visualize-pr skill folder (and "npx playwright install chromium" for web reviews).`);
+      throw new Error(`Missing dependency "${name}". Run this skill's CLI with --setup once to install it.`);
     }
     throw error;
   }
@@ -311,6 +313,35 @@ function projectFiles(root) {
   };
 }
 
+const skillRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+function runStep(step, cwd) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(step.command, step.args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' });
+    child.on('error', reject);
+    child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`${step.command} ${step.args.join(' ')} exited with ${code}`))));
+  });
+}
+
+async function runSetup(options) {
+  const browser = !options.backend;
+  const hasNodeModules = existsSync(path.join(skillRoot, 'node_modules'));
+  const steps = setupPlan({ hasNodeModules, browser });
+  const summary = setupSummary(steps, { hasNodeModules, browser });
+  if (summary) {
+    console.log(summary);
+    return;
+  }
+  console.log(`Installing into ${skillRoot}`);
+  for (const step of steps) {
+    console.log(`- ${step.label}: ${step.command} ${step.args.join(' ')}`);
+    await runStep(step, skillRoot);
+  }
+  console.log(browser
+    ? 'Setup complete. Web and backend reviews are ready.'
+    : 'Setup complete. Backend reviews are ready; re-run --setup without --backend for web reviews.');
+}
+
 async function runInit(options) {
   const invocationDir = process.cwd();
   const configPath = path.resolve(invocationDir, options.config);
@@ -340,7 +371,17 @@ async function main() {
     console.log(usage());
     return;
   }
-  if (options.init) {
+  if (options.setup) {
+  try {
+    await runSetup(options);
+  } catch (error) {
+    console.error(error.message);
+    process.exit(2);
+  }
+  process.exit(0);
+}
+
+if (options.init) {
     await runInit(options);
     return;
   }
