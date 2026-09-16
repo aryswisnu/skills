@@ -9,7 +9,7 @@ Agent skills for real engineering work. Each one is small, composable, and built
 evidence rather than a verdict. Install once, type a slash command, review what it drafted,
 approve with one click.
 
-Current release: **v0.13.1**. One skill shipped, more on the way.
+Current release: **v0.13.2**. One skill shipped, more on the way.
 
 ---
 
@@ -20,6 +20,7 @@ Current release: **v0.13.1**. One skill shipped, more on the way.
 - [visualize-pr in 60 seconds](#visualize-pr-in-60-seconds)
 - [Review, then approve](#review-then-approve)
 - [What lands in the PR](#what-lands-in-the-pr)
+- [ASCII fallback](#ascii-fallback)
 - [Providers](#providers)
 - [Two review modes](#two-review-modes)
 - [How the agent runs it](#how-the-agent-runs-it)
@@ -185,18 +186,7 @@ flowchart LR
   class n_more unchanged
 ```
 
-On Bitbucket Cloud, which does not render Mermaid, the same map arrives as text:
-
-```text
-Change map  f6f7429 -> 825fc07  (2 changed files)
-
-  scripts/
-    [M] visual-pr-review.mjs  -> backend.mjs, +17 unchanged imports
-  src/
-    [M] backend.mjs
-
-  [A] added  [M] modified  [D] deleted  [R] renamed  [ ] unchanged
-```
+Where Mermaid is not rendered, the same map arrives as text; see [ASCII fallback](#ascii-fallback).
 
 Above it: abbreviated SHAs, files changed, a per-module table, the most changed files. Green means
 added, amber modified, red deleted, grey untouched. When a file imports more than five unchanged
@@ -229,6 +219,66 @@ A web review adds real browser evidence, uploaded to a `visual-review-assets` br
 Every web cell gets a verdict: `unchanged`, `changed-within-threshold`, `review-required`, or
 `capture-failed`. None of them approves anything. Full rendered examples:
 [pr-comment-examples.md](skills/engineering/visualize-pr/docs/pr-comment-examples.md).
+
+---
+
+## ASCII fallback
+
+Mermaid is only useful where it is rendered. GitHub and GitLab render it; Bitbucket Cloud renders
+CommonMark only, so a Mermaid fence there shows as raw source. The CLI therefore picks the diagram
+form per provider, and `--ascii` forces text anywhere, including the local `report.md`, for a
+terminal, an email, or any renderer without Mermaid. Both `change-map.mmd` and `change-map.txt`
+are written on every backend run regardless.
+
+The change map as text, real output from this repository over six commits, trimmed:
+
+```text
+Change map  713e339 -> e31d673  (19 changed files)
+
+  scripts/
+    [M] visualize-pr.mjs             -> ascii.mjs, providers.mjs, report.mjs, +21 unchanged imports
+  src/
+    [A] ascii.mjs
+    [M] backend.mjs
+    [A] provider-bitbucket.mjs
+    [ ] provider-github.mjs          (imported by 1)
+    [A] provider-gitlab.mjs
+    [A] providers.mjs                -> provider-bitbucket.mjs, provider-github.mjs, provider-gitlab.mjs
+    [M] report.mjs                   -> backend.mjs
+  test/
+    [A] ascii.test.mjs               -> ascii.mjs
+    [A] providers.test.mjs           -> pr-url.mjs, providers.mjs
+
+  [A] added  [M] modified  [D] deleted  [R] renamed  [ ] unchanged
+```
+
+Files group by directory. Each line carries a status marker, the file, and the in-repo files it
+imports; an unchanged file that a changed file imports shows how many import it instead. More than
+five unchanged imports from one file fold into a single `+N unchanged imports` target, listed
+last.
+
+The `--diagram` sequence diagram gets the same treatment. A Mermaid `sequenceDiagram` is redrawn
+as text: participants and aliases, solid and dashed arrows, self-messages, notes, and
+loop/alt/opt/par blocks. Real output:
+
+```text
+       Dev        visualize-pr      Bitbucket
+        |               |               |
+        |  --pr <url> --backend         |
+        |--------------->               |
+        |               |  GET pullrequests/N
+        |               |--------------->
+        |               |  200          |
+        |               <- - - - - - - -|
+        |               [ draft written ]
+        |  --publish out|               |
+        |--------------->               |
+        |               |  PUT description
+        |               |--------------->
+```
+
+Any Mermaid the renderer cannot parse is shown as fenced source rather than dropped, so nothing
+the agent wrote is lost. Which form was used is recorded in `pr.json`, so `--publish` keeps it.
 
 ---
 

@@ -1,5 +1,16 @@
 # aryswisnu-skills
 
+## 0.13.2 (2026-09-16)
+
+README section for the ASCII fallback, and two renderer nits.
+
+- Root README gains an "ASCII fallback" section with real renderer output for both the change map
+  and the sequence diagram, replacing a hand-drawn sample from before the renderer existed, and
+  explains when each form is used and that `change-map.txt` is always written.
+- ASCII change map: "1 changed file" is singular now, and a lone `.` directory header is dropped
+  when every changed file shared one directory that the labels already stripped.
+- `npm test`: 287 tests, 2 new.
+
 ## 0.13.1 (2026-09-16)
 
 Fix a race that could leave `failure.json` empty after SIGTERM or SIGINT.

@@ -70,7 +70,7 @@ test('renderAsciiChangeMap shows a fold node only as a target', () => {
   assert.match(text, /\[M\] app\.js\s+-> \+17 unchanged imports/);
   assert.equal(text.includes('[ ] +17 unchanged imports'), false);
   assert.equal(text.includes('(imported by'), false);
-  assert.equal(text.split('\n')[0], 'Change map  (1 changed files)');
+  assert.equal(text.split('\n')[0], 'Change map  (1 changed file)');
 });
 
 test('renderAsciiChangeMap disambiguates targets that share a basename', () => {
@@ -185,4 +185,31 @@ test('renderAsciiSequence renders notes anchored at a participant column', () =>
 
 test('renderAsciiSequence is deterministic', () => {
   assert.equal(renderAsciiSequence(EXAMPLE_SEQUENCE), renderAsciiSequence(EXAMPLE_SEQUENCE));
+});
+
+test('renderAsciiChangeMap uses the singular for one file and drops the lone "." header', () => {
+  const graph = {
+    nodes: [
+      { id: 'a', path: 'src/app.js', label: 'app.js', status: 'modified', changed: true },
+    ],
+    edges: [],
+  };
+  const out = renderAsciiChangeMap(graph, { base: 'a'.repeat(40), head: 'b'.repeat(40) });
+  assert.match(out, /\(1 changed file\)/);
+  assert.doesNotMatch(out, /^  \.\n/m, 'no "." directory header when it would be the only group');
+  assert.match(out, /^  \[M\] app\.js\n/m, 'the node sits directly under the header at two-space indent');
+});
+
+test('renderAsciiChangeMap keeps the "." header when it sits beside real directories', () => {
+  const graph = {
+    nodes: [
+      { id: 'a', path: 'README.md.js', label: 'README.js', status: 'modified', changed: true },
+      { id: 'b', path: 'src/app.js', label: 'src/app.js', status: 'added', changed: true },
+    ],
+    edges: [],
+  };
+  const out = renderAsciiChangeMap(graph);
+  assert.match(out, /^  src\/\n/m);
+  assert.match(out, /^  \.\n/m);
+  assert.match(out, /\(2 changed files\)/);
 });
