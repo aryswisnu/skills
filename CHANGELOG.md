@@ -1,5 +1,18 @@
 # aryswisnu-skills
 
+## 0.17.0 (2026-09-17)
+
+The review block leads the description; the original is folded under it.
+
+- `--update-description` used to append the block below whatever the description already said,
+  so a reader met the long original first. The block now goes at the top on first insert, and the
+  author's existing text is folded under it in a `<details>` "Original description" on GitHub and
+  GitLab, one tap to expand. Bitbucket Cloud strips raw HTML, so there the original sits under a
+  plain "Original description" heading, demoted rather than folded, and the docs say so.
+- A re-run still replaces only the block, wherever it sits, so the fold is applied once and the
+  original text is never touched again. Providers expose `rendersHtml`.
+- `npm test`: 322 tests, 5 new.
+
 ## 0.16.0 (2026-09-16)
 
 Terse by construction.
