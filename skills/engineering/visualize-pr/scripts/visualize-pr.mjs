@@ -39,6 +39,7 @@ import { buildArchitectureDiagram, buildBackendComment, buildChangeSummary, pars
 import { buildModuleGraph, renderMermaidFlowchart } from '../src/mermaid.mjs';
 import { setupPlan, setupSummary, unsupportedNodeVersion } from '../src/setup.mjs';
 import { formatDiagramWarnings, lintDiagram } from '../src/diagram-lint.mjs';
+import { formatNotesWarnings, lintNotes } from '../src/notes-lint.mjs';
 import { renderAsciiChangeMap, renderAsciiSequence } from '../src/ascii.mjs';
 import { mergeDescription } from '../src/pr-description.mjs';
 
@@ -163,6 +164,10 @@ async function readNotes(filePath) {
   if (!filePath) return null;
   const text = await readFile(filePath, 'utf8');
   if (!text.trim()) throw new Error(`--notes file is empty: ${filePath}`);
+  // Warn, never block: the notes are the author's, but a missing pseudocode
+  // block or a prose paragraph is exactly what reviewers complain about.
+  const warnings = formatNotesWarnings(lintNotes(text), filePath);
+  if (warnings) console.error(warnings);
   return text;
 }
 
