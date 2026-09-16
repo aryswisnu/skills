@@ -10,6 +10,8 @@ Options:
   --pr <url>         GitHub pull request URL; resolves base and head SHAs
   --backend          Analyze the diff and emit a change summary + Mermaid change map (no browser)
   --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
+  --ascii            Render the change map and sequence diagram as ASCII instead of Mermaid
+                     (automatic for providers that do not render Mermaid, such as Bitbucket Cloud)
   --config <path>    Config path, default: visual-review.json
   --init             Write a starter visual-review.json for this repo, then exit
   --setup            Install this skill's npm dependencies and Chromium, then exit
@@ -49,6 +51,7 @@ export function parseArgs(argv) {
     init: false,
     setup: false,
     publish: null,
+    ascii: false,
     help: false,
   };
   let headExplicit = false;
@@ -62,6 +65,7 @@ export function parseArgs(argv) {
     else if (arg === '--backend') options.backend = true;
     else if (arg === '--init') options.init = true;
     else if (arg === '--setup') options.setup = true;
+    else if (arg === '--ascii') options.ascii = true;
     else if (arg === '--scenario' || VALUE_FLAGS.includes(arg)) {
       const value = argv[index + 1];
       if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value`);
@@ -85,6 +89,7 @@ export function parseArgs(argv) {
       ['--diagram', Boolean(options.diagram)],
       ['--all', options.all],
       ['--scenario', options.scenarios.length > 0],
+      ['--ascii', options.ascii],
     ];
     const conflict = conflicts.find(([, present]) => present);
     if (conflict) throw new Error(`--publish cannot be combined with ${conflict[0]}`);

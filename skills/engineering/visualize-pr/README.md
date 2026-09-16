@@ -75,7 +75,7 @@ provenance.
 | --- | --- |
 | **Two live revisions** | Both revisions are checked out into detached worktrees and started on separate local ports. Nothing is stored as a baseline. |
 | **Pull request URL** | `--pr <url>` takes a GitHub PR, Bitbucket Cloud PR, or GitLab MR (self-hosted too, detected from the path shape), resolves base and head SHAs, runs the same capture, and (with `--post-comment`) uploads the images and posts the review as a PR comment. |
-| **Backend / non-web** | `--backend` analyzes the diff and emits a change summary plus a Mermaid change map (`change-map.mmd`, a flowchart of changed files and their in-repo imports, colored by status), no browser or config required. GitHub renders it natively, so nothing is uploaded. |
+| **Backend / non-web** | `--backend` analyzes the diff and emits a change summary plus a change map of changed files and their in-repo imports, no browser or config required. Written as Mermaid (`change-map.mmd`) and ASCII (`change-map.txt`); the PR text gets Mermaid where the forge renders it (GitHub, GitLab) and ASCII where it does not (Bitbucket Cloud). Nothing is uploaded. |
 | **Sequence diagram** | `--diagram <file.mmd>` inserts an agent-authored Mermaid `sequenceDiagram` of the changed behavior as a `### Sequence` section in the report and PR text. |
 | **Scenario replay** | A validated action list (`goto`, `click`, `fill`, `press`, `select`, `waitForSelector`, `assertVisible`, `assertText`) is replayed identically on base and head. |
 | **Capture matrix** | Scenario x viewport, with deterministic artifact names. |
@@ -257,6 +257,8 @@ Only examples under **Available now, v0.10.0** describe executable behavior in t
 --post-comment     Upload evidence, embed images, and post as a PR comment (requires --pr)
 --diagram <path>   Mermaid file (for example a sequenceDiagram) to include in the report and PR text
                    (linted for comment and label mistakes that render wrong; warnings only)
+--ascii            Render the change map and sequence diagram as ASCII instead of Mermaid
+                   (automatic for Bitbucket Cloud, which does not render Mermaid)
 --update-description  Insert or refresh the review section in the PR description (requires --pr)
 --publish <dir>    Post the reviewed draft in <dir>/pr-comment.md; uploads GitHub web screenshots then
 --config <path>    Config path, default: visual-review.json

@@ -4,7 +4,7 @@ description: Turn a GitHub PR or two Git revisions into reviewer-ready evidence.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.12.1
+  version: 0.13.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -87,8 +87,11 @@ web review the screenshots are uploaded at that moment and an Evidence section i
 line the human read stays, only the footer about local images changes. That is the normal path; pass the publish flags on the review run itself only when the human asked for
 that up front. Publishing needs a token with write access in the environment: `GITHUB_TOKEN` or
 `GH_TOKEN`; `BITBUCKET_TOKEN`, or `BITBUCKET_USERNAME` with `BITBUCKET_APP_PASSWORD`;
-`GITLAB_TOKEN`. Backend reviews upload nothing on any provider: the change map is a Mermaid block
-that all three render natively. Web reviews embed the side-by-side screenshots only on GitHub,
+`GITLAB_TOKEN`. Backend reviews upload nothing on any provider. The change map is a Mermaid block
+where the forge renders Mermaid (GitHub, GitLab) and an ASCII block where it does not (Bitbucket
+Cloud renders CommonMark only); the CLI picks per provider, and `--ascii` forces ASCII anywhere,
+including in `report.md`. The `--diagram` sequence diagram follows the same rule: a
+`sequenceDiagram` is redrawn as ASCII art, anything else is shown as fenced source. Web reviews embed the side-by-side screenshots only on GitHub,
 where they are uploaded to a `visual-review-assets` branch, at publish time; on Bitbucket and GitLab the verdicts
 and diagrams still publish and the images stay in the output directory, which the CLI says at the
 time. Without either flag, only the local draft is written. Bitbucket Server (Data Center) and

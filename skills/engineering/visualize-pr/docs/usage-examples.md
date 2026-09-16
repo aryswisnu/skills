@@ -2,11 +2,11 @@
 
 > **Implementation status:** The local Git and browser workflow, the GitHub, Bitbucket Cloud, and
 > GitLab pull request URL entry points, and the backend diff-summary path in
-> [Available now](#available-now-v0110) are implemented and tested in v0.12.1. Azure DevOps and the
+> [Available now](#available-now-v0110) are implemented and tested in v0.13.0. Azure DevOps and the
 > richer non-web adapters in [Planned interfaces](#planned-interfaces-not-yet-implemented) are
 > design examples, not executable features in the current release.
 
-## Available now, v0.12.1
+## Available now, v0.13.0
 
 ### Install the skill collection
 
@@ -99,6 +99,23 @@ evidence and requires the same token as `--post-comment`, and the two flags can 
 See [What the PR comment looks like](pr-comment-examples.md) for complete rendered web and backend
 examples.
 
+### Force ASCII diagrams
+
+Where Mermaid is not rendered (Bitbucket Cloud, email, a terminal), `--ascii` draws the change map
+and the sequence diagram as text. Bitbucket gets this automatically; the flag forces it anywhere,
+including in the local `report.md`:
+
+```bash
+node /path/to/skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs \
+  --base origin/main \
+  --backend \
+  --ascii \
+  --diagram visual-review-sequence.mmd \
+  --output visual-review-output
+```
+
+Both `change-map.mmd` and `change-map.txt` are always written, whichever flavor the report uses.
+
 ### Review the draft, then publish it
 
 The review run writes `pr-comment.md` and `pr.json` and posts nothing. Read the draft, then
@@ -117,8 +134,9 @@ buttons, elsewhere the publish command itself is what you approve.
 
 ### Review a Bitbucket Cloud pull request
 
-Same flags, different URL and token. Backend reviews post a Mermaid change map that Bitbucket
-renders; web reviews post verdicts and diagrams, and the screenshots stay in the output directory.
+Same flags, different URL and token. Bitbucket Cloud does not render Mermaid, so the change map
+and sequence diagram are sent as ASCII text blocks automatically; web reviews post verdicts and
+diagrams, and the screenshots stay in the output directory.
 
 ```bash
 export BITBUCKET_TOKEN=<repository-or-workspace-access-token>
@@ -372,7 +390,7 @@ pull request automatically, and uploads evidence only when the human-triggered
 
 ## Planned interfaces, not yet implemented
 
-The following examples describe the intended direction. The v0.12.1 CLI already resolves GitHub,
+The following examples describe the intended direction. The v0.13.0 CLI already resolves GitHub,
 Bitbucket Cloud, and GitLab URLs via `--pr` and updates descriptions on all three (see
 [Available now](#available-now-v0110)); Azure DevOps and the non-web adapters remain planned.
 

@@ -1,5 +1,23 @@
 # aryswisnu-skills
 
+## 0.13.0 (2026-09-16)
+
+ASCII diagrams where Mermaid is not rendered.
+
+- Correction: Bitbucket Cloud renders CommonMark only, so a ```mermaid fence there shows as source
+  text. Earlier releases and docs claimed all three forges render Mermaid; that was wrong for
+  Bitbucket and is what made the diagram unreadable there.
+- The change map and the `--diagram` sequence diagram are now drawn as ASCII on providers that do
+  not render Mermaid (Bitbucket Cloud), and Mermaid on those that do (GitHub, GitLab). `--ascii`
+  forces the text form anywhere, including the local `report.md`. A `sequenceDiagram` is redrawn
+  as ASCII art (participants, solid and dashed arrows, self-messages, notes, loop/alt blocks); any
+  other Mermaid is shown as fenced source.
+- `change-map.txt` is written next to `change-map.mmd` on every backend run. `pr.json` records the
+  chosen flavor so `--publish` keeps it.
+- New `src/ascii.mjs`, 15 unit tests. End-to-end: a Bitbucket description update carries `Change map` text and no
+  Mermaid fence; `--backend --ascii --diagram` puts both text diagrams in `report.md`.
+- `npm test`: 285 tests, 18 new.
+
 ## 0.12.1 (2026-09-16)
 
 `--publish` now uploads GitHub web screenshots.

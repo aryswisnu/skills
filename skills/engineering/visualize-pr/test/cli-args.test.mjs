@@ -143,3 +143,11 @@ test('parseArgs accepts --publish <dir> with a publish flag and nothing else', (
   assert.throws(() => parseArgs(['--publish']), /--publish requires a value/);
   assert.match(usage(), /--publish <dir>/);
 });
+
+test('parseArgs accepts --ascii on review runs and rejects it on --publish', () => {
+  assert.equal(parseArgs(['--base', 'main', '--ascii']).ascii, true);
+  assert.equal(parseArgs(['--base', 'main']).ascii, false);
+  assert.equal(parseArgs(['--pr', 'https://github.com/a/b/pull/1', '--backend', '--ascii']).ascii, true);
+  assert.throws(() => parseArgs(['--publish', 'out', '--post-comment', '--ascii']), /--publish cannot be combined with --ascii/);
+  assert.match(usage(), /--ascii/);
+});
