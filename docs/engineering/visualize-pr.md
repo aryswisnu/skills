@@ -23,31 +23,27 @@ Git, Node.js 20+, and both revisions available locally (or a GitHub, Bitbucket C
 
 ## What the reviewer reads
 
-The block is ordered the way a reviewer needs it: bullets, pseudocode, the sequence diagram, one line of numbers, the change map. For a small change the generated part is that line plus the two diagrams. A real one, trimmed, from a Bitbucket PR that changed how an endpoint parses its filters:
+The block is ordered the way a reviewer needs it: a headline, three to five bullets, a Heads up line when callers see different results, a pseudocode block under eight lines, a sequence diagram with at most four participants and six messages, then one line of numbers. It reads like a message to a colleague, and the CLI warns when any part runs long. A real one, trimmed, from a Bitbucket PR that changed how an endpoint parses its filters:
 
 ~~~markdown
-- `property_type`, `listing_type`, `status` accept an array or a comma list.
-- A plain object or a non-string item is a 400, so `?uid[$ne]=0` never reaches `$match`.
-- Each value expands to every stored spelling of the same concept; exact matching had
-  undercounted (206 of 363 in one district) because `room` is not a case variant of `room rental`.
-- A value in no group passes through and is listed in `meta.unrecognized`.
+Filters accept arrays and match every spelling of a value.
+
+- `property_type`, `listing_type`, `status`: array, repeated param, or `A,B`. Objects still 400.
+- Each value expands to all stored spellings. District 1024: 206 of 363 before, 363 now.
+- Unknown values pass through and are listed in `meta.unrecognized`: a typo is visible, not a silent 0.
+
+Heads up: `for sale` now also matches `For Sale` and `SALE`. Intended.
 
 ```
 for v in values:
-    group = VALUE_GROUPS[filter].find(g => g.includes(v))
-    expanded += group ? group : [v]
-match[filter] = { $in: expanded }
+    expanded += VALUE_GROUPS[field][lower(v)] or [v]
+match[field] = { $in: expanded }
 ```
 
 1 file changed (+110 -20): `src/controllers/agentStats.controller.js`
-
-```text
-Change map  6934b9a -> 434fab5  (1 changed file)
-  [M] agentStats.controller.js  -> property.model.js
-```
 ~~~
 
-Everything above the numbers line is the agent's, from `--notes`. The pseudocode is a fenced block; an indented one after a bullet list renders as plain text on every forge, and the CLI warns when it sees that. The module table appears only with two or more modules and the most-changed ranking only with more than three files, so a one-file change is not padded with tables that repeat the one line. The markers around the block are CommonMark link reference definitions, invisible on every forge.
+Everything above the numbers line is the agent's, from `--notes`. The pseudocode is a fenced block; an indented one after a bullet list renders as plain text on every forge, and the CLI warns when it sees that. Tables, the ranking, and the change map appear only when they add something: two or more modules, more than three files, more than one file or import. The markers around the block are CommonMark link reference definitions, invisible on every forge.
 
 ## Evidence, not approval
 

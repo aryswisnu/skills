@@ -140,6 +140,8 @@ test('--ascii renders the change map and the sequence diagram as text', async ()
     git(['add', '.'], root);
     git(['commit', '-qm', 'base'], root);
     await writeFile(path.join(root, 'src/orders.js'), "import './log.js';\nexport const a = 2;\n");
+    // Two changed files: a one file, one arrow graph is dropped from the report.
+    await writeFile(path.join(root, 'src/billing.js'), 'export const d = 4;\n');
     git(['add', '.'], root);
     git(['commit', '-qm', 'head'], root);
     await writeFile(path.join(root, 'seq.mmd'), 'sequenceDiagram\n  participant Caller\n  participant App\n  Caller->>App: renders\n');
@@ -162,6 +164,36 @@ test('--ascii renders the change map and the sequence diagram as text', async ()
     assert.match(txt, /^Change map/);
     const mmd = await readFile(path.join(root, 'review-output', 'change-map.mmd'), 'utf8');
     assert.match(mmd, /flowchart LR/, 'the Mermaid artifact is still written alongside');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('a one file change with a single import drops the change map but still writes the artifact', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'vpr-tiny-'));
+  try {
+    await mkdir(path.join(root, 'src'), { recursive: true });
+    git(['init', '-q'], root);
+    git(['config', 'user.name', 'Test'], root);
+    git(['config', 'user.email', 'test@example.invalid'], root);
+    await writeFile(path.join(root, 'src/orders.js'), 'export const a = 1;\n');
+    await writeFile(path.join(root, 'src/log.js'), 'export const l = 1;\n');
+    git(['add', '.'], root);
+    git(['commit', '-qm', 'base'], root);
+    await writeFile(path.join(root, 'src/orders.js'), "import './log.js';\nexport const a = 2;\n");
+    git(['add', '.'], root);
+    git(['commit', '-qm', 'head'], root);
+
+    const result = spawnSync(process.execPath, [
+      cli, '--base', 'HEAD~1', '--head', 'HEAD', '--backend', '--output', 'review-output',
+    ], { cwd: root, encoding: 'utf8', timeout: 30_000 });
+
+    assert.equal(result.status, 0, result.stderr);
+    const report = await readFile(path.join(root, 'review-output', 'report.md'), 'utf8');
+    assert.match(report, /## Change summary/);
+    assert.doesNotMatch(report, /### Change map/, 'one file and one arrow says nothing the file list does not');
+    const txt = await readFile(path.join(root, 'review-output', 'change-map.txt'), 'utf8');
+    assert.match(txt, /^Change map/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
