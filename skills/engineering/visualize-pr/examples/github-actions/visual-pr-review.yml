@@ -1,0 +1,92 @@
+# Reusable example. Copy into .github/workflows/ of the application repository.
+#
+# MANUAL, OPT-IN WORKFLOW. It runs only when a human triggers it from the Actions tab
+# (workflow_dispatch). There is no automatic trigger, so evidence is never produced or
+# uploaded without an explicit human decision.
+#
+# DISCLOSURE: when the "Upload evidence as an artifact" input is enabled, the entire
+# `visual-review-output` directory leaves the runner and is stored by GitHub as a build
+# artifact. That directory can contain screenshots and runtime text captured from your
+# application, which may include sensitive data. Enabling this input authorizes the newly
+# generated directory to upload immediately after capture; this workflow has no post-capture
+# inspection checkpoint. Use synthetic data, or keep upload disabled and inspect local output.
+#
+# It runs the install and start commands of BOTH revisions, which is arbitrary code
+# execution. Only run this against revisions you trust.
+name: Visual PR Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      base-ref:
+        description: Base revision (e.g. origin/main)
+        required: true
+        default: origin/main
+      head-ref:
+        description: Head revision (e.g. HEAD or a PR head SHA)
+        required: true
+        default: HEAD
+      upload-evidence:
+        description: Upload the output directory as a GitHub artifact (evidence leaves this machine)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  visual-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the application repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install visual-pr-review
+        run: |
+          git clone --depth 1 https://github.com/aryswisnu/skills.git "$RUNNER_TEMP/arys-skills"
+          npm ci --prefix "$RUNNER_TEMP/arys-skills/skills/engineering/visualize-pr"
+          npx --prefix "$RUNNER_TEMP/arys-skills/skills/engineering/visualize-pr" playwright install --with-deps chromium
+
+      - name: Capture before-and-after evidence
+        id: capture
+        run: |
+          set +e
+          node "$RUNNER_TEMP/arys-skills/skills/engineering/visualize-pr/scripts/visualize-pr.mjs" \
+            --base "${{ inputs.base-ref }}" \
+            --head "${{ inputs.head-ref }}" \
+            --config visual-review.json \
+            --output visual-review-output
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Upload evidence (manual opt-in)
+        if: inputs.upload-evidence == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-review-${{ inputs.head-ref }}
+          path: visual-review-output
+          if-no-files-found: error
+          retention-days: 14
+
+      # Exit code 1 means at least one scenario could not be captured. Exit code 2
+      # means the review failed before capture completed (usage, configuration, or
+      # infrastructure error). They are surfaced separately so the failure.json
+      # distinction is not flattened into a generic "scenarios missing" message.
+      - name: Fail if any scenario could not be captured
+        if: steps.capture.outputs.exit-code == '1'
+        run: |
+          echo "::error::One or more scenarios could not be captured. Inspect visual-review-output/report.md and summary.json."
+          exit 1
+
+      - name: Fail on usage, configuration, or infrastructure error
+        if: steps.capture.outputs.exit-code == '2'
+        run: |
+          echo "::error::The review failed before capture completed. Inspect visual-review-output/failure.json."
+          exit 2

@@ -1,0 +1,38 @@
+{
+  "name": "visualize-pr",
+  "version": "0.7.0",
+  "description": "Boot two git revisions locally and produce visual, semantic and runtime evidence for a web change, or a diff summary and change map for a backend change.",
+  "type": "module",
+  "bin": {
+    "visualize-pr": "scripts/visualize-pr.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aryswisnu/skills.git",
+    "directory": "skills/engineering/visualize-pr"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "pixelmatch": "7.1.0",
+    "playwright": "1.63.0",
+    "pngjs": "7.0.0"
+  },
+  "license": "MIT",
+  "files": [
+    "agents/",
+    "scripts/",
+    "src/",
+    "test/",
+    "docs/",
+    "examples/",
+    "README.md",
+    "SKILL.md",
+    "LICENSE"
+  ]
+}

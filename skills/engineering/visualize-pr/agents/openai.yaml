@@ -1,0 +1,5 @@
+interface:
+  display_name: "Visualize PR"
+  short_description: "Before/after evidence for a PR or two revisions"
+policy:
+  allow_implicit_invocation: false

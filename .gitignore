@@ -1,4 +1,5 @@
 node_modules/
 visual-review-output/
+.claude/
 .DS_Store
 *.log
