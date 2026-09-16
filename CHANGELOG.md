@@ -1,5 +1,20 @@
 # aryswisnu-skills
 
+## 0.13.1 (2026-09-16)
+
+Fix a race that could leave `failure.json` empty after SIGTERM or SIGINT.
+
+- After a signal, cleanup kills the preview or install child, which also rejects the main flow, so
+  the signal handler and the main error path both tried to write `failure.json` after the same
+  cleanup. Both used an exclusive create then write; when the main path's create won, the handler
+  saw the file exist and called `process.exit` while the other write was still in flight. The
+  file was left empty, with the right exit code. Seen once on the macOS CI runner for 0.13.0.
+- The failure write is now single-flight: the first caller writes, every caller awaits that same
+  write, and nothing exits before it finishes. After a signal the main path no longer writes at
+  all, so the record is always the signal's.
+- Process note: 0.13.0 was merged with that one macOS job red because the merge step was not
+  gated on the check result. Merges are gated on it from here on.
+
 ## 0.13.0 (2026-09-16)
 
 ASCII diagrams where Mermaid is not rendered.

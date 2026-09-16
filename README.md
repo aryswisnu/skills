@@ -9,7 +9,7 @@ Agent skills for real engineering work. Each one is small, composable, and built
 evidence rather than a verdict. Install once, type a slash command, review what it drafted,
 approve with one click.
 
-Current release: **v0.13.0**. One skill shipped, more on the way.
+Current release: **v0.13.1**. One skill shipped, more on the way.
 
 ---
 

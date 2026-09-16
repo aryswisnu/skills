@@ -611,14 +611,27 @@ if (options.init) {
         : [],
     },
   });
-  const emitFailure = async (failure) => {
-    try {
-      await safeWriteArtifact(outputDir, 'failure.json', `${JSON.stringify(failure, null, 2)}\n`);
-      console.error(`Failure evidence written to ${path.join(outputDir, 'failure.json')}`);
-    } catch (error) {
-      console.error(`Error: could not write failure.json: ${error.message}`);
+  // Single-flight. After a signal, cleanup() kills the preview or install
+  // child, which also rejects the main flow, so the signal handler and the
+  // main catch both arrive here after the same cleanup promise. Two racing
+  // O_EXCL writers meant the loser could call process.exit while the winner's
+  // write was still in flight, leaving an empty failure.json. One shared
+  // promise: the first caller writes, every caller awaits that same write.
+  let failureWrite = null;
+  const emitFailure = (failure) => {
+    if (!failureWrite) {
+      failureWrite = (async () => {
+        try {
+          await safeWriteArtifact(outputDir, 'failure.json', `${JSON.stringify(failure, null, 2)}\n`);
+          console.error(`Failure evidence written to ${path.join(outputDir, 'failure.json')}`);
+        } catch (error) {
+          console.error(`Error: could not write failure.json: ${error.message}`);
+        }
+      })();
     }
+    return failureWrite;
   };
+  let signalReceived = null;
 
   let outputReady = false;
   try {
@@ -692,6 +705,7 @@ if (options.init) {
   };
   const handleSignal = (signal) => {
     const exitCode = signal === 'SIGINT' ? 130 : 143;
+    signalReceived = signal;
     (async () => {
       let signalCleanupError = null;
       try {
@@ -953,7 +967,9 @@ if (options.init) {
     }
   }
 
-  if (runError || cleanupError) {
+  // After a signal the handler owns the failure record and the exit code;
+  // the main flow's own error is a consequence of that cleanup, not the cause.
+  if ((runError || cleanupError) && !signalReceived) {
     const failure = failureRecord({
       phase: runError ? phase : 'cleanup',
       error: runError
