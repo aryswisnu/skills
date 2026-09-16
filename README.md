@@ -6,7 +6,7 @@
 Agent skills for real engineering work. Each one is small, composable, and built to hand a human
 evidence rather than a verdict: the agent drafts, you review, you approve with one click.
 
-Current release: **v0.16.0**. One skill shipped, more on the way.
+Current release: **v0.17.0**. One skill shipped, more on the way.
 
 ## The skills
 

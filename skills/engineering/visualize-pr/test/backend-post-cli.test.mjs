@@ -235,7 +235,8 @@ test('--backend --update-description writes a marked section into the PR body an
     const afterFirst = posted.description;
     assert.ok(afterFirst.includes(DESCRIPTION_START));
     assert.ok(afterFirst.includes(DESCRIPTION_END));
-    assert.ok(afterFirst.startsWith('Original PR body.'));
+    assert.ok(afterFirst.startsWith(DESCRIPTION_START), 'the block leads the description');
+    assert.match(afterFirst, /<details>\n<summary>Original description<\/summary>\n\nOriginal PR body\.\n\n<\/details>$/, 'the original is folded on GitHub');
     assert.match(afterFirst, /files? changed \(\+\d+ -\d+\)/);
     assert.match(afterFirst, /2 files changed/);
     assert.match(afterFirst, /```mermaid\nflowchart LR/);

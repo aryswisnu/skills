@@ -20,6 +20,7 @@ export function providerFor(ref) {
       // branch plus the contents API). Web screenshots stay local elsewhere.
       supportsEvidenceUpload: true,
       rendersMermaid: true,
+      rendersHtml: true,
       tokenFrom: (env) => github.githubTokenFrom(env),
       resolvePr: (auth, f) => github.resolvePr(auth, owner, repo, number, f),
       postComment: (auth, body, f) => github.postPrComment(auth, owner, repo, number, body, f),
@@ -37,6 +38,8 @@ export function providerFor(ref) {
       // Bitbucket Cloud renders CommonMark only; a ```mermaid fence shows as
       // source text. Diagrams fall back to ASCII there.
       rendersMermaid: false,
+      // Raw HTML such as <details> is stripped too, so nothing can be folded.
+      rendersHtml: false,
       tokenFrom: (env) => bitbucket.bitbucketTokenFrom(env),
       resolvePr: (auth, f) => bitbucket.resolvePr(auth, owner, repo, number, f),
       postComment: (auth, body, f) => bitbucket.postPrComment(auth, owner, repo, number, body, f),
@@ -53,6 +56,7 @@ export function providerFor(ref) {
       tokenHint: 'GITLAB_TOKEN',
       supportsEvidenceUpload: false,
       rendersMermaid: true,
+      rendersHtml: true,
       tokenFrom: (env) => gitlab.gitlabTokenFrom(env),
       resolvePr: (auth, f) => gitlab.resolvePr(auth, host, projectPath, number, f),
       postComment: (auth, body, f) => gitlab.postPrComment(auth, host, projectPath, number, body, f),

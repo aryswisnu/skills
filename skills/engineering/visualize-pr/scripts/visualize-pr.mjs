@@ -185,7 +185,7 @@ async function readDiagram(filePath) {
 async function updatePrDescription(token, pr, section) {
   const provider = providerFor(pr);
   const existing = await provider.getBody(token);
-  const body = mergeDescription(existing, section);
+  const body = mergeDescription(existing, section, { collapse: provider.rendersHtml });
   return provider.updateBody(token, body);
 }
 

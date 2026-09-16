@@ -114,7 +114,8 @@ test('--backend --update-description against Bitbucket Cloud', async () => {
     assert.doesNotMatch(state.description, /```mermaid/, 'Bitbucket Cloud does not render Mermaid, so none is sent');
     assert.match(state.description, /```text\nChange map/, 'the change map falls back to ASCII on Bitbucket');
     assert.match(state.description, /\[M\] orders\.js/);
-    assert.ok(state.description.startsWith('Original body.'), 'the existing body is preserved');
+    assert.ok(state.description.startsWith('[//]: # (visualize-pr:start)'), 'the block leads the description');
+    assert.match(state.description, /\n\n## Original description\n\nOriginal body\.$/, 'the original is demoted under a heading on Bitbucket, which strips HTML');
 
     const again = await runCli(
       ['--pr', 'https://bitbucket.org/acme/orders/pull-requests/42', '--backend', '--update-description', '--output', 'out2'],

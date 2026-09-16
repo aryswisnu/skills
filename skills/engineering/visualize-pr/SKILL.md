@@ -4,7 +4,7 @@ description: Turn a pull request on GitHub, Bitbucket Cloud, or GitLab, or any t
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: 0.16.0
+  version: 0.17.0
   author: Arys
   platforms: linux, macos
   tags: code-review, visual-testing, playwright, git, evidence
@@ -78,8 +78,10 @@ The URL may be a GitHub pull request, a Bitbucket Cloud pull request, or a GitLa
 the provider is read from the path shape, so self-hosted GitLab and GitHub Enterprise work too.
 This resolves the base and head SHAs, fetches them, captures evidence, and writes a draft comment
 to `pr-comment.md`. Add `--post-comment` to publish it, or `--update-description` to write the
-same markdown into the PR description between `<!-- visualize-pr:start -->` and
-`<!-- visualize-pr:end -->` markers, which a repeat run replaces in place. The two can be
+same markdown into the PR description. The block goes at the top, between invisible CommonMark
+markers, and the author's existing text is folded under it in a collapsible "Original
+description" on GitHub and GitLab; Bitbucket Cloud strips HTML, so there the original sits under a
+plain "Original description" heading instead. A repeat run replaces only the block, in place. The two can be
 combined. Publishing is also a separate, instant step: after the human has read the draft,
 `--publish <output-dir> --post-comment` or `--publish <output-dir> --update-description` posts
 `pr-comment.md` as written, with no re-diff, no browser, and no second review run. For a GitHub

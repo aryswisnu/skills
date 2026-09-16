@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 
 import { DESCRIPTION_END, DESCRIPTION_START, mergeDescription } from '../src/pr-description.mjs';
 
-test('mergeDescription appends a marked block when no markers exist', () => {
+test('mergeDescription puts the marked block first when no markers exist', () => {
   const merged = mergeDescription('Original body.', '## Evidence\nsomething');
-  assert.match(merged, /^Original body\.\n\n/);
+  assert.ok(merged.startsWith(DESCRIPTION_START));
+  assert.match(merged, /## Original description\n\nOriginal body\.$/);
   assert.ok(merged.includes(DESCRIPTION_START));
   assert.ok(merged.includes(DESCRIPTION_END));
   assert.ok(merged.includes('## Evidence'));
@@ -18,7 +19,8 @@ test('mergeDescription replaces an existing marked block in place', () => {
   assert.ok(!second.includes('first section'));
   assert.equal(second.split(DESCRIPTION_START).length - 1, 1);
   assert.equal(second.split(DESCRIPTION_END).length - 1, 1);
-  assert.match(second, /^Original body\.\n\n/);
+  assert.ok(second.startsWith(DESCRIPTION_START), 'block stays first');
+  assert.match(second, /## Original description\n\nOriginal body\.$/, 'original stays demoted, folded once');
 });
 
 test('mergeDescription is idempotent for the same section', () => {
@@ -55,4 +57,38 @@ test('mergeDescription upgrades a block delimited by the legacy HTML-comment mar
   const out = mergeDescription(legacy, 'new');
   assert.equal(out, `Body.\n\n${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}`);
   assert.doesNotMatch(out, /old|<!--/);
+});
+
+
+test('mergeDescription puts the block at the top and folds the original body under details where HTML renders', () => {
+  const out = mergeDescription('Original text.\n\nMore text.', '## Visual review\nx', { collapse: true });
+  assert.equal(out, [
+    `${DESCRIPTION_START}\n## Visual review\nx\n${DESCRIPTION_END}`,
+    '',
+    '<details>',
+    '<summary>Original description</summary>',
+    '',
+    'Original text.\n\nMore text.',
+    '',
+    '</details>',
+  ].join('\n'));
+});
+
+test('mergeDescription demotes the original body under a heading where HTML does not render', () => {
+  const out = mergeDescription('Original text.', '## Visual review\nx', { collapse: false });
+  assert.equal(out, `${DESCRIPTION_START}\n## Visual review\nx\n${DESCRIPTION_END}\n\n## Original description\n\nOriginal text.`);
+});
+
+test('mergeDescription replaces an existing block in place and does not re-wrap the original', () => {
+  const first = mergeDescription('Original.', 'old', { collapse: true });
+  const second = mergeDescription(first, 'new', { collapse: true });
+  assert.equal(second, first.replace('old', 'new'));
+  assert.equal((second.match(/<details>/g) || []).length, 1);
+  const bottomLegacy = `Original.\n\n${DESCRIPTION_START}\nold\n${DESCRIPTION_END}`;
+  assert.equal(mergeDescription(bottomLegacy, 'new', { collapse: true }), `Original.\n\n${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}`);
+});
+
+test('mergeDescription with an empty body is just the block', () => {
+  assert.equal(mergeDescription('', 'x', { collapse: true }), `${DESCRIPTION_START}\nx\n${DESCRIPTION_END}`);
+  assert.equal(mergeDescription(null, 'x'), `${DESCRIPTION_START}\nx\n${DESCRIPTION_END}`);
 });

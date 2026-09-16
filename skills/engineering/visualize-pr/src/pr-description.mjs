@@ -24,11 +24,25 @@ function findBlock(body) {
   return null;
 }
 
-export function mergeDescription(existingBody, section) {
+// First insert goes at the top: the block is the summary a reader wants
+// first, and the author's own text follows untouched. A re-run replaces the
+// block wherever it sits. `replace` makes the block the whole description,
+// for the case where the existing text is a longer version of the notes.
+// First insert puts the block on top, because it is the summary a reader
+// wants first, and folds the author's own text under it: a <details> block
+// where the forge renders HTML (GitHub, GitLab), a plain "Original
+// description" heading where it does not (Bitbucket Cloud strips HTML). A
+// re-run replaces only the block, wherever it sits, so the fold is applied
+// once and the original text is never touched again.
+export function mergeDescription(existingBody, section, { collapse = false } = {}) {
   const block = markedBlock(section);
   const body = typeof existingBody === 'string' ? existingBody : '';
   const found = findBlock(body);
   if (found) return body.slice(0, found.start) + block + body.slice(found.end);
   const trimmed = body.trim();
-  return trimmed ? `${trimmed}\n\n${block}` : block;
+  if (!trimmed) return block;
+  const original = collapse
+    ? ['<details>', '<summary>Original description</summary>', '', trimmed, '', '</details>'].join('\n')
+    : `## Original description\n\n${trimmed}`;
+  return `${block}\n\n${original}`;
 }
