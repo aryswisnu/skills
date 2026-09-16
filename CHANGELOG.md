@@ -1,5 +1,17 @@
 # aryswisnu-skills
 
+## 0.14.2 (2026-09-16)
+
+The three layers say the same thing.
+
+- SKILL.md's frontmatter description, the text the slash-command picker shows, said "a GitHub PR"
+  and "an optional PR comment draft". It now names all three providers, the notes-first PR text,
+  the change map and sequence diagram, and that publishing waits for approval. Its "When to Use"
+  section drops the v0.5 "architecture diagram" wording for the same reason.
+- The engineering bucket README line and the docs page's opening paragraph carried the same old
+  wording and are aligned with the skill README.
+- The Codex short description matches.
+
 ## 0.14.1 (2026-09-16)
 
 Root README is an index again.

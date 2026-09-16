@@ -1,5 +1,5 @@
 interface:
   display_name: "Visualize PR"
-  short_description: "Before/after evidence for a PR or two revisions"
+  short_description: "Notes, diagrams, and evidence written into a PR, on your approval"
 policy:
   allow_implicit_invocation: false
