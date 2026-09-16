@@ -1,5 +1,9 @@
 # aryswisnu-skills
 
+## 0.17.1
+
+- `--update-description` keeps the review block on top on re-runs. A block that an earlier version left at the bottom is lifted to the top and the original text folded once. A block already on top is replaced in place.
+
 ## 0.17.0 (2026-09-17)
 
 The review block leads the description; the original is folded under it.

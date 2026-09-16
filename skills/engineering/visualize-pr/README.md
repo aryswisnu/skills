@@ -71,7 +71,7 @@ node <skill>/scripts/visualize-pr.mjs --publish out --update-description
 The review block goes at the top of the PR description, between invisible markers; whatever the
 description already said is folded under it in a collapsible "Original description" on GitHub and
 GitLab, and demoted under a plain heading on Bitbucket Cloud, which strips HTML. Re-run and only
-the block is replaced, in place. Swap `--update-description` for `--post-comment`, or pass both. A Bitbucket Cloud or
+the block is replaced, in place; a block an older version left at the bottom is lifted to the top first. Swap `--update-description` for `--post-comment`, or pass both. A Bitbucket Cloud or
 GitLab URL works the same way; see [Providers](#providers) for the token each one reads.
 
 For a web change, generate a config first, then run without `--backend`:

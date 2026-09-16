@@ -55,7 +55,7 @@ test('markers are CommonMark link reference definitions, invisible on every forg
 test('mergeDescription upgrades a block delimited by the legacy HTML-comment markers', () => {
   const legacy = 'Body.\n\n<!-- visualize-pr:start -->\nold\n<!-- visualize-pr:end -->';
   const out = mergeDescription(legacy, 'new');
-  assert.equal(out, `Body.\n\n${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}`);
+  assert.equal(out, `${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}\n\n## Original description\n\nBody.`);
   assert.doesNotMatch(out, /old|<!--/);
 });
 
@@ -84,11 +84,27 @@ test('mergeDescription replaces an existing block in place and does not re-wrap 
   const second = mergeDescription(first, 'new', { collapse: true });
   assert.equal(second, first.replace('old', 'new'));
   assert.equal((second.match(/<details>/g) || []).length, 1);
-  const bottomLegacy = `Original.\n\n${DESCRIPTION_START}\nold\n${DESCRIPTION_END}`;
-  assert.equal(mergeDescription(bottomLegacy, 'new', { collapse: true }), `Original.\n\n${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}`);
 });
 
 test('mergeDescription with an empty body is just the block', () => {
   assert.equal(mergeDescription('', 'x', { collapse: true }), `${DESCRIPTION_START}\nx\n${DESCRIPTION_END}`);
   assert.equal(mergeDescription(null, 'x'), `${DESCRIPTION_START}\nx\n${DESCRIPTION_END}`);
+});
+
+test('mergeDescription lifts a block that sits below the original text to the top and folds the rest', () => {
+  const legacyBottom = `Long original prose.\n\n${DESCRIPTION_START}\nold\n${DESCRIPTION_END}`;
+  const out = mergeDescription(legacyBottom, 'new', { collapse: true });
+  assert.ok(out.startsWith(`${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}`), 'block first');
+  assert.match(out, /<details>\n<summary>Original description<\/summary>\n\nLong original prose\.\n\n<\/details>$/);
+  assert.doesNotMatch(out, /old/);
+  assert.equal((out.match(/visualize-pr:start/g) || []).length, 1);
+  const again = mergeDescription(out, 'newer', { collapse: true });
+  assert.equal(again, out.replace('new', 'newer'), 'second run replaces in place, no second fold');
+  assert.equal((again.match(/<details>/g) || []).length, 1);
+});
+
+test('mergeDescription lifts a legacy HTML-marker block from the bottom too, on Bitbucket form', () => {
+  const legacy = 'Original.\n\n<!-- visualize-pr:start -->\nold\n<!-- visualize-pr:end -->';
+  const out = mergeDescription(legacy, 'new', { collapse: false });
+  assert.equal(out, `${DESCRIPTION_START}\nnew\n${DESCRIPTION_END}\n\n## Original description\n\nOriginal.`);
 });
