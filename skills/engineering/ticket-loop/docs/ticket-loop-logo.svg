@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">/ticket-loop</title>
+  <desc id="desc">A photocopied newspaper front page. Masthead: slash ticket hyphen loop. Headline: Ticket worked until done, autonomously. Three columns describe the skill, beside a halftone picture of a loop.</desc>
+  <defs>
+    <style>@font-face { font-family: TLMast; font-weight: 900; src: url(data:font/woff2;base64,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) format("woff2"); }@font-face { font-family: TLHead; src: url(data:font/woff2;base64,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) format("woff2"); font-weight: 700; }</style>
+    <radialGradient id="dot">
+      <stop offset="0" stop-color="#111" stop-opacity="1"/>
+      <stop offset="1" stop-color="#111" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <circle cx="3" cy="3" r="4.2" fill="url(#dot)"/>
+    </pattern>
+    <filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="screen"><feComponentTransfer><feFuncA type="discrete" tableValues="0 0 1 1 1"/></feComponentTransfer></filter>
+    <mask id="pic">
+      <rect x="860" y="206" width="300" height="160" fill="#4a4a4a"/>
+      <g filter="url(#soft)">
+        <path d="M1062.6 305.2A56 56 0 0 1 964.1 318.1" fill="none" stroke="#fff" stroke-width="22"/>
+        <path d="M942.0 333.6L942.3 287.0L986.2 302.6Z" fill="#fff"/>
+        <path d="M957.4 266.8A56 56 0 0 1 1055.9 253.9" fill="none" stroke="#fff" stroke-width="22"/>
+        <path d="M1078.0 238.4L1077.7 285.0L1033.8 269.4Z" fill="#fff"/>
+      </g>
+    </mask>
+    <linearGradient id="lid" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity="0.85"/>
+      <stop offset="0.035" stop-color="#000" stop-opacity="0.25"/>
+      <stop offset="0.09" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.93" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.975" stop-color="#000" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+      <stop offset="0.08" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.9" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="specks" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="1" seed="11"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  44 0 0 0 -33.2"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="grit" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.9" numOctaves="2" seed="4"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -1.5"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="toner" x="-5%" y="-20%" width="110%" height="140%">
+      <feMorphology operator="dilate" radius="0.7" result="bleed"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="3" result="warp"/>
+      <feDisplacementMap in="bleed" in2="warp" scale="4" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="1" seed="9" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  30 0 0 0 -21.9" result="holes"/>
+      <feComposite in="rough" in2="holes" operator="out"/>
+    </filter>
+    <filter id="toner-fine" x="-5%" y="-40%" width="110%" height="180%">
+      <feMorphology operator="dilate" radius="0.25" result="bleed"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="5" result="warp"/>
+      <feDisplacementMap in="bleed" in2="warp" scale="1.6" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" seed="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  30 0 0 0 -23" result="holes"/>
+      <feComposite in="rough" in2="holes" operator="out"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="420" fill="#ecebe6"/>
+  <rect width="1200" height="420" fill="#000" filter="url(#grit)" opacity="0.12"/>
+
+  <g transform="rotate(-0.6 600 210) translate(5 2)" fill="#111">
+    <g filter="url(#toner-fine)">
+      <g font-family="Georgia, 'Times New Roman', Times, serif" font-size="13" font-weight="700" letter-spacing="2.5">
+        <text x="40" y="34">VOL. 0.18, NO. 1</text>
+        <text x="600" y="34" text-anchor="middle">ONE TICKET, FROM PLAN TO DONE</text>
+        <text x="1160" y="34" text-anchor="end">PRICE: ONE APPROVAL</text>
+      </g>
+      <path d="M40 44H1160" stroke="#111" stroke-width="1"/>
+    </g>
+    <g filter="url(#toner)">
+      <text x="600" y="124" font-family="TLMast, serif" font-weight="900" font-size="96" text-anchor="middle">/ticket-loop</text>
+      <path d="M40 146H1160M40 151H1160" stroke="#111" stroke-width="1.6"/>
+      <path d="M40 181H1160" stroke="#111" stroke-width="1.6"/>
+    </g>
+    <g filter="url(#toner-fine)" font-family="Georgia, 'Times New Roman', Times, serif" font-size="13" font-weight="700" letter-spacing="2.5">
+      <text x="40" y="171">LATE EDITION</text>
+      <text x="600" y="171" text-anchor="middle">PLAN · APPROVE · STEPS · DONE</text>
+      <text x="1160" y="171" text-anchor="end">WEATHER: STOP HOOK ARMED</text>
+    </g>
+    <g filter="url(#toner)">
+      <text x="40" y="236" font-family="TLHead, Georgia, 'Times New Roman', Times, serif" font-weight="700" font-size="44" textLength="790" lengthAdjust="spacingAndGlyphs">TICKET WORKED UNTIL DONE, AUTONOMOUSLY</text>
+      <g filter="url(#screen)"><rect x="860" y="206" width="300" height="160" fill="url(#dots)" mask="url(#pic)"/></g>
+      <rect x="860" y="206" width="300" height="160" fill="none" stroke="#111" stroke-width="1.6"/>
+    </g>
+    <g filter="url(#toner-fine)">
+      <text x="40" y="266" font-family="Georgia, 'Times New Roman', Times, serif" font-size="17" font-style="italic">Approve the plan once. The agent does the rest, step by step, and no one asks what is next.</text>
+      <text y="296" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12.5"><tspan x="40" dy="0">Approve the plan one time, and the</tspan><tspan x="40" dy="15">ticket is worked until it is done.</tspan><tspan x="40" dy="15">The agent reads the ticket and the</tspan><tspan x="40" dy="15">code, and it writes the plan before</tspan><tspan x="40" dy="15">it touches anything.</tspan></text><text y="296" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12.5"><tspan x="302" dy="0">Then it works every step on its own:</tspan><tspan x="302" dy="15">branch, fix, test, PR, review, and</tspan><tspan x="302" dy="15">QA. A checklist page shows each step</tspan><tspan x="302" dy="15">as it happens, live in the browser.</tspan></text><path d="M290 286V384" stroke="#111" stroke-width="1"/><text y="296" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12.5"><tspan x="564" dy="0">When it tries to stop early, a Stop</tspan><tspan x="564" dy="15">hook sends it back to the next step.</tspan><tspan x="564" dy="15">It never merges. It lets go when</tspan><tspan x="564" dy="15">something breaks, or when it is</tspan><tspan x="564" dy="15">stuck.</tspan></text><path d="M552 286V384" stroke="#111" stroke-width="1"/>
+      <text x="860" y="386" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12" font-style="italic">FIG. 1: The loop. It ends when the ticket is done.</text>
+      <path d="M40 400H1160" stroke="#111" stroke-width="1.6"/>
+    </g>
+  </g>
+
+  <rect width="1200" height="420" fill="#000" filter="url(#specks)"/>
+  <path d="M0 96H1200" stroke="#000" stroke-width="0.8" opacity="0.16"/>
+  <path d="M0 274H1200" stroke="#000" stroke-width="1.6" opacity="0.09"/>
+  <path d="M842 0V420" stroke="#000" stroke-width="1" opacity="0.08"/>
+  <rect width="1200" height="420" fill="url(#lid)"/>
+  <rect width="1200" height="420" fill="url(#fade)"/>
+</svg>
