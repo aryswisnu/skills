@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/engineering/ticket-loop/scripts/loop.py\" guard" }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/engineering/ticket-loop/scripts/loop.py\" prompt" }] }
+    ]
+  }
+}

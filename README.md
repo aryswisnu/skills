@@ -6,7 +6,7 @@
 Agent skills for real engineering work. Each one is small, composable, and built to hand a human
 evidence rather than a verdict: the agent drafts, you review, you approve with one click.
 
-Current release: **v0.17.0**. One skill shipped, more on the way.
+Current release: **v0.18.0**. Two skills shipped, more on the way.
 
 ## The skills
 
@@ -23,7 +23,9 @@ them. **Model-invoked** skills can also be picked up by the agent when a task fi
 
 **Model-invoked**
 
-None yet.
+| Skill | What it does | Read |
+| --- | --- | --- |
+| [`ticket-loop`](./skills/engineering/ticket-loop/SKILL.md) | Takes one ticket from plan to done: a plan gate, a live checklist page, a Stop hook that holds the session until the ticket is done, and before/after artifacts. Your team's steps live in private playbooks outside the repo. | [page](./docs/engineering/ticket-loop.md) |
 
 Full bucket list: [skills/engineering](./skills/engineering/README.md).
 
@@ -70,6 +72,7 @@ README. For `visualize-pr` that is one command, `--setup`, which the agent runs 
 ```text
 .claude-plugin/       Plugin and marketplace manifests
 docs/<bucket>/        One human-facing page per promoted skill
+hooks/                Plugin hooks (ticket-loop's Stop and UserPromptSubmit hooks)
 skills/<bucket>/      One folder per skill: SKILL.md, agents/openai.yaml, and its own README,
                       code, tests, and docs
 scripts/              Maintainer helpers (list-skills, link-skills)
@@ -85,7 +88,8 @@ scripts/link-skills.sh            # symlink promoted skills into ~/.claude/skill
 claude plugin validate .
 ```
 
-Each skill's tests run from its own folder; `visualize-pr` is `npm test` after `--setup`. CI runs
+Each skill's tests run from its own folder; `visualize-pr` is `npm test` after `--setup`, and
+`ticket-loop` is `python3 -m unittest discover -s test` (stdlib only). CI runs
 every suite on Ubuntu and macOS for every push and PR. See [CHANGELOG.md](./CHANGELOG.md) for
 what changed in each release.
 

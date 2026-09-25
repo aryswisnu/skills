@@ -10,4 +10,6 @@ Reachable only when you type them (Claude Code: `disable-model-invocation: true`
 
 ## Model-invoked
 
-None yet.
+Picked up by the agent when a task fits.
+
+- **[ticket-loop](./ticket-loop/SKILL.md)**: Take one ticket from plan to done: a plan gate, a live checklist page, a Stop hook that holds the session until the ticket is done, and before/after artifacts. Team-specific steps live in private playbooks outside the repo.
