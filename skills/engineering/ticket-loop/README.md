@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/ticket-loop-logo.svg" alt="Ticket Loop" width="900">
+  <img src="docs/ticket-loop-logo.svg" alt="/ticket-loop" width="900">
 </p>
 
 <h1 align="center">Ticket Loop</h1>
