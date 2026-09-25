@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/ticket-loop-logo.svg" alt="Ticket Loop" width="900">
+</p>
+
 <h1 align="center">Ticket Loop</h1>
 
 <p align="center"><code>ticket-loop</code> takes one ticket from plan to done, keeps its state in a live checklist page, and will not let the agent stop halfway.</p>
