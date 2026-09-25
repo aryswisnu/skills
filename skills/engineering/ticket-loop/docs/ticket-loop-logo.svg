@@ -1,70 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
   <title id="title">Ticket Loop</title>
-  <desc id="desc">A checklist with done, current, and open steps inside a loop arrow, beside the text slash ticket hyphen loop</desc>
+  <desc id="desc">Black spiked paint across the text slash ticket hyphen loop, on grey paper, above a plain checklist: plan, approve, and steps ticked, done open</desc>
   <defs>
-    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#111827"/>
-      <stop offset="1" stop-color="#080c17"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#fbbf24"/>
-      <stop offset="1" stop-color="#34d399"/>
-    </linearGradient>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.10"/></feComponentTransfer>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="rough" x="-5%" y="-30%" width="110%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="5"/>
     </filter>
   </defs>
 
-  <rect x="2" y="2" width="1196" height="316" rx="28" fill="url(#panel)" stroke="#263244" stroke-width="4"/>
-  <path d="M36 276H1164" stroke="url(#accent)" stroke-width="3" opacity="0.75"/>
+  <rect width="1200" height="320" fill="#e6e6e3"/>
+  <rect width="1200" height="320" fill="#000" filter="url(#grain)"/>
 
-  <!-- Checklist mark: done, done, current, open -->
-  <g transform="translate(48 54)">
-    <rect width="250" height="196" rx="18" fill="#0f172a" stroke="#334155" stroke-width="3"/>
-    <rect x="14" y="16" width="96" height="24" rx="7" fill="#1e293b"/>
-    <text x="62" y="33" fill="#94a3b8" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700" text-anchor="middle">ABC-12</text>
-    <rect x="140" y="16" width="96" height="24" rx="7" fill="#052e16"/>
-    <text x="188" y="33" fill="#86efac" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700" text-anchor="middle">2 / 4</text>
-
-    <circle cx="30" cy="68" r="9" fill="#065f46" stroke="#34d399" stroke-width="2"/>
-    <path d="M25 68L29 72L35 64" fill="none" stroke="#6ee7b7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="50" y="64" width="110" height="8" rx="4" fill="#64748b"/>
-
-    <circle cx="30" cy="100" r="9" fill="#065f46" stroke="#34d399" stroke-width="2"/>
-    <path d="M25 100L29 104L35 96" fill="none" stroke="#6ee7b7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="50" y="96" width="86" height="8" rx="4" fill="#475569"/>
-
-    <circle cx="30" cy="132" r="9" fill="#78350f" stroke="#fbbf24" stroke-width="2" filter="url(#glow)">
-      <animate attributeName="r" values="8;10;8" dur="1.6s" repeatCount="indefinite"/>
-    </circle>
-    <rect x="50" y="125" width="124" height="14" rx="5" fill="#b45309" filter="url(#glow)"/>
-
-    <circle cx="30" cy="164" r="9" fill="none" stroke="#475569" stroke-width="2"/>
-    <rect x="50" y="160" width="70" height="8" rx="4" fill="#334155"/>
-
-    <circle cx="214" cy="160" r="24" fill="none" stroke="#fbbf24" stroke-width="5" stroke-dasharray="120 31" stroke-linecap="round" transform="rotate(-60 214 160)"/>
-    <path d="M185.3 143.5L197.3 142.7L196 154.6" fill="none" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" letter-spacing="3" fill="#0a0a0a">
+    <text x="36" y="40">FORM TL-01</text>
+    <text x="1164" y="40" text-anchor="end">STATUS: IN PROGRESS</text>
+    <path d="M36 52H1164" stroke="#0a0a0a" stroke-width="1.5"/>
   </g>
 
-  <!-- Wordmark -->
-  <text x="350" y="136" fill="#f8fafc" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="66" font-weight="800" letter-spacing="-3">/ticket-loop</text>
-  <text x="354" y="180" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="22" font-weight="500" letter-spacing="1.5">ONE TICKET, PLAN TO DONE</text>
+  <path d="M160 136.0 Q190 100 230 96 L280 94 Q288.4 75.3 268.4 60 Q295.6 78.7 304 94 L390 94 Q399.8 58.8 375.8 30 Q408.2 65.2 418 94 L509 94 Q516.7 72.0 512.8 54 Q523.3 76.0 531 94 L669 94 Q676.7 72.0 687.2 54 Q683.3 76.0 691 94 L782 94 Q791.8 58.8 824.2 30 Q800.2 65.2 810 94 L896 94 Q904.4 75.3 931.6 60 Q911.6 78.7 920 94 L970 96 Q1010 100 1040 136.0 Q1010 174 970 178 L942 178 Q933.0 196.0 943.4 208 Q927.0 190.0 918 178 L825 178 Q815.2 204.4 824.6 222 Q808.8 195.6 799 178 L739 178 Q732.2 193.6 734.6 204 Q727.8 188.4 721 178 L650 178 Q642.5 202.0 642.2 218 Q637.5 194.0 630 178 L570 178 Q562.5 202.0 557.8 218 Q557.5 194.0 550 178 L479 178 Q472.2 193.6 465.4 204 Q467.8 188.4 461 178 L401 178 Q391.2 204.4 375.4 222 Q384.8 195.6 375 178 L282 178 Q273.0 196.0 256.6 208 Q267.0 190.0 258 178 L230 178 Q190 174 160 136.0 Z" fill="#0a0a0a" filter="url(#rough)"/>
+  <text x="600" y="156" fill="#f4f4f1" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="68" font-weight="800" letter-spacing="-2" text-anchor="middle">/ticket-loop</text>
 
-  <g transform="translate(354 210)" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="700">
-    <rect width="72" height="32" rx="9" fill="#1e293b" stroke="#475569"/>
-    <text x="36" y="21" fill="#cbd5e1" text-anchor="middle">PLAN</text>
-    <path d="M84 16H112" stroke="#64748b" stroke-width="2"/>
-    <path d="M106 10L114 16L106 22" fill="none" stroke="#64748b" stroke-width="2"/>
-    <rect x="126" width="104" height="32" rx="9" fill="#422006" stroke="#b45309"/>
-    <text x="178" y="21" fill="#fcd34d" text-anchor="middle">APPROVE</text>
-    <path d="M242 16H270" stroke="#64748b" stroke-width="2"/>
-    <path d="M264 10L272 16L264 22" fill="none" stroke="#64748b" stroke-width="2"/>
-    <rect x="284" width="150" height="32" rx="9" fill="#172554" stroke="#1d4ed8"/>
-    <text x="359" y="21" fill="#93c5fd" text-anchor="middle">STEPS + STOP HOOK</text>
-    <path d="M446 16H474" stroke="#64748b" stroke-width="2"/>
-    <path d="M468 10L476 16L468 22" fill="none" stroke="#64748b" stroke-width="2"/>
-    <rect x="488" width="72" height="32" rx="9" fill="#052e16" stroke="#15803d"/>
-    <text x="524" y="21" fill="#86efac" text-anchor="middle">DONE</text>
-  </g>
+  <text x="600" y="250" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" letter-spacing="4" text-anchor="middle">ONE TICKET. PLAN TO DONE. IT DOES NOT STOP HALFWAY.</text>
+  <rect x="350" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M354 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="380" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">PLAN</text><rect x="458" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M462 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="488" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">APPROVE</text><rect x="599" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M603 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="629" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">STEPS</text><rect x="718" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><text x="748" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">DONE</text>
+  <path d="M36 300H1164" stroke="#0a0a0a" stroke-width="1.5"/>
 </svg>
