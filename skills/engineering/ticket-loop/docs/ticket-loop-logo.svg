@@ -1,32 +1,75 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
   <title id="title">Ticket Loop</title>
-  <desc id="desc">Black spiked paint across the text slash ticket hyphen loop, on grey paper, above a plain checklist: plan, approve, and steps ticked, done open</desc>
+  <desc id="desc">A photocopied form: black spiked paint across the text slash ticket hyphen loop, above a plain checklist with plan, approve, and steps ticked and done open</desc>
   <defs>
-    <filter id="grain" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
-      <feColorMatrix in="n" type="saturate" values="0"/>
-      <feComponentTransfer><feFuncA type="linear" slope="0.10"/></feComponentTransfer>
+    <linearGradient id="lid" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity="0.85"/>
+      <stop offset="0.035" stop-color="#000" stop-opacity="0.25"/>
+      <stop offset="0.09" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.93" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.975" stop-color="#000" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+      <stop offset="0.08" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.9" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="specks" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="1" seed="11"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  44 0 0 0 -33.2"/>
       <feComposite in2="SourceGraphic" operator="in"/>
     </filter>
-    <filter id="rough" x="-5%" y="-30%" width="110%" height="160%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3" result="t"/>
-      <feDisplacementMap in="SourceGraphic" in2="t" scale="5"/>
+    <filter id="grit" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.9" numOctaves="2" seed="4"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -1.5"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="toner" x="-5%" y="-20%" width="110%" height="140%">
+      <feMorphology operator="dilate" radius="0.7" result="bleed"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="3" result="warp"/>
+      <feDisplacementMap in="bleed" in2="warp" scale="4" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="1" seed="9" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  30 0 0 0 -21.9" result="holes"/>
+      <feComposite in="rough" in2="holes" operator="out"/>
+    </filter>
+    <filter id="toner-fine" x="-5%" y="-40%" width="110%" height="180%">
+      <feMorphology operator="dilate" radius="0.25" result="bleed"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="5" result="warp"/>
+      <feDisplacementMap in="bleed" in2="warp" scale="1.6" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" seed="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  30 0 0 0 -23" result="holes"/>
+      <feComposite in="rough" in2="holes" operator="out"/>
     </filter>
   </defs>
 
-  <rect width="1200" height="320" fill="#e6e6e3"/>
-  <rect width="1200" height="320" fill="#000" filter="url(#grain)"/>
+  <rect width="1200" height="320" fill="#ecebe6"/>
+  <rect width="1200" height="320" fill="#000" filter="url(#grit)" opacity="0.12"/>
 
-  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" letter-spacing="3" fill="#0a0a0a">
-    <text x="36" y="40">FORM TL-01</text>
-    <text x="1164" y="40" text-anchor="end">STATUS: IN PROGRESS</text>
-    <path d="M36 52H1164" stroke="#0a0a0a" stroke-width="1.5"/>
+  <g transform="rotate(-0.7 600 160) translate(6 3)" fill="#111">
+    <g filter="url(#toner-fine)">
+    <g font-family="'Courier New', Courier, monospace" font-size="15" font-weight="700" letter-spacing="3">
+      <text x="40" y="40">FORM TL-01</text>
+      <text x="1160" y="40" text-anchor="end">STATUS: IN PROGRESS</text>
+    </g>
+    </g>
+    <g filter="url(#toner)">
+    <path d="M40 52H1160" stroke="#111" stroke-width="1.8"/>
+    <path d="M160 136.0 Q190 100 230 96 L280 94 Q288.4 75.3 268.4 60 Q295.6 78.7 304 94 L390 94 Q399.8 58.8 375.8 30 Q408.2 65.2 418 94 L509 94 Q516.7 72.0 512.8 54 Q523.3 76.0 531 94 L669 94 Q676.7 72.0 687.2 54 Q683.3 76.0 691 94 L782 94 Q791.8 58.8 824.2 30 Q800.2 65.2 810 94 L896 94 Q904.4 75.3 931.6 60 Q911.6 78.7 920 94 L970 96 Q1010 100 1040 136.0 Q1010 174 970 178 L942 178 Q933.0 196.0 943.4 208 Q927.0 190.0 918 178 L825 178 Q815.2 204.4 824.6 222 Q808.8 195.6 799 178 L739 178 Q732.2 193.6 734.6 204 Q727.8 188.4 721 178 L650 178 Q642.5 202.0 642.2 218 Q637.5 194.0 630 178 L570 178 Q562.5 202.0 557.8 218 Q557.5 194.0 550 178 L479 178 Q472.2 193.6 465.4 204 Q467.8 188.4 461 178 L401 178 Q391.2 204.4 375.4 222 Q384.8 195.6 375 178 L282 178 Q273.0 196.0 256.6 208 Q267.0 190.0 258 178 L230 178 Q190 174 160 136.0 Z"/>
+    <text x="600" y="156" fill="#ecebe6" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="68" font-weight="800" letter-spacing="-2" text-anchor="middle">/ticket-loop</text>
+    </g>
+    <g filter="url(#toner-fine)">
+    <text x="600" y="250" font-family="'Courier New', Courier, monospace" font-size="17" font-weight="700" letter-spacing="3" text-anchor="middle">ONE TICKET. PLAN TO DONE. IT DOES NOT STOP HALFWAY.</text>
+    <rect x="350" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M354 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="380" y="282" fill="#0a0a0a" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="700" letter-spacing="2">PLAN</text><rect x="458" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M462 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="488" y="282" fill="#0a0a0a" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="700" letter-spacing="2">APPROVE</text><rect x="599" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M603 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="629" y="282" fill="#0a0a0a" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="700" letter-spacing="2">STEPS</text><rect x="718" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><text x="748" y="282" fill="#0a0a0a" font-family="'Courier New', Courier, monospace" font-size="16" font-weight="700" letter-spacing="2">DONE</text>
+    <path d="M40 300H1160" stroke="#111" stroke-width="1.8"/>
+    </g>
   </g>
 
-  <path d="M160 136.0 Q190 100 230 96 L280 94 Q288.4 75.3 268.4 60 Q295.6 78.7 304 94 L390 94 Q399.8 58.8 375.8 30 Q408.2 65.2 418 94 L509 94 Q516.7 72.0 512.8 54 Q523.3 76.0 531 94 L669 94 Q676.7 72.0 687.2 54 Q683.3 76.0 691 94 L782 94 Q791.8 58.8 824.2 30 Q800.2 65.2 810 94 L896 94 Q904.4 75.3 931.6 60 Q911.6 78.7 920 94 L970 96 Q1010 100 1040 136.0 Q1010 174 970 178 L942 178 Q933.0 196.0 943.4 208 Q927.0 190.0 918 178 L825 178 Q815.2 204.4 824.6 222 Q808.8 195.6 799 178 L739 178 Q732.2 193.6 734.6 204 Q727.8 188.4 721 178 L650 178 Q642.5 202.0 642.2 218 Q637.5 194.0 630 178 L570 178 Q562.5 202.0 557.8 218 Q557.5 194.0 550 178 L479 178 Q472.2 193.6 465.4 204 Q467.8 188.4 461 178 L401 178 Q391.2 204.4 375.4 222 Q384.8 195.6 375 178 L282 178 Q273.0 196.0 256.6 208 Q267.0 190.0 258 178 L230 178 Q190 174 160 136.0 Z" fill="#0a0a0a" filter="url(#rough)"/>
-  <text x="600" y="156" fill="#f4f4f1" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="68" font-weight="800" letter-spacing="-2" text-anchor="middle">/ticket-loop</text>
-
-  <text x="600" y="250" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" letter-spacing="4" text-anchor="middle">ONE TICKET. PLAN TO DONE. IT DOES NOT STOP HALFWAY.</text>
-  <rect x="350" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M354 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="380" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">PLAN</text><rect x="458" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M462 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="488" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">APPROVE</text><rect x="599" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><path d="M603 276l5 6l10 -13" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="square"/><text x="629" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">STEPS</text><rect x="718" y="266" width="20" height="20" fill="none" stroke="#0a0a0a" stroke-width="2.5"/><text x="748" y="282" fill="#0a0a0a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" font-weight="700" letter-spacing="2">DONE</text>
-  <path d="M36 300H1164" stroke="#0a0a0a" stroke-width="1.5"/>
+  <rect width="1200" height="320" fill="#000" filter="url(#specks)"/>
+  <path d="M0 118H1200" stroke="#000" stroke-width="0.8" opacity="0.18"/>
+  <path d="M0 207H1200" stroke="#000" stroke-width="1.6" opacity="0.1"/>
+  <path d="M862 0V320" stroke="#000" stroke-width="1" opacity="0.08"/>
+  <rect width="1200" height="320" fill="url(#lid)"/>
+  <rect width="1200" height="320" fill="url(#fade)"/>
 </svg>
