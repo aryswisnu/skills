@@ -1,5 +1,14 @@
 # aryswisnu-skills
 
+## 0.18.0
+
+New skill: `ticket-loop`, model-invoked.
+
+- One ticket from plan to done: a plan gate, a live `tasks.html` checklist, and before/after artifacts.
+- A Stop hook holds only the session that armed the loop, fails open when the tracker or the config is unreadable, and lets go after three holds with no progress. The plugin now ships `hooks/hooks.json`. The hooks need `python3`; without it they exit quietly, so `visualize-pr`-only users see no change.
+- Everything team-specific (tracker URL, statuses, steps, playbooks) lives in a private config, never in the repo.
+- Python stdlib only. CI runs its tests on Ubuntu and macOS, and a gitleaks secret scan on every push.
+
 ## 0.17.1
 
 - `--update-description` keeps the review block on top on re-runs. A block that an earlier version left at the bottom is lifted to the top and the original text folded once. A block already on top is replaced in place.

@@ -1,7 +1,7 @@
 {
   "name": "aryswisnu-skills",
-  "version": "0.17.1",
-  "description": "Arys's agent skills for real engineering. Starts with visualize-pr: before/after evidence for a pull request.",
+  "version": "0.18.0",
+  "description": "Arys's agent skills for real engineering: visualize-pr (before/after evidence for a pull request) and ticket-loop (one ticket from plan to done, with a checklist page and a Stop-hook guard).",
   "author": {
     "name": "Arys",
     "url": "https://github.com/aryswisnu"
@@ -13,9 +13,12 @@
     "skills",
     "code-review",
     "visual-testing",
-    "playwright"
+    "playwright",
+    "workflow",
+    "hooks"
   ],
   "skills": [
-    "./skills/engineering/visualize-pr"
+    "./skills/engineering/visualize-pr",
+    "./skills/engineering/ticket-loop"
   ]
 }
