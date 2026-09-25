@@ -76,6 +76,38 @@ class LoopTest(unittest.TestCase):
         self.assertEqual(self.hook("guard"), {"decision": "block", "reason": "write the lesson for T-1"})
         self.assertTrue(os.path.exists(self.sentinel))
 
+    def test_done_gate_output_blocks_even_on_nonzero_exit(self):
+        self.set_config(doneGateCommand="echo lesson owed for {key}; exit 1")
+        self.start()
+        self.set_status("Done")
+        self.assertEqual(self.hook("guard"), {"decision": "block", "reason": "lesson owed for T-1"})
+        self.assertTrue(os.path.exists(self.sentinel))
+
+    def test_block_reason_names_the_done_statuses(self):
+        self.start()
+        self.assertIn("done statuses: Done", self.hook("guard")["reason"])
+
+    def test_all_ticked_but_status_not_done(self):
+        self.start()
+        for step in ("0", "1", "2"):
+            self.s.run("checklist.py", "tick", "T-1", step)
+        self.assertIn("is not really done", self.hook("guard")["reason"])
+
+    def test_status_and_done(self):
+        self.start()
+        self.assertEqual(self.s.run("loop.py", "status").stdout.splitlines(), ["T-1: In Progress", "owner session: S1"])
+        self.assertEqual(self.s.run("loop.py", "done").stdout.strip(), "ticket loop cleared")
+        self.assertFalse(os.path.exists(self.sentinel))
+        self.assertEqual(self.s.run("loop.py", "status").stdout.strip(), "no active ticket")
+
+    def test_start_keeps_a_broken_page(self):
+        self.s.run("checklist.py", "init", "T-1")
+        page = self.s.page("T-1")
+        write(page, read(page).replace('"key"', '"key" oops', 1))
+        broken = read(page)
+        self.assertNotEqual(self.start().returncode, 0)
+        self.assertEqual(read(page), broken)
+
     def test_unreadable_status_fails_open(self):
         self.start()
         os.remove(self.status)

@@ -100,6 +100,30 @@ class ChecklistTest(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("no checklist for T-1", r.stderr)
 
+    def test_init_refuses_to_overwrite_a_broken_page(self):
+        self.cli("init", "T-1")
+        self.cli("tick", "T-1", "0", "keep me")
+        p = self.s.page("T-1")
+        write(p, read(p).replace('"key"', '"key" oops', 1))
+        broken = read(p)
+        r = self.cli("init", "T-1")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("does not parse", r.stderr)
+        self.assertEqual(read(p), broken)
+
+    def test_reopen_clears_state_note_and_time(self):
+        self.cli("init", "T-1")
+        self.cli("tick", "T-1", "0", "ok")
+        self.cli("reopen", "T-1", "0")
+        item = self.state()["items"][0]
+        self.assertEqual((item["state"], item["note"], item["at"]), ("open", "", ""))
+
+    def test_explainer_link_appears_when_index_exists(self):
+        self.cli("init", "T-1")
+        write(os.path.join(os.path.dirname(self.s.page("T-1")), "index.html"), "<p>explainer</p>")
+        self.cli("tick", "T-1", "0")
+        self.assertEqual(self.state()["links"]["explainer"], "https://example.test/T-1/index.html")
+
     def test_example_config_runs(self):
         cfg = json.loads(read(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.example.json")))
         cfg["artifacts"]["dir"] = os.path.join(self.s.dir, "pages", "{key}")

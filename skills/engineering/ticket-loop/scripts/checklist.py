@@ -412,6 +412,8 @@ def open_line(i):
 
 def init(key):
     if load(key) is None:
+        if os.path.exists(path(key)):
+            sys.exit(f"{path(key)} exists but its state block does not parse; fix or move it, then init again")
         save({"key": key, "links": {}, "ask": None, "items": [
             {"step": s["id"], "title": s["title"].replace("<KEY>", key), "check": s["check"].replace("<KEY>", key),
              "state": "open", "note": "", "at": ""} for s in config()["steps"]]})

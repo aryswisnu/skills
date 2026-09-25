@@ -48,17 +48,23 @@ def clear(*paths):
             pass
 
 
-def run(cmd, key, cwd=None):
-    """stdout of a config command, or "" when unset, failing, or slow (fail open)."""
+COMMAND_TIMEOUT = 12  # two commands must fit inside a 30 s hook timeout
+
+
+def run(cmd, key, cwd=None, any_exit=False):
+    """stdout of a config command, or "" when unset, slow, or (unless any_exit) failing: fail open.
+
+    any_exit keeps stdout from a non-zero exit: a gate may print what is owed and exit 1.
+    """
     if not cmd:
         return ""
     try:
         # replace, not format: shell commands often hold braces, as in awk '{print $1}'.
         r = subprocess.run(cmd.replace("{key}", shlex.quote(key)), shell=True, capture_output=True, text=True,
-                           timeout=60, cwd=cwd if cwd and os.path.isdir(cwd) else None)
+                           timeout=COMMAND_TIMEOUT, cwd=cwd if cwd and os.path.isdir(cwd) else None)
     except subprocess.TimeoutExpired:
         return ""
-    return r.stdout.strip() if r.returncode == 0 else ""
+    return r.stdout.strip() if r.returncode == 0 or any_exit else ""
 
 
 def hook_input():
@@ -103,7 +109,7 @@ def guard():
             emit({"systemMessage": f"Could not read the {key} status; the loop stays armed. Run: loop.py status"})
             return
         if status in cfg.get("doneStatuses", []):
-            owed = run(cfg.get("doneGateCommand", ""), key, cwd)
+            owed = run(cfg.get("doneGateCommand", ""), key, cwd, any_exit=True)
             if owed:
                 emit({"decision": "block", "reason": owed})
                 return
@@ -142,14 +148,17 @@ def guard():
         f.write(f"{count}\t{digest}")
 
     if state is None:
-        todo = f"No checklist at {page}. Create it with: checklist.py init {key}"
+        todo = (f"No checklist at {page}, or its state block does not parse. "
+                f"Fix the page, or create it with: checklist.py init {key}")
     elif open_items:
         todo = f"Open items in {page}:\n" + "\n".join("- " + checklist.open_line(i) for i in open_items)
     else:
         todo = (f"Every item in {page} is ticked, but the status is '{status}'. "
                 f"Find the step that is not really done, and reopen it with: checklist.py reopen {key} <STEP>")
     emit({"decision": "block", "reason": (
-        f"The {key} ticket loop is unfinished." + (f" Status: '{status}'." if status else "") + f"\n{todo}\n"
+        f"The {key} ticket loop is unfinished."
+        + (f" Status: '{status}', done statuses: {', '.join(cfg.get('doneStatuses', []))}." if status else "")
+        + f"\n{todo}\n"
         "Continue with the first open item now. If one is blocked, say what blocks it, "
         f"and record it with: checklist.py block {key} <STEP> <reason>.\n"
         "Follow the ticket-loop skill. Arming a watcher is not finishing a step. "
