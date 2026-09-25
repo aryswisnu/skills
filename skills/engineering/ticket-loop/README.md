@@ -54,6 +54,10 @@ your approval. Open `tasks.html` in a browser and leave it open. It follows the 
 
 ## How the loop runs
 
+![The ticket loop: plan, approval, steps, and the Stop hook](docs/ticket-loop-flow.svg)
+
+The same flow as a timeline:
+
 ```text
   you                     agent                                   hooks
    |   "work on ABC-12"     |                                        |
@@ -209,6 +213,8 @@ loop.py prompt          # the UserPromptSubmit hook
 
 What the guard does when the agent tries to stop:
 
+![How the Stop guard decides to allow, clear, or block](docs/ticket-loop-stop-guard.svg)
+
 | Situation | Result |
 | --- | --- |
 | No loop is armed | The session stops. |
@@ -344,3 +350,6 @@ python3 -m unittest discover -s test
 The tests run the real scripts against a temporary config, artifacts folder, and state folder. They
 cover the checklist commands, the page escaping, the key check, and every row of the guard table. CI
 runs them on Ubuntu and macOS with Python 3.10.
+
+The charts are Excalidraw drawings. To change one, open its `.excalidraw` file in `docs/` at
+https://excalidraw.com, edit it, and export it over the `.svg` file with the same name. Commit both files.
