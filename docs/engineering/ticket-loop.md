@@ -40,7 +40,7 @@ Set `artifacts.url` and serve the folder. The pages can hold internal details, s
 
 ## It's working if
 
-- `loop.py status` prints the ticket key and the owning session after the plan stage.
+- `loop.py status` prints the ticket key and the owning session after the start stage (after you approve the plan).
 - Every answer during the loop ends with the checklist.
 - A stop with open items makes the agent continue with the first open item.
 - The checklist page changes within 20 seconds of a `tick`, without a reload.

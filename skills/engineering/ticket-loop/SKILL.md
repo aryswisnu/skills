@@ -45,9 +45,9 @@ When the step has a `playbook`, read that file before the step: it holds the tea
 
 - `plan`: Read the ticket and the code it names. Write the root cause, files, tests, risks, and rollout.
   Stress-test the plan with questions to the user. Write it to `<artifacts.dir>/plan.html` (see Artifacts).
-  Run `loop.py start <KEY>` beside it, so the checklist shows from the first answer. Send the link and wait for approval.
-  Do not touch the tracker, git, or files before approval.
-- `start`: Claim the ticket and move it to in progress with the user's tracker tools.
+  Run `checklist.py init <KEY>` beside it, so the checklist shows from the first answer. Send the link and wait for approval.
+  Do not touch the tracker, git, or files before approval. Do not arm the loop yet: the Stop hook would hold the approval wait.
+- `start`: Claim the ticket and move it to in progress with the user's tracker tools. Then run `loop.py start <KEY>` to arm the Stop hook.
 - `worktree`: Branch off the latest default branch, in a worktree named after the key. Never work in a live checkout.
 - `run`: Run the change and see it work in the real app before you continue. A green health check proves a server answers, not that this code serves.
 - `fix`: One agent logs issues, a second fixes them, a third audits the fixes and runs the build, a fourth repairs.

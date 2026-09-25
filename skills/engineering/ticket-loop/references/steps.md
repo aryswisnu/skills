@@ -10,7 +10,7 @@ Use this when a step has no playbook. A playbook replaces this section for its s
 
 ## start
 - Assign the ticket to the user if it has no assignee.
-- Move it to in progress. Then run `loop.py start <KEY>` if the plan stage did not.
+- Move it to in progress. Then run `loop.py start <KEY>`. Arm it only after the plan is approved.
 
 ## worktree
 - `git worktree list` first. Remove leftovers of finished tickets before you add a new one.
