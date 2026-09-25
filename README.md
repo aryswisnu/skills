@@ -25,7 +25,7 @@ them. **Model-invoked** skills can also be picked up by the agent when a task fi
 
 | Skill | What it does | Read |
 | --- | --- | --- |
-| [`ticket-loop`](./skills/engineering/ticket-loop/SKILL.md) | Takes one ticket from plan to done: a plan gate, a live checklist page, a Stop hook that holds the session until the ticket is done, and before/after artifacts. Your team's steps live in private playbooks outside the repo. | [page](./docs/engineering/ticket-loop.md) |
+| [`ticket-loop`](./skills/engineering/ticket-loop/SKILL.md) | Takes one ticket from plan to done: a plan gate, a live checklist page, a Stop hook that holds the session until the ticket is done, and before/after artifacts. Your team's steps live in private playbooks outside the repo. | [README](./skills/engineering/ticket-loop/README.md), [page](./docs/engineering/ticket-loop.md) |
 
 Full bucket list: [skills/engineering](./skills/engineering/README.md).
 
