@@ -10,7 +10,7 @@
 A Stop hook enforces what a document cannot: the loop ends at the done status,
 not at "PR raised" or "watcher armed". Every failure path lets the session stop.
 """
-import hashlib, json, os, subprocess, sys
+import hashlib, json, os, shlex, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import checklist
@@ -53,7 +53,8 @@ def run(cmd, key, cwd=None):
     if not cmd:
         return ""
     try:
-        r = subprocess.run(cmd.format(key=key), shell=True, capture_output=True, text=True,
+        # replace, not format: shell commands often hold braces, as in awk '{print $1}'.
+        r = subprocess.run(cmd.replace("{key}", shlex.quote(key)), shell=True, capture_output=True, text=True,
                            timeout=60, cwd=cwd if cwd and os.path.isdir(cwd) else None)
     except subprocess.TimeoutExpired:
         return ""
@@ -195,10 +196,14 @@ def main(argv):
         cfg = config_or_none() or {}
         print(f"{key}: {run(cfg.get('statusCommand', ''), key) or '(no status)'}")
         print(f"owner session: {owner or '(none recorded)'}")
-    elif cmd == "guard":
-        guard()
-    elif cmd == "prompt":
-        prompt()
+    elif cmd in ("guard", "prompt"):
+        # A hook must never fail with a traceback: report and let the session go on.
+        try:
+            guard() if cmd == "guard" else prompt()
+        except Exception as e:
+            if cmd == "guard":
+                emit({"systemMessage": f"ticket-loop guard error ({e.__class__.__name__}: {e}); not blocking. "
+                                       "Check the config, or run: loop.py done"})
     else:
         sys.exit(__doc__)
 

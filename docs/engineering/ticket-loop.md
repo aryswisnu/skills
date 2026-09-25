@@ -29,11 +29,14 @@ Into `~/.config/ticket-loop/config.json` (or `$TICKET_LOOP_CONFIG`) and any play
 **How do I add my team's own steps?**
 List them in `steps`. Give each a `stage` (`plan`, `start`, `worktree`, `run`, `fix`, `commit`, `pr`, `review`, `verify`, `artifacts`, `teardown`) and, when the default detail is not enough, a `playbook` path. The agent reads the playbook before that step, and it wins on conflict. A top-level `rules` file holds rules for the whole loop.
 
+**How does the guard know the ticket is done?**
+`statusCommand` is a shell command that prints the ticket status. `{key}` in it is replaced with the shell-quoted key, and the output must equal one entry of `doneStatuses`. Example: `"statusCommand": "gh issue view {key} --json state -q .state"` with `"doneStatuses": ["CLOSED"]`. With no `statusCommand`, the loop ends when every checklist item is done. `doneGateCommand` runs once the status is done: any output blocks the stop one time and is shown to the agent (for example, "write the lesson first"). No output lets the loop end.
+
 **What if the tracker is down?**
 The guard cannot read the status, so it lets the session stop and keeps the loop armed. The next stop checks again.
 
 **Does it need the plugin?**
-The plugin installs the two hooks. With skills.sh or a symlink, add them yourself: `loop.py guard` as a `Stop` hook and `loop.py prompt` as a `UserPromptSubmit` hook. Use one route only, or each hook runs twice.
+The plugin installs the two hooks. They need `python3` on the PATH. Without it, they exit quietly and do nothing. With skills.sh or a symlink, add them yourself: `loop.py guard` as a `Stop` hook and `loop.py prompt` as a `UserPromptSubmit` hook. Use one route only, or each hook runs twice.
 
 **Can I publish the pages?**
 Set `artifacts.url` and serve the folder. The pages can hold internal details, so put access control in front of the server. With no URL, the pages stay local files.

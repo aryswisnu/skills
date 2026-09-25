@@ -5,7 +5,7 @@
 New skill: `ticket-loop`, model-invoked.
 
 - One ticket from plan to done: a plan gate, a live `tasks.html` checklist, and before/after artifacts.
-- A Stop hook holds only the session that armed the loop, fails open when the tracker or the config is unreadable, and lets go after three holds with no progress. The plugin now ships `hooks/hooks.json`.
+- A Stop hook holds only the session that armed the loop, fails open when the tracker or the config is unreadable, and lets go after three holds with no progress. The plugin now ships `hooks/hooks.json`. The hooks need `python3`; without it they exit quietly, so `visualize-pr`-only users see no change.
 - Everything team-specific (tracker URL, statuses, steps, playbooks) lives in a private config, never in the repo.
 - Python stdlib only. CI runs its tests on Ubuntu and macOS, and a gitleaks secret scan on every push.
 

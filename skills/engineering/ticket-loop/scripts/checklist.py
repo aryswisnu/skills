@@ -9,10 +9,10 @@ HTML by hand: a script cannot drop a closing tag or tick the wrong box.
   checklist.py init   <KEY>                 # create if absent, print path
   checklist.py tick   <KEY> <STEP> [note]   # mark done
   checklist.py block  <KEY> <STEP> <note>   # mark blocked, with the reason
-  checklist.py reopen <KEY> <STEP>...       # mark open again (QA FAIL: 3b..12)
+  checklist.py reopen <KEY> <STEP>...       # mark open again (failed verification: the fix step on)
   checklist.py link   <KEY> <pr|sandbox|explainer> <url>   # header link chip
   checklist.py ask    <KEY> <question>      # question card on the page
-  checklist.py ask    <KEY> --clear         # remove it once Arys answers
+  checklist.py ask    <KEY> --clear         # remove it once the user answers
   checklist.py list   <KEY>                 # markdown task list, for every answer
   checklist.py open   <KEY>                 # open + blocked items, one per line
   checklist.py path   <KEY>

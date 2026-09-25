@@ -1,5 +1,5 @@
-import json, os, unittest
-from helpers import Sandbox, read, write
+import json, os, subprocess, unittest
+from helpers import HERE, Sandbox, read, write
 
 
 class LoopTest(unittest.TestCase):
@@ -93,6 +93,27 @@ class LoopTest(unittest.TestCase):
         self.start()
         write(self.s.config, "{not json")
         self.assertIn("config", self.hook("guard")["systemMessage"])
+
+    def test_status_command_with_braces(self):
+        self.set_config(statusCommand="awk '{print $1}' " + self.status)
+        self.start()
+        self.set_status("Done")
+        self.assertIn("Ticket loop cleared", self.hook("guard")["systemMessage"])
+
+    def test_wrong_shape_config_while_armed_fails_open(self):
+        self.start()
+        write(self.s.config, '{"keyPattern": "T-\\\\d+"}')
+        self.assertIn("config", self.hook("guard")["systemMessage"])
+        self.assertIsNone(self.hook("prompt"))
+
+    def test_plugin_hook_without_python_is_silent(self):
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(HERE))))
+        hooks = json.loads(read(os.path.join(root, "hooks", "hooks.json")))["hooks"]
+        for event in ("Stop", "UserPromptSubmit"):
+            cmd = hooks[event][0]["hooks"][0]["command"]
+            r = subprocess.run(["/bin/sh", "-c", cmd], input="{}", capture_output=True, text=True,
+                               env={"PATH": "/nonexistent", "CLAUDE_PLUGIN_ROOT": root})
+            self.assertEqual((r.returncode, r.stdout), (0, ""), event + ": " + r.stderr)
 
     def test_missing_page_is_held(self):
         self.start()
