@@ -1,0 +1,23 @@
+{
+  "keyPattern": "[A-Z][A-Z0-9]*-\\d+",
+  "issueUrl": "https://acme.atlassian.net/browse/{key}",
+  "issueLabel": "Issue",
+  "artifacts": { "dir": "~/ticket-loop/{key}", "url": "" },
+  "statusCommand": "",
+  "doneStatuses": ["Done"],
+  "doneGateCommand": "",
+  "rules": "",
+  "steps": [
+    {"id": "0", "title": "Plan approved", "check": "explicit approval in chat", "phase": "Plan", "stage": "plan"},
+    {"id": "1", "title": "Ticket claimed, loop armed", "check": "loop.py status shows the key", "phase": "Plan", "stage": "start"},
+    {"id": "2", "title": "Worktree on branch <KEY>", "check": "git worktree list", "phase": "Build", "stage": "worktree"},
+    {"id": "3", "title": "Change runs and is seen working", "check": "the change seen in the running app", "phase": "Build", "stage": "run"},
+    {"id": "4", "title": "Fix/audit loop found nothing new", "check": "last audit round found nothing", "phase": "Build", "stage": "fix"},
+    {"id": "5", "title": "Commit with guard test, pushed", "check": "the guard goes red with the fix reverted", "phase": "Build", "stage": "commit"},
+    {"id": "6", "title": "PR raised with a reviewer", "check": "PR URL recorded with checklist.py link pr", "phase": "Review", "stage": "pr"},
+    {"id": "7", "title": "PR approved, every comment resolved", "check": "no open review comment", "phase": "Review", "stage": "review"},
+    {"id": "8", "title": "Acceptance checks pass", "check": "each acceptance criterion has evidence", "phase": "Verify", "stage": "verify"},
+    {"id": "9", "title": "Before/after screenshots and explainer sent", "check": "links open", "phase": "Ship", "stage": "artifacts"},
+    {"id": "10", "title": "Preview and worktree removed", "check": "git worktree list", "phase": "Ship", "stage": "teardown"}
+  ]
+}

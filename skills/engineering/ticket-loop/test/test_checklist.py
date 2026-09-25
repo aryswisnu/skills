@@ -100,6 +100,14 @@ class ChecklistTest(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("no checklist for T-1", r.stderr)
 
+    def test_example_config_runs(self):
+        cfg = json.loads(read(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.example.json")))
+        cfg["artifacts"]["dir"] = os.path.join(self.s.dir, "pages", "{key}")
+        self.s.write_config(cfg)
+        self.assertEqual(self.cli("init", "ABC-12").returncode, 0)
+        self.assertEqual(self.cli("list", "ABC-12").stdout.splitlines()[0],
+                         "**ABC-12 loop** (0/11) " + self.s.page("ABC-12"))
+
     def test_assets(self):
         out = os.path.join(self.s.dir, "web")
         self.assertEqual(self.cli("assets", out).returncode, 0)
