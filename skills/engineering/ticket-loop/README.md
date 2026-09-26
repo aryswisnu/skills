@@ -37,6 +37,14 @@ own rules live in a private config file on your machine.
 | A stuck agent waits without a word. | The step turns red on the page, with the reason. |
 | Progress lives in the chat, and it is lost on a new session. | Progress lives in `tasks.html`, and a new session continues from it. |
 
+## How it works
+
+![How it works: you ask, the agent interviews you, you approve, it works each step until the ticket is done](docs/ticket-loop-overview.svg)
+
+You talk to the agent twice: in the plan interview, and when you get the evidence. Between the two, the
+agent works on its own, and the Stop hook sends it back whenever it tries to stop early. The detailed
+charts are in [How the loop runs](#how-the-loop-runs) and [The Stop guard](#the-stop-guard).
+
 ## Words used in this README
 
 | Word | Meaning |
@@ -51,6 +59,7 @@ own rules live in a private config file on your machine.
 
 ## Table of contents
 
+- [How it works](#how-it-works)
 - [In 60 seconds](#in-60-seconds)
 - [Your first ticket](#your-first-ticket)
 - [How the loop runs](#how-the-loop-runs)
@@ -88,17 +97,19 @@ your approval. Open `tasks.html` in a browser and leave it open. It follows the 
 
 What you do, and what you see:
 
-1. **Say "work on ABC-12".** The agent reads the ticket and the code. It writes `plan.html` with the
-   root cause, the files, the tests, and the risks. It creates `tasks.html`. The Stop hook is not on yet,
-   so the agent can stop and wait for you.
-2. **Read the plan, and answer.** Say "approved", or ask for changes. The agent changes nothing in the
+1. **Say "work on ABC-12".** The agent reads the ticket and the code.
+2. **Answer the interview.** The agent asks you about the plan, one question at a time, each with its
+   recommended answer. It follows each answer into the next open decision, and stops when none is open.
+   Then it writes `plan.html` with the root cause, the files, the tests, and the risks, and it creates
+   `tasks.html`. The Stop hook is not on yet, so the agent can stop and wait for you.
+3. **Read the plan, and answer.** Say "approved", or ask for changes. The agent changes nothing in the
    code before you approve.
-3. **Watch the page, or do other work.** The agent arms the loop and works the steps in order. The
+4. **Watch the page, or do other work.** The agent arms the loop and works the steps in order. The
    current step pulses on the page. Each done step gets a check mark and a note with its proof, such as
    a commit hash or a PR link.
-4. **Answer a question if one appears.** When the agent needs a product decision, a question card shows
+5. **Answer a question if one appears.** When the agent needs a product decision, a question card shows
    on the page and the agent stops. Answer in the agent session. The loop continues.
-5. **Get the evidence.** When the ticket reaches a done status, the Stop hook clears the loop. The agent
+6. **Get the evidence.** When the ticket reaches a done status, the Stop hook clears the loop. The agent
    sends you the links: PR, preview, screenshots, and explainer. You merge.
 
 To stop the loop at any time, run `loop.py done`, or ask the agent to run it. The checklist page
@@ -202,7 +213,7 @@ Each item in `steps` is one row on the checklist:
 
 | Stage | What the agent does |
 | --- | --- |
-| `plan` | Reads the ticket and the code. Writes root cause, files, tests, risks, and rollout to `plan.html`. Runs `checklist.py init`. Waits for approval, and touches nothing before it. |
+| `plan` | Reads the ticket and the code. Interviews you about the plan, one question at a time, until no decision is open. Writes root cause, files, tests, risks, and rollout to `plan.html`. Runs `checklist.py init`. Waits for approval, and touches nothing before it. |
 | `start` | Claims the ticket, moves it to in progress, and runs `loop.py start` to arm the Stop hook. |
 | `worktree` | Branches off the latest default branch, in a worktree named after the key. |
 | `run` | Runs the change and sees it work in the real app. |

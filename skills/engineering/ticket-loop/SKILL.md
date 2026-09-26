@@ -44,7 +44,9 @@ When the step has a `playbook`, read that file before the step: it holds the tea
 `references/steps.md` holds the default detail for each stage.
 
 - `plan`: Read the ticket and the code it names. Write the root cause, files, tests, risks, and rollout.
-  Stress-test the plan with questions to the user. Write it to `<artifacts.dir>/plan.html` (see Artifacts).
+  Interview the user about the plan before you send it: one question at a time, each with your recommended answer.
+  Follow each answer into the questions it opens, until no decision is open, and fold the answers into the plan.
+  Write it to `<artifacts.dir>/plan.html` (see Artifacts).
   Run `checklist.py init <KEY>` beside it, so the checklist shows from the first answer. Send the link and wait for approval.
   Do not touch the tracker, git, or files before approval. Do not arm the loop yet: the Stop hook would hold the approval wait.
 - `start`: Claim the ticket and move it to in progress with the user's tracker tools. Then run `loop.py start <KEY>` to arm the Stop hook.
