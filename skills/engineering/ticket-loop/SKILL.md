@@ -18,6 +18,23 @@ When the config has a `rules` file, read it before the first step. It holds the 
 The plugin installs the hooks. Without the plugin, add `python3 <this folder>/scripts/loop.py guard` as a `Stop` hook
 and `python3 <this folder>/scripts/loop.py prompt` as a `UserPromptSubmit` hook. Do not install both.
 
+## The plan interview
+
+This applies in every setup, with or without a plan playbook. The goal: no decision in the plan is a guess.
+
+1. Research first. Read the ticket, its comments, the code, and the git history. Do not ask what they answer.
+2. List the open decisions. Order them by how much of the plan each one changes: scope, then the root cause,
+   then the approach, then the definition of done. Ask the one that changes the most first.
+3. Ask one question at a time. Number it (Q1, Q2). Say why it matters, give the options, and give your
+   recommended answer with the reason. A bare "yes" accepts the recommendation.
+4. Follow each answer into the decisions that depend on it. Drop a question that an answer made moot.
+5. Do not ask about a choice with a clear default. Write it in the plan as an assumption. The user can change it at approval.
+6. Confirm how each acceptance criterion will be verified, and on what data. This is the check that ends the loop.
+7. Stop when no decision is open. Then ask one last question: "Is anything missing?"
+
+Put a Decisions section in `plan.html`: each question, the answer, and the reason. List the assumptions under it.
+If the user says "skip the interview", write every open decision as an assumption with your recommendation, and send the plan.
+
 ## The task list lives in a file
 
 Each ticket has a page, `<artifacts.dir>/tasks.html`. `checklist.py` owns it. Do not edit the HTML by hand.
@@ -44,9 +61,7 @@ When the step has a `playbook`, read that file before the step: it holds the tea
 `references/steps.md` holds the default detail for each stage.
 
 - `plan`: Read the ticket and the code it names. Write the root cause, files, tests, risks, and rollout.
-  Interview the user about the plan before you send it: one question at a time, each with your recommended answer.
-  Follow each answer into the questions it opens, until no decision is open, and fold the answers into the plan.
-  Write it to `<artifacts.dir>/plan.html` (see Artifacts).
+  Run the plan interview (below) before you send the plan. Write it to `<artifacts.dir>/plan.html` (see Artifacts).
   Run `checklist.py init <KEY>` beside it, so the checklist shows from the first answer. Send the link and wait for approval.
   Do not touch the tracker, git, or files before approval. Do not arm the loop yet: the Stop hook would hold the approval wait.
 - `start`: Claim the ticket and move it to in progress with the user's tracker tools. Then run `loop.py start <KEY>` to arm the Stop hook.

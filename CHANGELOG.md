@@ -1,5 +1,9 @@
 # aryswisnu-skills
 
+## 0.18.2
+
+- The `ticket-loop` plan interview is its own section in `SKILL.md`, so it runs even when a plan playbook replaces the default plan detail. It researches before it asks, asks the question that changes the plan most first, numbers each question with its reason and a recommended answer, writes clear defaults down as assumptions, confirms how each criterion will be verified, and records the decisions in `plan.html`.
+
 ## 0.18.1
 
 - `ticket-loop` interviews you about the plan before it sends it: one question at a time, each with a recommended answer, until no decision is open. The README adds a high-level chart of the loop.

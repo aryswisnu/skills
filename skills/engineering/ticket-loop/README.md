@@ -98,8 +98,11 @@ your approval. Open `tasks.html` in a browser and leave it open. It follows the 
 What you do, and what you see:
 
 1. **Say "work on ABC-12".** The agent reads the ticket and the code.
-2. **Answer the interview.** The agent asks you about the plan, one question at a time, each with its
-   recommended answer. It follows each answer into the next open decision, and stops when none is open.
+2. **Answer the interview.** The agent reads the ticket, the code, and the history first, so it asks only
+   what they cannot answer. It asks the question that changes the plan most first, one at a time,
+   numbered (Q1, Q2), each with the reason and its recommended answer. Reply "yes" to accept one. It
+   writes clear defaults down as assumptions instead of asking, confirms how each criterion will be
+   verified, and ends with "Is anything missing?". Say "skip the interview" to get assumptions only.
    Then it writes `plan.html` with the root cause, the files, the tests, and the risks, and it creates
    `tasks.html`. The Stop hook is not on yet, so the agent can stop and wait for you.
 3. **Read the plan, and answer.** Say "approved", or ask for changes. The agent changes nothing in the
@@ -213,7 +216,7 @@ Each item in `steps` is one row on the checklist:
 
 | Stage | What the agent does |
 | --- | --- |
-| `plan` | Reads the ticket and the code. Interviews you about the plan, one question at a time, until no decision is open. Writes root cause, files, tests, risks, and rollout to `plan.html`. Runs `checklist.py init`. Waits for approval, and touches nothing before it. |
+| `plan` | Reads the ticket and the code. Interviews you until no decision in the plan is a guess (see [Your first ticket](#your-first-ticket)). Writes root cause, files, tests, risks, rollout, and the decisions to `plan.html`. Runs `checklist.py init`. Waits for approval, and touches nothing before it. |
 | `start` | Claims the ticket, moves it to in progress, and runs `loop.py start` to arm the Stop hook. |
 | `worktree` | Branches off the latest default branch, in a worktree named after the key. |
 | `run` | Runs the change and sees it work in the real app. |

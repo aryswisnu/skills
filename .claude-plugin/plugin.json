@@ -1,6 +1,6 @@
 {
   "name": "aryswisnu-skills",
-  "version": "0.18.1",
+  "version": "0.18.2",
   "description": "Arys's agent skills for real engineering: visualize-pr (before/after evidence for a pull request) and ticket-loop (one ticket from plan to done, with a checklist page and a Stop-hook guard).",
   "author": {
     "name": "Arys",
