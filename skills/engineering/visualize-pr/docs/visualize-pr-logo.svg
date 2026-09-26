@@ -1,64 +1,107 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
-  <title id="title">Visualize PR</title>
-  <desc id="desc">A before and after code review mark beside the text slash visualize hyphen PR</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">/visualize-pr</title>
+  <desc id="desc">A photocopied newspaper front page. Masthead: slash visualize hyphen PR. Headline: Pull request shows its work, before and after. Three columns describe the skill, beside a halftone picture of an eye.</desc>
   <defs>
-    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#111827"/>
-      <stop offset="1" stop-color="#080c17"/>
+    <style>@font-face { font-family: TLMast; font-weight: 900; src: url(data:font/woff2;base64,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) format("woff2"); }@font-face { font-family: TLHead; src: url(data:font/woff2;base64,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) format("woff2"); font-weight: 700; }</style>
+    <radialGradient id="dot">
+      <stop offset="0" stop-color="#111" stop-opacity="1"/>
+      <stop offset="1" stop-color="#111" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <circle cx="3" cy="3" r="4.2" fill="url(#dot)"/>
+    </pattern>
+    <filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="screen"><feComponentTransfer><feFuncA type="discrete" tableValues="0 0 1 1 1"/></feComponentTransfer></filter>
+    <mask id="pic">
+      <rect x="860" y="206" width="300" height="160" fill="#4a4a4a"/>
+      <g filter="url(#soft)">
+        <path d="M922 286Q1010 206 1098 286Q1010 366 922 286Z" fill="none" stroke="#fff" stroke-width="14"/>
+        <circle cx="1010" cy="286" r="36" fill="#bbb"/>
+        <circle cx="1010" cy="286" r="17" fill="#fff"/>
+        <circle cx="1000" cy="276" r="6" fill="#000"/>
+      </g>
+    </mask>
+    <linearGradient id="lid" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity="0.85"/>
+      <stop offset="0.035" stop-color="#000" stop-opacity="0.25"/>
+      <stop offset="0.09" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.93" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.975" stop-color="#000" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.9"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#22d3ee"/>
-      <stop offset="1" stop-color="#a78bfa"/>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+      <stop offset="0.08" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.9" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.3"/>
     </linearGradient>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <filter id="specks" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="1" seed="11"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  44 0 0 0 -33.2"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="grit" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.9" numOctaves="2" seed="4"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -1.5"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="toner" x="-5%" y="-20%" width="110%" height="140%">
+      <feMorphology operator="dilate" radius="0.7" result="bleed"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="3" result="warp"/>
+      <feDisplacementMap in="bleed" in2="warp" scale="4" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="1" seed="9" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  30 0 0 0 -21.9" result="holes"/>
+      <feComposite in="rough" in2="holes" operator="out"/>
+    </filter>
+    <filter id="toner-fine" x="-5%" y="-40%" width="110%" height="180%">
+      <feMorphology operator="dilate" radius="0.25" result="bleed"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="5" result="warp"/>
+      <feDisplacementMap in="bleed" in2="warp" scale="1.6" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" seed="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  30 0 0 0 -23" result="holes"/>
+      <feComposite in="rough" in2="holes" operator="out"/>
     </filter>
   </defs>
 
-  <rect x="2" y="2" width="1196" height="316" rx="28" fill="url(#panel)" stroke="#263244" stroke-width="4"/>
-  <path d="M36 276H1164" stroke="url(#accent)" stroke-width="3" opacity="0.75"/>
+  <rect width="1200" height="420" fill="#ecebe6"/>
+  <rect width="1200" height="420" fill="#000" filter="url(#grit)" opacity="0.12"/>
 
-  <!-- Before and after preview mark -->
-  <g transform="translate(48 54)">
-    <rect width="250" height="196" rx="18" fill="#0f172a" stroke="#334155" stroke-width="3"/>
-    <path d="M125 0V196" stroke="#475569" stroke-width="3"/>
-    <rect x="14" y="16" width="96" height="24" rx="7" fill="#1e293b"/>
-    <text x="62" y="33" fill="#94a3b8" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700" text-anchor="middle">BEFORE</text>
-    <rect x="140" y="16" width="96" height="24" rx="7" fill="#164e63"/>
-    <text x="188" y="33" fill="#67e8f9" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700" text-anchor="middle">AFTER</text>
-
-    <rect x="18" y="60" width="86" height="8" rx="4" fill="#64748b"/>
-    <rect x="18" y="82" width="72" height="8" rx="4" fill="#475569"/>
-    <rect x="18" y="104" width="90" height="8" rx="4" fill="#64748b"/>
-    <rect x="18" y="126" width="62" height="8" rx="4" fill="#475569"/>
-    <rect x="18" y="148" width="82" height="8" rx="4" fill="#64748b"/>
-
-    <rect x="143" y="60" width="86" height="8" rx="4" fill="#64748b"/>
-    <rect x="143" y="82" width="72" height="8" rx="4" fill="#475569"/>
-    <rect x="143" y="101" width="92" height="14" rx="5" fill="#0891b2" filter="url(#glow)"/>
-    <rect x="143" y="126" width="62" height="8" rx="4" fill="#475569"/>
-    <rect x="143" y="148" width="82" height="8" rx="4" fill="#64748b"/>
-
-    <circle cx="223" cy="168" r="25" fill="#111827" stroke="#a78bfa" stroke-width="4"/>
-    <path d="M240 186L258 204" stroke="#a78bfa" stroke-width="7" stroke-linecap="round"/>
-    <path d="M212 168L220 176L235 158" fill="none" stroke="#34d399" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="rotate(-0.6 600 210) translate(5 2)" fill="#111">
+    <g filter="url(#toner-fine)">
+      <g font-family="Georgia, 'Times New Roman', Times, serif" font-size="13" font-weight="700" letter-spacing="2.5">
+        <text x="40" y="34">VOL. 0.17, NO. 1</text>
+        <text x="600" y="34" text-anchor="middle">EVERY PULL REQUEST, MADE VISIBLE</text>
+        <text x="1160" y="34" text-anchor="end">PRICE: ONE REVIEW</text>
+      </g>
+      <path d="M40 44H1160" stroke="#111" stroke-width="1"/>
+    </g>
+    <g filter="url(#toner)">
+      <text x="600" y="124" font-family="TLMast, serif" font-weight="900" font-size="96" text-anchor="middle">/visualize-pr</text>
+      <path d="M40 146H1160M40 151H1160" stroke="#111" stroke-width="1.6"/>
+      <path d="M40 181H1160" stroke="#111" stroke-width="1.6"/>
+    </g>
+    <g filter="url(#toner-fine)" font-family="Georgia, 'Times New Roman', Times, serif" font-size="13" font-weight="700" letter-spacing="2.5">
+      <text x="40" y="171">LATE EDITION</text>
+      <text x="600" y="171" text-anchor="middle">BEFORE · AFTER · DIFF · REVIEW</text>
+      <text x="1160" y="171" text-anchor="end">WEATHER: NOT PUBLISHED</text>
+    </g>
+    <g filter="url(#toner)">
+      <text x="40" y="236" font-family="TLHead, Georgia, 'Times New Roman', Times, serif" font-weight="700" font-size="44" textLength="790" lengthAdjust="spacingAndGlyphs">PULL REQUEST SHOWS ITS WORK, BEFORE AND AFTER</text>
+      <g filter="url(#screen)"><rect x="860" y="206" width="300" height="160" fill="url(#dots)" mask="url(#pic)"/></g>
+      <rect x="860" y="206" width="300" height="160" fill="none" stroke="#111" stroke-width="1.6"/>
+    </g>
+    <g filter="url(#toner-fine)">
+      <text x="40" y="266" font-family="Georgia, 'Times New Roman', Times, serif" font-size="17" font-style="italic">Two exact revisions, side by side. Screenshots, a change map, and your notes, in the PR.</text>
+      <text y="296" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12.5"><tspan x="40" dy="0">It boots two exact Git revisions</tspan><tspan x="40" dy="15">side by side on your own machine,</tspan><tspan x="40" dy="15">and it replays the same reviewer</tspan><tspan x="40" dy="15">states on both of them.</tspan></text><text y="296" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12.5"><tspan x="302" dy="0">Web changes get real browser</tspan><tspan x="302" dy="15">screenshots and runtime evidence.</tspan><tspan x="302" dy="15">Backend changes get a change map</tspan><tspan x="302" dy="15">and a sequence diagram.</tspan></text><path d="M290 286V384" stroke="#111" stroke-width="1"/><text y="296" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12.5"><tspan x="564" dy="0">Your own notes go first. The</tspan><tspan x="564" dy="15">evidence is written into the PR</tspan><tspan x="564" dy="15">description, and nothing is</tspan><tspan x="564" dy="15">published until you say so.</tspan></text><path d="M552 286V384" stroke="#111" stroke-width="1"/>
+      <text x="860" y="386" font-family="Georgia, 'Times New Roman', Times, serif" font-size="12" font-style="italic">FIG. 1: The reviewer, seeing the change.</text>
+      <path d="M40 400H1160" stroke="#111" stroke-width="1.6"/>
+    </g>
   </g>
 
-  <!-- Wordmark -->
-  <text x="350" y="136" fill="#f8fafc" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="66" font-weight="800" letter-spacing="-3">/visualize-pr</text>
-  <text x="354" y="180" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="22" font-weight="500" letter-spacing="1.5">CODE CHANGES, MADE VISIBLE</text>
-
-  <g transform="translate(354 210)" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="700">
-    <rect width="94" height="32" rx="9" fill="#1e293b" stroke="#475569"/>
-    <text x="47" y="21" fill="#cbd5e1" text-anchor="middle">BEFORE</text>
-    <path d="M112 16H146" stroke="#64748b" stroke-width="2"/>
-    <path d="M140 10L148 16L140 22" fill="none" stroke="#64748b" stroke-width="2"/>
-    <rect x="164" width="88" height="32" rx="9" fill="#164e63" stroke="#0891b2"/>
-    <text x="208" y="21" fill="#67e8f9" text-anchor="middle">AFTER</text>
-    <rect x="270" width="76" height="32" rx="9" fill="#3b0764" stroke="#7e22ce"/>
-    <text x="308" y="21" fill="#d8b4fe" text-anchor="middle">DIFF</text>
-    <rect x="364" width="150" height="32" rx="9" fill="#052e16" stroke="#15803d"/>
-    <text x="439" y="21" fill="#86efac" text-anchor="middle">HUMAN REVIEW</text>
-  </g>
+  <rect width="1200" height="420" fill="#000" filter="url(#specks)"/>
+  <path d="M0 96H1200" stroke="#000" stroke-width="0.8" opacity="0.16"/>
+  <path d="M0 274H1200" stroke="#000" stroke-width="1.6" opacity="0.09"/>
+  <path d="M842 0V420" stroke="#000" stroke-width="1" opacity="0.08"/>
+  <rect width="1200" height="420" fill="url(#lid)"/>
+  <rect width="1200" height="420" fill="url(#fade)"/>
 </svg>

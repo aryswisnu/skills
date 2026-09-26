@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/visualize-pr-logo.svg" alt="Visualize PR" width="900">
+  <img src="docs/visualize-pr-logo.svg" alt="/visualize-pr" width="900">
 </p>
 
 <h1 align="center">Visualize PR</h1>
