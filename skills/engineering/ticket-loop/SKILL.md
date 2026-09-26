@@ -67,8 +67,9 @@ When the step has a `playbook`, read that file before the step: it holds the tea
 - `start`: Claim the ticket and move it to in progress with the user's tracker tools. Then run `loop.py start <KEY>` to arm the Stop hook.
 - `worktree`: Branch off the latest default branch, in a worktree named after the key. Never work in a live checkout.
 - `run`: Run the change and see it work in the real app before you continue. A green health check proves a server answers, not that this code serves.
-- `fix`: One agent logs issues, a second fixes them, a third audits the fixes and runs the build, a fourth repairs.
-  Repeat until a round finds nothing new. The fixer and the auditor are separate agents. Every guard must fail when you revert its fix.
+- `fix`: One agent logs issues, a second fixes them, and a third audits the fixes and runs the build.
+  Send the audit findings back to the fixer. Repeat until a round finds nothing new.
+  The fixer and the auditor are separate agents. Every guard must fail when you revert its fix.
 - `commit`: Commit with the regression guard in the same commit. Push the branch.
 - `pr`: Raise the PR and check that a reviewer is set. Record it with `checklist.py link <KEY> pr <url>`.
 - `review`: Loop the PR to approval. Each pass: read the state and the comments, then fix and push, or reply with a precise reason.
