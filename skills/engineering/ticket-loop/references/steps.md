@@ -5,7 +5,10 @@ Use this when a step has no playbook. A playbook replaces this section for its s
 ## plan
 - Name the root cause with a file and line, or say that it is unknown.
 - List every file you will change and the test that guards each change.
-- List the risks and the rollout. Present each open question with a recommended answer.
+- List the risks and the rollout.
+- Interview the user before you send the plan. Ask one question at a time, and give your recommended answer with each.
+  If the code or the ticket can answer a question, read them instead of asking.
+- Follow each answer into the decisions that depend on it. Stop when no decision is open. Fold every answer into the plan.
 - Revise and re-send the plan on each change request. The approval covers the plan that was sent.
 
 ## start

@@ -1,5 +1,9 @@
 # aryswisnu-skills
 
+## 0.18.1
+
+- `ticket-loop` interviews you about the plan before it sends it: one question at a time, each with a recommended answer, until no decision is open. The README adds a high-level chart of the loop.
+
 ## 0.18.0
 
 New skill: `ticket-loop`, model-invoked.
