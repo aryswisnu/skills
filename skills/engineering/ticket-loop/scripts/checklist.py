@@ -496,8 +496,8 @@ def main(argv):
                     options.append(rest.pop(0))
                 else:
                     sys.exit(usage)
-            text = " ".join(words)
-            nums = list(dict.fromkeys(re.findall(r"\bq(\d+)\b", text, re.I)))
+            text = re.sub(r"[ \t]+(?=option\s+\d+\b|•)", "\n", " ".join(words), flags=re.I)
+            nums =list(dict.fromkeys(re.findall(r"\bq(\d+)\b", text, re.I)))
             if len(nums) > 1:
                 sys.exit(f"one question per card: the text names {', '.join('Q' + n for n in nums)}. "
                          "Ask them one at a time, and pass the choices with --option.")

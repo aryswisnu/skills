@@ -62,7 +62,8 @@ across the plan interview and the rest of the loop. Do not repeat an older open 
 refuses a text that names two question numbers. Ask the older one again after this one is answered.
 Pass each choice with `--option` as a short label, recommended first, and keep the detail in the question text.
 Without `--option`, "Option 1", "Option 2" in the text become the buttons, and with neither, the card offers
-yes and no. The card always adds "other".
+yes and no. The card always adds "other". Put each option or bullet on its own line. `ask` also starts a new
+line before "Option N" and "•", so a one-line text still shows one option per line.
 
 Each button copies one line, and the user pastes it into the session: `Q4. accept the DB row`, `Q4. yes`, or
 `Q4. other: <their words>`. Read the number to match the answer to the question, then run `ask <KEY> --clear`.

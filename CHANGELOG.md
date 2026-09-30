@@ -1,5 +1,9 @@
 # aryswisnu-skills
 
+## 0.19.2
+
+- `ticket-loop` question cards show each option and bullet on its own line. `checklist.py ask` starts a new line before "Option N" and "•", and keeps the line breaks it is given. A plain dash inside a sentence stays where it is.
+
 ## 0.19.1
 
 - `checklist.py ask` refuses a card that names two question numbers, so an older open question in the text can no longer give the buttons the wrong number. It reads the number anywhere in the text, and without `--option` it turns "Option 1", "Option 2" in the text into buttons, instead of offering yes and no.
