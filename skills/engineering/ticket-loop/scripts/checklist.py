@@ -11,7 +11,7 @@ HTML by hand: a script cannot drop a closing tag or tick the wrong box.
   checklist.py block  <KEY> <STEP> <note>   # mark blocked, with the reason
   checklist.py reopen <KEY> <STEP>...       # mark open again (failed verification: the fix step on)
   checklist.py link   <KEY> <pr|sandbox|explainer> <url>   # header link chip
-  checklist.py ask    <KEY> <question>      # question card on the page
+  checklist.py ask    <KEY> <question> [--option <answer>]...   # question card with answer buttons
   checklist.py ask    <KEY> --clear         # remove it once the user answers
   checklist.py list   <KEY>                 # markdown task list, for every answer
   checklist.py open   <KEY>                 # open + blocked items, one per line
@@ -132,7 +132,10 @@ h1{font:800 clamp(34px,8vw,52px)/1 var(--sans);letter-spacing:-.03em;margin:0}
 .ask h2{margin:0 0 6px;font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--run)}
 .ask p{margin:0 0 12px;font-size:16px;font-weight:500;overflow-wrap:anywhere;white-space:pre-wrap}
 .ask .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.ask button{padding:8px 14px;border:0;border-radius:8px;background:var(--run);color:#1b1200;font-weight:700;cursor:pointer}
+.ask .answers{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.ask button{padding:8px 14px;border:0;border-radius:8px;background:var(--run);color:#1b1200;font:700 13px/1.2 var(--mono);cursor:pointer;overflow-wrap:anywhere;text-align:left}
+.ask button.other{background:transparent;color:var(--run);box-shadow:inset 0 0 0 1.5px var(--run)}
+.ask button.copied{animation:rise .4s both}
 .ask small{color:var(--muted);font-size:12px}
 .phase{margin:34px 0 4px;display:flex;align-items:baseline;gap:10px}
 .phase b{font:600 11px/1 var(--mono);color:var(--muted);letter-spacing:.1em}
@@ -205,7 +208,8 @@ li:last-child::before{bottom:calc(100% - 22px)}
 <section class="ask" id="ask" hidden>
   <h2>Question for you</h2>
   <p id="askText"></p>
-  <div class="row"><button type="button" id="copy">Copy question</button><small id="askWhen"></small><small>Answer in the agent session.</small></div>
+  <div class="answers" id="answers" role="group" aria-label="Copy an answer"></div>
+  <div class="row"><small id="askWhen"></small><small>Click an answer to copy it, then paste it into the agent session.</small></div>
 </section>
 <div id="timeline"></div>
 <p class="foot">Updates without reload every 20 s</p>
@@ -286,6 +290,19 @@ li:last-child::before{bottom:calc(100% - 22px)}
       if ($("askText").textContent !== S.ask.text) { ask.classList.remove("pop"); void ask.offsetWidth; ask.classList.add("pop"); }
       $("askText").textContent = S.ask.text;
       $("askWhen").textContent = "asked " + ago(when(S.ask.at)) + " ·";
+      var answers = S.ask.answers || ["yes", "no", "other: "], box = $("answers");
+      if (box.dataset.for !== JSON.stringify(answers)) {
+        box.dataset.for = JSON.stringify(answers);
+        box.textContent = "";
+        answers.forEach(function (a) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.textContent = a;
+          if (/other: $/.test(a)) b.className = "other";
+          b.onclick = function () { copy(a, b); };
+          box.appendChild(b);
+        });
+      }
     }
 
     var n = 0;
@@ -322,13 +339,21 @@ li:last-child::before{bottom:calc(100% - 22px)}
     }).catch(function () {});
   }
 
-  $("copy").onclick = function () {
-    if (!navigator.clipboard) return;
-    navigator.clipboard.writeText("Answer to " + S.key + ": " + S.ask.text + "\n> ").then(function () {
+  // navigator.clipboard exists only on https and localhost; a served http page falls back to execCommand.
+  function copy(text, button) {
+    var done = function () {
+      $("toast").textContent = "Copied: " + text.trim();
       $("toast").classList.add("on");
-      setTimeout(function () { $("toast").classList.remove("on"); }, 1400);
-    }, function () {});
-  };
+      button.classList.remove("copied"); void button.offsetWidth; button.classList.add("copied");
+      setTimeout(function () { $("toast").classList.remove("on"); }, 1600);
+    };
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(done, function () {});
+    var t = document.createElement("textarea");
+    t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select();
+    try { if (document.execCommand("copy")) done(); } catch (e) {}
+    t.remove();
+  }
   var root = document.documentElement, key = "tasks-theme";
   try {
     root.dataset.theme = localStorage.getItem(key) || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
@@ -456,9 +481,26 @@ def main(argv):
         save(state)
     elif cmd == "ask":
         state = need(key)
+        usage = "usage: ask <KEY> <question> [--option <answer>]... | ask <KEY> --clear"
         if not rest:
-            sys.exit("usage: ask <KEY> <question> | ask <KEY> --clear")
-        state["ask"] = None if rest == ["--clear"] else {"text": " ".join(rest), "at": now()}
+            sys.exit(usage)
+        if rest == ["--clear"]:
+            state["ask"] = None
+        else:
+            words, options = [], []
+            while rest:
+                w = rest.pop(0)
+                if w != "--option":
+                    words.append(w)
+                elif rest:
+                    options.append(rest.pop(0))
+                else:
+                    sys.exit(usage)
+            text = " ".join(words)
+            num = re.match(r"\s*q(\d+)\b", text, re.I)
+            ref = f"Q{num.group(1)}. " if num else ""
+            answers = [ref + a for a in (options or ["yes", "no"]) + ["other: "]]
+            state["ask"] = {"text": text, "answers": answers, "at": now()}
         save(state)
     elif cmd == "list":
         print(list_text(key, need(key)))

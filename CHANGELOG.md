@@ -1,5 +1,10 @@
 # aryswisnu-skills
 
+## 0.19.0
+
+- `ticket-loop` question cards have answer buttons. Each button copies one line to paste into the session, such as `Q4. yes`, `Q4. stage it by hand`, or `Q4. other: `. `checklist.py ask` reads the question number and takes the choices with `--option`; without it, the card offers yes and no. The copy works on plain http pages too. The "Copy question" button is gone.
+- The plan stage runs `checklist.py init` first, and the plan interview puts each question on the card.
+
 ## 0.18.3
 
 - The `ticket-loop` `fix` stage has one fixer. The audit findings go back to the fixer, not to a separate repair agent that did the same job.

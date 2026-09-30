@@ -64,6 +64,30 @@ class ChecklistTest(unittest.TestCase):
         self.cli("ask", "T-1", "--clear")
         self.assertIsNone(self.state()["ask"])
 
+    def test_ask_answers_carry_the_question_number(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "q4. Accept the DB row as proof?")
+        self.assertEqual(self.state()["ask"]["answers"], ["Q4. yes", "Q4. no", "Q4. other: "])
+
+    def test_ask_answers_from_options(self):
+        self.cli("init", "T-1")
+        r = self.cli("ask", "T-1", "Q2. Which proof?", "--option", "the DB row", "--option", "stage it by hand")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        ask = self.state()["ask"]
+        self.assertEqual(ask["text"], "Q2. Which proof?")
+        self.assertEqual(ask["answers"], ["Q2. the DB row", "Q2. stage it by hand", "Q2. other: "])
+
+    def test_ask_answers_without_a_number(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Ship it?")
+        self.assertEqual(self.state()["ask"]["answers"], ["yes", "no", "other: "])
+
+    def test_ask_option_needs_a_value(self):
+        self.cli("init", "T-1")
+        r = self.cli("ask", "T-1", "Q1. Ship?", "--option")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIsNone(self.state()["ask"])
+
     def test_unknown_step(self):
         self.cli("init", "T-1")
         r = self.cli("tick", "T-1", "9")

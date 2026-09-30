@@ -110,8 +110,9 @@ What you do, and what you see:
 4. **Watch the page, or do other work.** The agent arms the loop and works the steps in order. The
    current step pulses on the page. Each done step gets a check mark and a note with its proof, such as
    a commit hash or a PR link.
-5. **Answer a question if one appears.** When the agent needs a product decision, a question card shows
-   on the page and the agent stops. Answer in the agent session. The loop continues.
+5. **Answer a question if one appears.** When the agent needs a decision, a question card shows on the
+   page and the agent stops. Click an answer to copy it, such as `Q4. yes`, and paste it into the agent
+   session. The loop continues. The plan interview uses the same card.
 6. **Get the evidence.** When the ticket reaches a done status, the Stop hook clears the loop. The agent
    sends you the links: PR, preview, screenshots, and explainer. You merge.
 
@@ -244,7 +245,7 @@ checklist.py tick   ABC-12 5 "a1b2c3d with 2 guard tests"
 checklist.py block  ABC-12 7 "reviewer asked for a null guard in src/export.js:88"
 checklist.py reopen ABC-12 4 5 6 7 8         # after a failed verification
 checklist.py link   ABC-12 pr https://github.com/acme/app/pull/42
-checklist.py ask    ABC-12 "Accept the DB row as proof, or stage it by hand?"
+checklist.py ask    ABC-12 "Q4. Accept the DB row as proof?" --option "accept the DB row" --option "stage it by hand"
 checklist.py ask    ABC-12 --clear
 checklist.py list   ABC-12                   # the markdown list the agent ends each answer with
 checklist.py open   ABC-12                   # open and blocked items, one per line
@@ -258,7 +259,9 @@ What the page shows:
 - Chips for the ticket, the plan, the PR, the preview (`link sandbox`), and the explainer. A chip is grey until its link exists. The explainer chip turns on by itself at the next checklist command after `index.html` appears in the folder.
 - The steps grouped by phase. The current step pulses and shows a running timer. A done step draws its check mark. A blocked step turns red and shakes one time.
 - URLs, ticket keys, and `PR #42` (after `link pr`) in notes become links. Only `http` and `https` URLs become links.
-- A question card when the agent waits for you, with a button that copies the question. You answer in the agent session.
+- A question card when the agent waits for you. Each answer is a button that copies one line, such as
+  `Q4. yes`, `Q4. stage it by hand`, or `Q4. other: `. Paste it into the agent session, and type after
+  `other: ` if none fits. The agent reads the number to match your answer to the question.
 - Light and dark themes, and no motion when the system asks for reduced motion.
 
 The page reads its own file every 20 seconds and re-renders only what changed. So it works from a web
