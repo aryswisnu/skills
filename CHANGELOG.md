@@ -1,5 +1,9 @@
 # aryswisnu-skills
 
+## 0.19.2
+
+- `ticket-loop` question cards show a list as bullets. When the text names two or more "Option N", `checklist.py ask` puts each one on its own "•" line. It also splits inline "•" and turns "- " lines into "•". A single "option 1" mention and a plain dash inside a sentence stay where they are. The card draws the bullets as a list with a hanging indent.
+
 ## 0.19.1
 
 - `checklist.py ask` refuses a card that names two question numbers, so an older open question in the text can no longer give the buttons the wrong number. It reads the number anywhere in the text, and without `--option` it turns "Option 1", "Option 2" in the text into buttons, instead of offering yes and no.

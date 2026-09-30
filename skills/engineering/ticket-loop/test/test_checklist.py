@@ -108,6 +108,33 @@ class ChecklistTest(unittest.TestCase):
         self.assertEqual(self.state()["ask"]["answers"],
                          ["Q4. option 1", "Q4. option 2", "Q4. option 3", "Q4. other: "])
 
+    def test_ask_puts_each_listed_option_on_its_own_line(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Q4: the reviewer skips PR #42. Option 1 (recommended): review it yourself; "
+                 "I run QA by hand. Option 2: retarget it.")
+        self.assertEqual(self.state()["ask"]["text"], "Q4: the reviewer skips PR #42.\n"
+                         "• Option 1 (recommended): review it yourself; I run QA by hand.\n• Option 2: retarget it.")
+
+    def test_ask_bullets_options_given_on_lines_once(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Q4. Which way?\nOption 1: a.\n- Option 2: b.\n• Option 3: c.")
+        self.assertEqual(self.state()["ask"]["text"], "Q4. Which way?\n• Option 1: a.\n• Option 2: b.\n• Option 3: c.")
+
+    def test_ask_leaves_a_single_option_mention_alone(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Q4. Keep option 1 from the plan?")
+        self.assertEqual(self.state()["ask"]["text"], "Q4. Keep option 1 from the plan?")
+
+    def test_ask_puts_each_bullet_on_its_own_line(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Q5. Which proof? • the DB row • a screenshot")
+        self.assertEqual(self.state()["ask"]["text"], "Q5. Which proof?\n• the DB row\n• a screenshot")
+
+    def test_ask_keeps_a_plain_dash_and_bullets_dash_lines(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Q6. Ship the fix - today?\n- after QA\n- before QA")
+        self.assertEqual(self.state()["ask"]["text"], "Q6. Ship the fix - today?\n• after QA\n• before QA")
+
     def test_ask_explicit_options_win_over_listed_ones(self):
         self.cli("init", "T-1")
         self.cli("ask", "T-1", "Q4. Option 1: a. Option 2: b.", "--option", "a")

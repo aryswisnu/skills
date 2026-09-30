@@ -130,7 +130,10 @@ h1{font:800 clamp(34px,8vw,52px)/1 var(--sans);letter-spacing:-.03em;margin:0}
 .ask.pop{animation:rise .5s both}
 .ask::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--run)}
 .ask h2{margin:0 0 6px;font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--run)}
-.ask p{margin:0 0 12px;font-size:16px;font-weight:500;overflow-wrap:anywhere;white-space:pre-wrap}
+.ask .q{margin:0 0 12px;font-size:16px;font-weight:500;overflow-wrap:anywhere;white-space:pre-wrap}
+.ask .q ul{margin:6px 0 0;padding:0 0 0 1.3em;white-space:normal}
+.ask .q li{margin:3px 0;white-space:pre-wrap}
+.ask .q li::marker{color:var(--run)}
 .ask .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .ask .answers{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
 .ask button{padding:8px 14px;border:0;border-radius:8px;background:var(--run);color:#1b1200;font:700 13px/1.2 var(--mono);cursor:pointer;overflow-wrap:anywhere;text-align:left}
@@ -207,7 +210,7 @@ li:last-child::before{bottom:calc(100% - 22px)}
 <nav class="chips" id="chips" aria-label="Ticket links"></nav>
 <section class="ask" id="ask" hidden>
   <h2>Question for you</h2>
-  <p id="askText"></p>
+  <div class="q" id="askText"></div>
   <div class="answers" id="answers" role="group" aria-label="Copy an answer"></div>
   <div class="row"><small id="askWhen"></small><small>Click an answer to copy it, then paste it into the agent session.</small></div>
 </section>
@@ -287,8 +290,22 @@ li:last-child::before{bottom:calc(100% - 22px)}
     var ask = $("ask");
     ask.hidden = !S.ask;
     if (S.ask) {
-      if ($("askText").textContent !== S.ask.text) { ask.classList.remove("pop"); void ask.offsetWidth; ask.classList.add("pop"); }
-      $("askText").textContent = S.ask.text;
+      var q = $("askText");
+      if (q.dataset.text !== S.ask.text) {
+        ask.classList.remove("pop"); void ask.offsetWidth; ask.classList.add("pop");
+        q.dataset.text = S.ask.text;
+        q.textContent = "";
+        var list = null;
+        S.ask.text.split("\n").forEach(function (line) {
+          if (line.indexOf("• ") === 0) {
+            if (!list) list = q.appendChild(document.createElement("ul"));
+            list.appendChild(document.createElement("li")).textContent = line.slice(2);
+          } else {
+            list = null;
+            q.appendChild(document.createElement("div")).textContent = line;
+          }
+        });
+      }
       $("askWhen").textContent = "asked " + ago(when(S.ask.at)) + " ·";
       var answers = S.ask.answers || ["yes", "no", "other: "], box = $("answers");
       if (box.dataset.for !== JSON.stringify(answers)) {
@@ -496,7 +513,10 @@ def main(argv):
                     options.append(rest.pop(0))
                 else:
                     sys.exit(usage)
-            text = " ".join(words)
+            text = re.sub(r"[ \t]+(?=•)", "\n", " ".join(words))
+            if len(set(re.findall(r"\boption\s+(\d+)\b", text, re.I))) > 1:
+                text = re.sub(r"\s*(?:[-•*]\s*)?\b(option\s+\d+\b)", r"\n• \1", text, flags=re.I).lstrip("\n")
+            text = re.sub(r"(?m)^[ \t]*[-*][ \t]+", "• ", text)
             nums = list(dict.fromkeys(re.findall(r"\bq(\d+)\b", text, re.I)))
             if len(nums) > 1:
                 sys.exit(f"one question per card: the text names {', '.join('Q' + n for n in nums)}. "
