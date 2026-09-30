@@ -261,8 +261,8 @@ What the page shows:
 - URLs, ticket keys, and `PR #42` (after `link pr`) in notes become links. Only `http` and `https` URLs become links.
 - A question card when the agent waits for you. Each answer is a button that copies one line, such as
   `Q4. yes`, `Q4. stage it by hand`, or `Q4. other: `. Paste it into the agent session, and type after
-  `other: ` if none fits. The agent reads the number to match your answer to the question. Each option
-  and bullet in the question shows on its own line.
+  `other: ` if none fits. The agent reads the number to match your answer to the question. When the
+  question lists two or more options or points, each one shows as a bullet.
 - Light and dark themes, and no motion when the system asks for reduced motion.
 
 The page reads its own file every 20 seconds and re-renders only what changed. So it works from a web

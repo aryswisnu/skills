@@ -2,7 +2,7 @@
 
 ## 0.19.2
 
-- `ticket-loop` question cards show each option and bullet on its own line. `checklist.py ask` starts a new line before "Option N" and "•", and keeps the line breaks it is given. A plain dash inside a sentence stays where it is.
+- `ticket-loop` question cards show a list as bullets. When the text names two or more "Option N", `checklist.py ask` puts each one on its own "•" line. It also splits inline "•" and turns "- " lines into "•". A single "option 1" mention and a plain dash inside a sentence stay where they are. The card draws the bullets as a list with a hanging indent.
 
 ## 0.19.1
 
