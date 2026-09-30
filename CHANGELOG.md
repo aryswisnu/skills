@@ -1,5 +1,9 @@
 # aryswisnu-skills
 
+## 0.19.3
+
+- Fix: the bullets on a `ticket-loop` question card rendered as a narrow column, because the timeline styles used a bare `li` selector. They are scoped to the timeline (`ol>li`) now, and a test fails if a bare `li` rule comes back.
+
 ## 0.19.2
 
 - `ticket-loop` question cards show a list as bullets. When the text names two or more "Option N", `checklist.py ask` puts each one on its own "•" line. It also splits inline "•" and turns "- " lines into "•". A single "option 1" mention and a plain dash inside a sentence stay where they are. The card draws the bullets as a list with a hanging indent.
