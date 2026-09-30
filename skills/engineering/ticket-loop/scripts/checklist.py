@@ -497,8 +497,14 @@ def main(argv):
                 else:
                     sys.exit(usage)
             text = " ".join(words)
-            num = re.match(r"\s*q(\d+)\b", text, re.I)
-            ref = f"Q{num.group(1)}. " if num else ""
+            nums = list(dict.fromkeys(re.findall(r"\bq(\d+)\b", text, re.I)))
+            if len(nums) > 1:
+                sys.exit(f"one question per card: the text names {', '.join('Q' + n for n in nums)}. "
+                         "Ask them one at a time, and pass the choices with --option.")
+            ref = f"Q{nums[0]}. " if nums else ""
+            listed = list(dict.fromkeys(re.findall(r"\boption\s+(\d+)\b", text, re.I)))
+            if not options and len(listed) > 1:
+                options = [f"option {n}" for n in listed]
             answers = [ref + a for a in (options or ["yes", "no"]) + ["other: "]]
             state["ask"] = {"text": text, "answers": answers, "at": now()}
         save(state)

@@ -404,6 +404,7 @@ the loop. Most problems show up there.
 | The page does not update | The page is open as a `file://` URL, and the browser blocks the page from reading itself. | Reload by hand, or serve the folder with a web server and set `artifacts.url`. |
 | Ticket keys in notes are not links | `issueUrl` is empty, or `keyPattern` does not match the keys. | Set `issueUrl` with `{key}` in it, and check `keyPattern`. |
 | The explainer chip stays grey | The chip turns on at the next checklist command after `index.html` exists. | Run any checklist command, such as `checklist.py list <KEY>`. |
+| `ask` refuses: "one question per card" | The text names two question numbers, such as an older open question and the new one. | Ask one question per card. Ask the older one again after this one is answered. |
 | The question card does not go away | The agent did not clear it after your answer. | Run `checklist.py ask <KEY> --clear`. |
 | The hooks do nothing | `python3` is not on the `PATH` that Claude Code sees. | Run `command -v python3` in the same shell that starts Claude Code. Install Python 3.8 or newer. |
 | Each hook message shows twice | The hooks are installed twice: by the plugin and in `settings.json`. | Keep one route. Remove the entries in `settings.json` if you use the plugin. |
@@ -440,6 +441,8 @@ Python. The Stop hook and the prompt hook are Claude Code hooks, so other agents
 - One armed ticket per machine. A second `loop.py start` moves the sentinel to the new ticket.
 - A `keyPattern` with Python-only syntax, such as `(?P<name>...)`, breaks the page script.
 - A note that holds `<!--<script` can blank the page. No code runs, and the CLI keeps working.
+- `checklist.py ask` reads any `Q<n>` in the text as a question number, so a quarter such as "Q3 2026" in
+  a question counts as one. Two numbers make `ask` refuse the card. Write "the third quarter" instead.
 - A sentinel with no owner is adopted by the session whose working folder contains the key as text, so
   `ABC-12` can match a folder named `ABC-123`.
 

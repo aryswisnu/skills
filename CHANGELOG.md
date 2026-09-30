@@ -1,5 +1,10 @@
 # aryswisnu-skills
 
+## 0.19.1
+
+- `checklist.py ask` refuses a card that names two question numbers, so an older open question in the text can no longer give the buttons the wrong number. It reads the number anywhere in the text, and without `--option` it turns "Option 1", "Option 2" in the text into buttons, instead of offering yes and no.
+- `SKILL.md`: one question per card, short `--option` labels, and the detail in the question text.
+
 ## 0.19.0
 
 - `ticket-loop` question cards have answer buttons. Each button copies one line to paste into the session, such as `Q4. yes`, `Q4. stage it by hand`, or `Q4. other: `. `checklist.py ask` reads the question number and takes the choices with `--option`; without it, the card offers yes and no. The copy works on plain http pages too. The "Copy question" button is gone.

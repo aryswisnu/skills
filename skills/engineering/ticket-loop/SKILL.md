@@ -57,9 +57,12 @@ checklist.py list   <KEY>                  # the markdown list for your answer
 
 ### Questions on the page
 
-Start every question with its number, as in `Q4. Accept the DB row as proof?`. The number continues across the
-plan interview and the rest of the loop. Pass each real choice with `--option`, recommended first. Without
-`--option`, the card offers yes and no. The card always adds "other".
+One question per card. Start it with its number, as in `Q4. Accept the DB row as proof?`. The number continues
+across the plan interview and the rest of the loop. Do not repeat an older open question in the text: `ask`
+refuses a text that names two question numbers. Ask the older one again after this one is answered.
+Pass each choice with `--option` as a short label, recommended first, and keep the detail in the question text.
+Without `--option`, "Option 1", "Option 2" in the text become the buttons, and with neither, the card offers
+yes and no. The card always adds "other".
 
 Each button copies one line, and the user pastes it into the session: `Q4. accept the DB row`, `Q4. yes`, or
 `Q4. other: <their words>`. Read the number to match the answer to the question, then run `ask <KEY> --clear`.
