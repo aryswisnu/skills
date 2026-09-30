@@ -88,6 +88,31 @@ class ChecklistTest(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIsNone(self.state()["ask"])
 
+    def test_ask_refuses_two_questions_in_one_card(self):
+        self.cli("init", "T-1")
+        r = self.cli("ask", "T-1", "Q3 (cache targets) is still open. Q4: the reviewer skips PR #42. "
+                     "Option 1 (recommended): review it yourself. Option 2: retarget it.")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("one question per card", r.stderr)
+        self.assertIsNone(self.state()["ask"])
+
+    def test_ask_reads_the_number_anywhere(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Still open, Q4: ship it?")
+        self.assertEqual(self.state()["ask"]["answers"], ["Q4. yes", "Q4. no", "Q4. other: "])
+
+    def test_ask_turns_listed_options_into_answers(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Q4: the reviewer skips PR #42. Option 1 (recommended): review it yourself. "
+                 "Option 2: retarget it. Option 3: review the integration PR later.")
+        self.assertEqual(self.state()["ask"]["answers"],
+                         ["Q4. option 1", "Q4. option 2", "Q4. option 3", "Q4. other: "])
+
+    def test_ask_explicit_options_win_over_listed_ones(self):
+        self.cli("init", "T-1")
+        self.cli("ask", "T-1", "Q4. Option 1: a. Option 2: b.", "--option", "a")
+        self.assertEqual(self.state()["ask"]["answers"], ["Q4. a", "Q4. other: "])
+
     def test_unknown_step(self):
         self.cli("init", "T-1")
         r = self.cli("tick", "T-1", "9")
