@@ -145,13 +145,13 @@ h1{font:800 clamp(34px,8vw,52px)/1 var(--sans);letter-spacing:-.03em;margin:0}
 .phase h3{margin:0;font:700 13px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase}
 .phase span{flex:1;height:1px;background:var(--line)}
 ol{list-style:none;margin:0;padding:0}
-li{position:relative;display:grid;grid-template-columns:28px 1fr;gap:14px;padding:12px 10px 12px 0;border-radius:10px;
+ol>li{position:relative;display:grid;grid-template-columns:28px 1fr;gap:14px;padding:12px 10px 12px 0;border-radius:10px;
   animation:rise .45s both;animation-delay:calc(var(--i)*35ms)}
-.live li{animation:none}
-li::before{content:"";position:absolute;left:13px;top:0;bottom:0;width:2px;background:var(--line)}
-li.done::before{background:var(--done)}
-li:first-child::before{top:22px}
-li:last-child::before{bottom:calc(100% - 22px)}
+.live ol>li{animation:none}
+ol>li::before{content:"";position:absolute;left:13px;top:0;bottom:0;width:2px;background:var(--line)}
+ol>li.done::before{background:var(--done)}
+ol>li:first-child::before{top:22px}
+ol>li:last-child::before{bottom:calc(100% - 22px)}
 .node{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
   background:var(--bg);border:2px solid var(--line);transition:background .3s,border-color .3s}
 .node svg{width:14px;height:14px;fill:none;stroke:var(--bg);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}

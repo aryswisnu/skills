@@ -135,6 +135,13 @@ class ChecklistTest(unittest.TestCase):
         self.cli("ask", "T-1", "Q6. Ship the fix - today?\n- after QA\n- before QA")
         self.assertEqual(self.state()["ask"]["text"], "Q6. Ship the fix - today?\n• after QA\n• before QA")
 
+    def test_timeline_styles_do_not_reach_the_question_list(self):
+        self.cli("init", "T-1")
+        css = re.search(r"<style>(.*?)</style>", read(self.s.page("T-1")), re.S).group(1)
+        selectors = [s.strip() for rule in re.findall(r"([^{}]+)\{", css) for s in rule.split(",")]
+        bare = [s for s in selectors if re.match(r"(\.live\s+)?li\b", s)]
+        self.assertEqual(bare, [], "a bare li rule also styles the bullets on the question card")
+
     def test_ask_explicit_options_win_over_listed_ones(self):
         self.cli("init", "T-1")
         self.cli("ask", "T-1", "Q4. Option 1: a. Option 2: b.", "--option", "a")
